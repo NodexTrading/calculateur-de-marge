@@ -244,6 +244,24 @@ header {
 .ina-sub span { color:var(--orange); font-weight:700; }
 
 /* ── ZONE SELECTOR ── */
+/* Onglets de grille (Classique Z1-Z5 / ACOSS PACA 2025) */
+.grid-tabs {
+  display:flex; gap:4px; margin-bottom:8px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:6px; padding:3px;
+}
+.grid-tab {
+  flex:1; border:none; background:transparent; cursor:pointer;
+  font-family:'DM Sans',sans-serif; font-size:9px; font-weight:600;
+  color:var(--text3); padding:5px 4px; border-radius:4px;
+  text-transform:uppercase; letter-spacing:.3px; transition:all .12s;
+  white-space:nowrap;
+}
+.grid-tab:hover { color:var(--text2); background:rgba(0,0,0,.03); opacity:1; }
+.grid-tab.active {
+  background:#fff; color:var(--orange);
+  box-shadow:0 1px 3px rgba(15,23,42,.08);
+}
 .zone-selector { margin-bottom:8px; }
 .zone-label { font-size:9px; color:var(--text3); margin-bottom:5px; font-weight:600; text-transform:uppercase; letter-spacing:.3px; }
 .zone-btns { display:flex; flex-direction:column; gap:2px; }
@@ -661,7 +679,7 @@ function installPWA() {
             style="background:#fff;border:1.5px solid var(--border2);border-radius:6px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s"
             onmouseover="this.style.borderColor='var(--orange)';this.style.color='var(--orange)'"
             onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">
-            🏗️ Grand dépl.
+            ✈️ Grand dépl.
           </button>
           <button type="button" onclick="inaPreset('reset')"
             style="background:#fff;border:1.5px solid var(--border);border-radius:6px;padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .15s"
@@ -706,7 +724,16 @@ function installPWA() {
             <button class="ina-fact-btn off" id="ina-off-it" onclick="inaSetFact('it',false)" style="opacity:.45">✗ Non fact.</button>
           </div>
           <div class="ina-head">🚗 Ind. Transport <span class="ina-tag tag-client" id="tag-it">× 1</span></div>
-          <div class="zone-selector"><div class="zone-label">Zone :</div><div class="zone-btns" id="zone-btns-it"></div></div>
+          <div class="grid-tabs">
+            <button type="button" class="grid-tab active" id="grid-tab-cla" onclick="setGridIt('classique')" title="Zones conventionnelles 1 à 5">Classique Z1–Z5</button>
+            <button type="button" class="grid-tab"        id="grid-tab-acs" onclick="setGridIt('acoss')"     title="Grille kilométrique ACOSS PACA 2025">ACOSS PACA 2025</button>
+          </div>
+          <div class="zone-selector" id="zone-selector-it"><div class="zone-label">Zone :</div><div class="zone-btns" id="zone-btns-it"></div></div>
+          <div class="zone-selector" id="acoss-selector-it" style="display:none">
+            <div class="zone-label">Tranche km :</div>
+            <select id="acoss-select-it" onchange="selectAcossIt(parseInt(this.value,10))" style="flex:1;border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:600;color:var(--text);background:#fff;outline:none;cursor:pointer">
+            </select>
+          </div>
           <div class="ina-fields"><div class="ina-f"><label>Nb jours</label><input type="number" id="nb_it" value="0" step="1" min="0" oninput="calc()"></div><div class="ina-f"><label>Montant €</label><input type="number" id="mt_it" value="3.65" step="0.01" oninput="calc()"></div></div>
           <div class="ina-sub">= <span id="st_it">0,00 €</span></div>
         </div>
@@ -814,7 +841,9 @@ function installPWA() {
       <div style="display:flex;gap:8px;align-items:center">
         <span style="font-size:10px;color:var(--text3)" id="equipe-count">0 intérimaire</span>
         <button class="btn-add" style="padding:5px 14px;font-size:11px" onclick="eqAdd()">+ Ajouter</button>
-        <button class="btn-del" style="padding:5px 10px;font-size:11px" onclick="eqClear()">🗑</button>
+        <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.25);color:var(--green)" onclick="eqShare()" title="Partager cette équipe par lien">🔗 Partager</button>
+        <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(234,108,0,.08);border-color:rgba(234,108,0,.25);color:var(--orange)" onclick="eqExport()" title="Exporter en Excel">📊 Excel</button>
+        <button class="btn-del" style="padding:5px 10px;font-size:11px" onclick="eqClear()" title="Vider l'équipe">🗑</button>
       </div>
     </div>
 
@@ -930,7 +959,7 @@ function installPWA() {
   <!-- Petit / Grand déplacement -->
   <div style="display:flex;gap:8px;margin-bottom:16px">
     <button class="sim-depl-btn active" id="sim-depl-petit" onclick="simSetDepl('petit')">🏠 Petit déplacement</button>
-    <button class="sim-depl-btn"        id="sim-depl-grand" onclick="simSetDepl('grand')">🏗️ Grand déplacement</button>
+    <button class="sim-depl-btn"        id="sim-depl-grand" onclick="simSetDepl('grand')">✈️ Grand déplacement</button>
   </div>
 
   <!-- ── Saisie ── -->
@@ -980,96 +1009,96 @@ function installPWA() {
       <!-- INA -->
       <div class="divider"></div>
       <div class="sec-title">Indemnités INA <span style="font-size:9px;color:var(--grey2);font-weight:400;text-transform:none;letter-spacing:0">— nb × montant unitaire</span></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px;margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:14px">
 
         <!-- Prime Panier -->
-        <div style="background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:10px">
-          <div style="font-size:9px;font-weight:600;color:var(--grey);margin-bottom:8px">🥪 Prime Panier</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
+        <div style="background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:14px 16px">
+          <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:10px;letter-spacing:.2px">🥪 Prime Panier</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:9px;color:var(--grey2)">Nb</label>
+              <label style="font-size:11px;color:var(--grey);font-weight:500">Nb</label>
               <input type="number" id="sim-nj-pp" value="5" step="1" min="0" oninput="simCalc()"
-                style="border:1px solid var(--s2);border-radius:5px;padding:5px 4px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;color:var(--white);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+                style="border:1px solid var(--s2);border-radius:6px;padding:8px 6px;font-size:18px;font-weight:700;font-family:'Inter',sans-serif;color:var(--white);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
             </div>
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:9px;color:var(--grey2)">€</label>
+              <label style="font-size:11px;color:var(--grey);font-weight:500">€</label>
               <input type="number" id="sim-mt-pp" value="1.80" step="0.01" oninput="simCalc()"
-                style="border:1px solid var(--s2);border-radius:5px;padding:5px 4px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;color:var(--orange);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+                style="border:1px solid var(--s2);border-radius:6px;padding:8px 6px;font-size:18px;font-weight:700;font-family:'Inter',sans-serif;color:var(--orange);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
             </div>
           </div>
-          <div style="font-size:10px;color:var(--grey2);text-align:right;padding-top:5px;border-top:1px solid var(--s2)">=&nbsp;<strong style="color:var(--white)" id="sim-st-pp">–</strong></div>
+          <div style="font-size:13px;color:var(--grey);text-align:right;padding-top:8px;margin-top:2px;border-top:1px solid var(--s2);font-weight:600">=&nbsp;<strong style="color:var(--white)" id="sim-st-pp">–</strong></div>
         </div>
 
         <!-- Ind. Repas -->
-        <div style="background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:10px">
-          <div style="font-size:9px;font-weight:600;color:var(--grey);margin-bottom:8px">🍽️ Ind. Repas</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
+        <div style="background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:14px 16px">
+          <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:10px;letter-spacing:.2px">🍽️ Ind. Repas</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:9px;color:var(--grey2)">Nb</label>
+              <label style="font-size:11px;color:var(--grey);font-weight:500">Nb</label>
               <input type="number" id="sim-nj-ip" value="5" step="1" min="0" oninput="simCalc()"
-                style="border:1px solid var(--s2);border-radius:5px;padding:5px 4px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;color:var(--white);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+                style="border:1px solid var(--s2);border-radius:6px;padding:8px 6px;font-size:18px;font-weight:700;font-family:'Inter',sans-serif;color:var(--white);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
             </div>
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:9px;color:var(--grey2)">€</label>
+              <label style="font-size:11px;color:var(--grey);font-weight:500">€</label>
               <input type="number" id="sim-mt-ip" value="10.40" step="0.01" oninput="simCalc()"
-                style="border:1px solid var(--s2);border-radius:5px;padding:5px 4px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;color:var(--orange);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+                style="border:1px solid var(--s2);border-radius:6px;padding:8px 6px;font-size:18px;font-weight:700;font-family:'Inter',sans-serif;color:var(--orange);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
             </div>
           </div>
-          <div style="font-size:10px;color:var(--grey2);text-align:right;padding-top:5px;border-top:1px solid var(--s2)">=&nbsp;<strong style="color:var(--white)" id="sim-st-ip">–</strong></div>
+          <div style="font-size:13px;color:var(--grey);text-align:right;padding-top:8px;margin-top:2px;border-top:1px solid var(--s2);font-weight:600">=&nbsp;<strong style="color:var(--white)" id="sim-st-ip">–</strong></div>
         </div>
 
         <!-- Prime Trajet -->
-        <div style="background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:10px">
-          <div style="font-size:9px;font-weight:600;color:var(--grey);margin-bottom:8px">🛣️ Prime Trajet</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
+        <div style="background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:14px 16px">
+          <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:10px;letter-spacing:.2px">🛣️ Prime Trajet</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:9px;color:var(--grey2)">Nb</label>
+              <label style="font-size:11px;color:var(--grey);font-weight:500">Nb</label>
               <input type="number" id="sim-nj-pt" value="5" step="1" min="0" oninput="simCalc()"
-                style="border:1px solid var(--s2);border-radius:5px;padding:5px 4px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;color:var(--white);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+                style="border:1px solid var(--s2);border-radius:6px;padding:8px 6px;font-size:18px;font-weight:700;font-family:'Inter',sans-serif;color:var(--white);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
             </div>
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:9px;color:var(--grey2)">€</label>
+              <label style="font-size:11px;color:var(--grey);font-weight:500">€</label>
               <input type="number" id="sim-mt-pt" value="2.05" step="0.01" oninput="simCalc()"
-                style="border:1px solid var(--s2);border-radius:5px;padding:5px 4px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;color:var(--orange);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+                style="border:1px solid var(--s2);border-radius:6px;padding:8px 6px;font-size:18px;font-weight:700;font-family:'Inter',sans-serif;color:var(--orange);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
             </div>
           </div>
-          <div style="font-size:10px;color:var(--grey2);text-align:right;padding-top:5px;border-top:1px solid var(--s2)">=&nbsp;<strong style="color:var(--white)" id="sim-st-pt">–</strong></div>
+          <div style="font-size:13px;color:var(--grey);text-align:right;padding-top:8px;margin-top:2px;border-top:1px solid var(--s2);font-weight:600">=&nbsp;<strong style="color:var(--white)" id="sim-st-pt">–</strong></div>
         </div>
 
         <!-- Ind. Transport -->
-        <div style="background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:10px">
-          <div style="font-size:9px;font-weight:600;color:var(--grey);margin-bottom:8px">🚗 Ind. Transport</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
+        <div style="background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:14px 16px">
+          <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:10px;letter-spacing:.2px">🚗 Ind. Transport</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:9px;color:var(--grey2)">Nb</label>
+              <label style="font-size:11px;color:var(--grey);font-weight:500">Nb</label>
               <input type="number" id="sim-nj-it" value="4" step="1" min="0" oninput="simCalc()"
-                style="border:1px solid var(--s2);border-radius:5px;padding:5px 4px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;color:var(--white);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+                style="border:1px solid var(--s2);border-radius:6px;padding:8px 6px;font-size:18px;font-weight:700;font-family:'Inter',sans-serif;color:var(--white);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
             </div>
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:9px;color:var(--grey2)">€</label>
+              <label style="font-size:11px;color:var(--grey);font-weight:500">€</label>
               <input type="number" id="sim-mt-it" value="3.65" step="0.01" oninput="simCalc()"
-                style="border:1px solid var(--s2);border-radius:5px;padding:5px 4px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;color:var(--orange);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+                style="border:1px solid var(--s2);border-radius:6px;padding:8px 6px;font-size:18px;font-weight:700;font-family:'Inter',sans-serif;color:var(--orange);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
             </div>
           </div>
-          <div style="font-size:10px;color:var(--grey2);text-align:right;padding-top:5px;border-top:1px solid var(--s2)">=&nbsp;<strong style="color:var(--white)" id="sim-st-it">–</strong></div>
+          <div style="font-size:13px;color:var(--grey);text-align:right;padding-top:8px;margin-top:2px;border-top:1px solid var(--s2);font-weight:600">=&nbsp;<strong style="color:var(--white)" id="sim-st-it">–</strong></div>
         </div>
 
         <!-- Ind. Nuit (grand déplacement) -->
-        <div id="sim-nuit-cell" style="display:none;background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:10px">
-          <div style="font-size:9px;font-weight:600;color:var(--grey);margin-bottom:8px">🏨 Ind. Nuit</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
+        <div id="sim-nuit-cell" style="display:none;background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:14px 16px">
+          <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:10px;letter-spacing:.2px">🏨 Ind. Nuit</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:9px;color:var(--grey2)">Nb</label>
+              <label style="font-size:11px;color:var(--grey);font-weight:500">Nb</label>
               <input type="number" id="sim-nj-nuit" value="4" step="1" min="0" oninput="simCalc()"
-                style="border:1px solid var(--s2);border-radius:5px;padding:5px 4px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;color:var(--white);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+                style="border:1px solid var(--s2);border-radius:6px;padding:8px 6px;font-size:18px;font-weight:700;font-family:'Inter',sans-serif;color:var(--white);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
             </div>
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:9px;color:var(--grey2)">€</label>
+              <label style="font-size:11px;color:var(--grey);font-weight:500">€</label>
               <input type="number" id="sim-mt-nuit" value="50.00" step="0.01" oninput="simCalc()"
-                style="border:1px solid var(--s2);border-radius:5px;padding:5px 4px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;color:var(--orange);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+                style="border:1px solid var(--s2);border-radius:6px;padding:8px 6px;font-size:18px;font-weight:700;font-family:'Inter',sans-serif;color:var(--orange);background:var(--s0);text-align:center;width:100%;outline:none;-moz-appearance:textfield">
             </div>
           </div>
-          <div style="font-size:10px;color:var(--grey2);text-align:right;padding-top:5px;border-top:1px solid var(--s2)">=&nbsp;<strong style="color:var(--white)" id="sim-st-nuit">–</strong></div>
+          <div style="font-size:13px;color:var(--grey);text-align:right;padding-top:8px;margin-top:2px;border-top:1px solid var(--s2);font-weight:600">=&nbsp;<strong style="color:var(--white)" id="sim-st-nuit">–</strong></div>
         </div>
 
       </div>
@@ -1120,7 +1149,7 @@ function installPWA() {
             <div style="height:6px;background:var(--s2);border-radius:3px;overflow:hidden">
               <div id="sim-gauge" style="height:100%;border-radius:3px;transition:width .4s,background .3s;width:0%"></div>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--grey2)">
+            <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--grey);font-weight:500">
               <span>0%</span><span style="color:var(--orange)">15%</span><span>50%</span>
             </div>
           </div>
@@ -1444,6 +1473,33 @@ const ZONES_IT = [
   {id:3,km:'20-30 km', price:8.63},{id:4,km:'30-40 km', price:11.26},
   {id:5,km:'40-50 km', price:14.80},
 ];
+/* Grille ACOSS — Limite d'exonération quotidienne pour l'indemnité de
+   transport en BTP / TP / tôlerie / chaudronnerie. Source :
+   ACOSS / URSSAF montants 2023 (référence partagée par l'utilisateur,
+   appliquée pour la zone PACA 2025). Trajet aller-retour quotidien
+   compris dans la tranche → montant exonéré max. */
+const ZONES_IT_ACOSS = [
+  {id:1,  km:'5-10 km',     price:3.00},
+  {id:2,  km:'10-20 km',    price:6.10},
+  {id:3,  km:'20-30 km',    price:9.10},
+  {id:4,  km:'30-40 km',    price:12.10},
+  {id:5,  km:'40-50 km',    price:15.20},
+  {id:6,  km:'50-60 km',    price:18.20},
+  {id:7,  km:'60-70 km',    price:21.20},
+  {id:8,  km:'70-80 km',    price:24.20},
+  {id:9,  km:'80-90 km',    price:27.30},
+  {id:10, km:'90-100 km',   price:30.30},
+  {id:11, km:'100-110 km',  price:33.30},
+  {id:12, km:'110-120 km',  price:36.40},
+  {id:13, km:'120-130 km',  price:39.40},
+  {id:14, km:'130-140 km',  price:42.40},
+  {id:15, km:'140-150 km',  price:45.50},
+  {id:16, km:'150-160 km',  price:48.50},
+  {id:17, km:'160-170 km',  price:51.50},
+  {id:18, km:'170-180 km',  price:54.50},
+  {id:19, km:'180-190 km',  price:57.60},
+  {id:20, km:'190-200 km',  price:60.60},
+];
 const SIM_DEPL = {
   petit:{pp:1.80,ip:10.40,pt:2.05, it:3.65,  nuit:0},
   grand:{pp:1.80,ip:10.40,pt:6.90, it:14.80, nuit:50.00},
@@ -1453,6 +1509,11 @@ const SIM_DEPL = {
 let clients=[],histData=[];
 let cIdCtr=1;
 let activeZonePt=1,activeZoneIt=1;
+/* Grille active pour l'Indemnité Transport :
+   - 'classique' : les 5 zones conventionnelles Z1-Z5 (par défaut)
+   - 'acoss'     : la grille kilométrique ACOSS PACA 2025 (20 tranches) */
+let activeGridIt='classique';
+let activeAcossIdIt=1;
 const inaFact={pp:true,ip:true,pt:true,it:true};
 let simDepl='petit';
 
@@ -1505,6 +1566,48 @@ function selectZoneIt(id){
   const z=ZONES_IT.find(z=>z.id===id);
   document.getElementById('mt_it').value=z.price.toFixed(2);
   buildZoneBtns('zone-btns-it',ZONES_IT,activeZoneIt,selectZoneIt);
+  calc();
+}
+
+/* Bascule entre la grille classique Z1-Z5 et la grille ACOSS PACA 2025
+   pour l'Indemnité Transport. Pré-remplit le montant à la valeur de la
+   1ère ligne de la grille active. */
+function setGridIt(grid){
+  if (grid !== 'classique' && grid !== 'acoss') return;
+  activeGridIt = grid;
+  // Mise à jour visuelle des onglets
+  const tCla = document.getElementById('grid-tab-cla');
+  const tAcs = document.getElementById('grid-tab-acs');
+  if (tCla) tCla.classList.toggle('active', grid === 'classique');
+  if (tAcs) tAcs.classList.toggle('active', grid === 'acoss');
+  // Bascule du sélecteur visible
+  const selCla = document.getElementById('zone-selector-it');
+  const selAcs = document.getElementById('acoss-selector-it');
+  if (selCla) selCla.style.display = grid === 'classique' ? '' : 'none';
+  if (selAcs) selAcs.style.display = grid === 'acoss'     ? '' : 'none';
+  if (grid === 'acoss') {
+    // Construit / repeuple le select ACOSS s'il est vide
+    const sel = document.getElementById('acoss-select-it');
+    if (sel && !sel.options.length) {
+      sel.innerHTML = ZONES_IT_ACOSS.map(z =>
+        `<option value="${z.id}">${z.km} — ${z.price.toFixed(2)} €</option>`
+      ).join('');
+    }
+    if (sel) sel.value = String(activeAcossIdIt);
+    selectAcossIt(activeAcossIdIt);
+  } else {
+    selectZoneIt(activeZoneIt);
+  }
+}
+
+/* Applique la tranche kilométrique ACOSS sélectionnée à l'IT. */
+function selectAcossIt(id){
+  const z = ZONES_IT_ACOSS.find(x => x.id === id);
+  if (!z) return;
+  activeAcossIdIt = id;
+  document.getElementById('mt_it').value = z.price.toFixed(2);
+  const sel = document.getElementById('acoss-select-it');
+  if (sel) sel.value = String(id);
   calc();
 }
 
@@ -1743,7 +1846,7 @@ function renderClients(){
       <div class="ctabs">
         <button class="ctab-btn active" onclick="switchCtab(${c.id},'ina',this)">INA</button>
         <button class="ctab-btn" onclick="switchCtab(${c.id},'hs',this)">Heures Sup</button>
-        <button class="ctab-btn" onclick="switchCtab(${c.id},'chantiers',this)">🏗️ Chantiers <span class="tab-count" id="ch-count-${c.id}">${c.chantiers.length||0}</span></button>
+        <button class="ctab-btn" onclick="switchCtab(${c.id},'chantiers',this)">✈️ Chantiers <span class="tab-count" id="ch-count-${c.id}">${c.chantiers.length||0}</span></button>
       </div>
       <div class="ctab-panel active" id="ct-${c.id}-ina">
         <div class="coef-row"><label>Coef Ind. Transport</label><input type="number" value="${c.coefIna.toFixed(2)}" step="0.01" min="0.01" oninput="setClientField(${c.id},'coefIna',this.value)"></div>
@@ -1999,7 +2102,13 @@ function eqSnapInaFromGlobal() {
     pp: { nb: g('nb_pp'), mt: g('mt_pp'), fact: inaFact ? inaFact.pp !== false : true },
     ip: { nb: g('nb_ip'), mt: g('mt_ip'), fact: inaFact ? inaFact.ip !== false : true },
     pt: { nb: g('nb_pt'), mt: g('mt_pt'), fact: inaFact ? inaFact.pt !== false : true, zone: activeZonePt || 1 },
-    it: { nb: g('nb_it'), mt: g('mt_it'), fact: inaFact ? inaFact.it !== false : true, zone: activeZoneIt || 1 },
+    it: {
+      nb: g('nb_it'), mt: g('mt_it'),
+      fact: inaFact ? inaFact.it !== false : true,
+      zone: activeZoneIt || 1,
+      grid: activeGridIt || 'classique',         // 'classique' | 'acoss'
+      acossId: activeAcossIdIt || 1,             // 1..20 quand grid='acoss'
+    },
   };
 }
 
@@ -2014,9 +2123,17 @@ function eqRenderZoneCell(id) {
   const detailRow = document.getElementById('eq-detail-' + id);
   const isOpen = detailRow && detailRow.style.display !== 'none';
   const arrow  = isOpen ? '▲' : '▼';
-  const sameZ  = ina.pt.zone === ina.it.zone;
-  const zoneTxt = sameZ ? ('Z' + ina.pt.zone) : ('Z' + ina.pt.zone + '/Z' + ina.it.zone);
-  const deplIcon = ina.depl === 'grand' ? '🏗️' : '🏠';
+  // Libellé compact :
+  //  - "Z2" si PT et IT sont sur le même zone classique
+  //  - "Z2/Z1" si PT et IT diffèrent en classique
+  //  - "Z2/A3" si l'IT est sur la grille ACOSS (A = ACOSS, n° de tranche)
+  const itGrid = ina.it.grid || 'classique';
+  const itLabel = itGrid === 'acoss' ? ('A' + (ina.it.acossId || 1)) : ('Z' + ina.it.zone);
+  const ptLabel = 'Z' + ina.pt.zone;
+  const zoneTxt = (itGrid === 'classique' && ina.pt.zone === ina.it.zone)
+    ? ptLabel
+    : ptLabel + '/' + itLabel;
+  const deplIcon = ina.depl === 'grand' ? '✈️' : '🏠';
   el.innerHTML =
     '<button type="button" onclick="eqToggleDetail(' + id + ')" '+
     'title="Détail INA pour le contrat" '+
@@ -2238,21 +2355,66 @@ function eqInaTableRowHTML(id, key, icon, label, tag) {
   const stot = (parseFloat(data.nb)||0) * (parseFloat(data.mt)||0);
   const showZone = key === 'pt' || key === 'it';
   const factOn = !!data.fact;
-  // Cellule Zone : sélecteur Z1-Z5 pour pt/it, tiret sinon
-  const zoneCell = showZone ? (
-    '<div style="display:inline-flex;gap:2px">' +
-    [1,2,3,4,5].map(z => {
-      const active = data.zone === z;
-      return '<button type="button" onclick="eqSetRowZone(' + id + ',\'' + key + '\',' + z + ')" '+
+  // Cellule Zone :
+  //  - Pour PT : toujours sélecteur classique Z1-Z5
+  //  - Pour IT : toggle Classique/ACOSS + sélecteur correspondant
+  //  - Sinon : tiret
+  let zoneCell;
+  if (key === 'it') {
+    const grid = data.grid || 'classique';
+    const acossId = data.acossId || 1;
+    const tabBtn = (gridName, label) => {
+      const active = grid === gridName;
+      return '<button type="button" onclick="eqSetRowGridIt(' + id + ',\'' + gridName + '\')" '+
         'style="border:1px solid ' + (active ? 'var(--orange)' : 'var(--border2)') + ';' +
         'background:' + (active ? 'rgba(234,108,0,.12)' : '#fff') + ';' +
         'color:' + (active ? 'var(--orange)' : 'var(--text3)') + ';' +
         'font-weight:' + (active ? '700' : '500') + ';' +
-        'border-radius:3px;padding:2px 5px;font-size:9px;cursor:pointer;font-family:\'DM Sans\',sans-serif;min-width:22px">'+
-        'Z' + z + '</button>';
-    }).join('') +
-    '</div>'
-  ) : '<span style="color:var(--text3);font-size:9px">—</span>';
+        'border-radius:3px;padding:2px 6px;font-size:9px;cursor:pointer;font-family:\'DM Sans\',sans-serif">' +
+        label + '</button>';
+    };
+    let inner;
+    if (grid === 'acoss') {
+      inner = '<select onchange="eqSetRowAcossIt(' + id + ',parseInt(this.value,10))" '+
+        'style="border:1px solid var(--border2);border-radius:3px;padding:2px 4px;font-size:9px;font-weight:600;font-family:\'DM Sans\',sans-serif;color:var(--orange);background:#fff;cursor:pointer;outline:none;max-width:140px">' +
+        ZONES_IT_ACOSS.map(z =>
+          '<option value="' + z.id + '"' + (acossId === z.id ? ' selected' : '') + '>' + z.km + ' (' + z.price.toFixed(2) + ' €)</option>'
+        ).join('') +
+        '</select>';
+    } else {
+      inner = '<div style="display:inline-flex;gap:2px;flex-wrap:wrap">' +
+        [1,2,3,4,5].map(z => {
+          const active = data.zone === z;
+          return '<button type="button" onclick="eqSetRowZone(' + id + ',\'it\',' + z + ')" '+
+            'style="border:1px solid ' + (active ? 'var(--orange)' : 'var(--border2)') + ';' +
+            'background:' + (active ? 'rgba(234,108,0,.12)' : '#fff') + ';' +
+            'color:' + (active ? 'var(--orange)' : 'var(--text3)') + ';' +
+            'font-weight:' + (active ? '700' : '500') + ';' +
+            'border-radius:3px;padding:2px 5px;font-size:9px;cursor:pointer;font-family:\'DM Sans\',sans-serif;min-width:22px">' +
+            'Z' + z + '</button>';
+        }).join('') +
+        '</div>';
+    }
+    zoneCell = '<div style="display:flex;flex-direction:column;gap:3px;align-items:center">' +
+      '<div style="display:inline-flex;gap:2px">' + tabBtn('classique','Classique') + tabBtn('acoss','ACOSS') + '</div>' +
+      inner +
+    '</div>';
+  } else if (key === 'pt') {
+    zoneCell = '<div style="display:inline-flex;gap:2px">' +
+      [1,2,3,4,5].map(z => {
+        const active = data.zone === z;
+        return '<button type="button" onclick="eqSetRowZone(' + id + ',\'pt\',' + z + ')" '+
+          'style="border:1px solid ' + (active ? 'var(--orange)' : 'var(--border2)') + ';' +
+          'background:' + (active ? 'rgba(234,108,0,.12)' : '#fff') + ';' +
+          'color:' + (active ? 'var(--orange)' : 'var(--text3)') + ';' +
+          'font-weight:' + (active ? '700' : '500') + ';' +
+          'border-radius:3px;padding:2px 5px;font-size:9px;cursor:pointer;font-family:\'DM Sans\',sans-serif;min-width:22px">' +
+          'Z' + z + '</button>';
+      }).join('') +
+      '</div>';
+  } else {
+    zoneCell = '<span style="color:var(--text3);font-size:9px">—</span>';
+  }
 
   return ''+
     '<tr style="border-bottom:1px solid var(--border)">'+
@@ -2326,7 +2488,7 @@ function eqRenderDetailRow(id) {
             'background:' + (!isPetit ? 'rgba(234,108,0,.1)' : '#fff') + ';' +
             'color:' + (!isPetit ? 'var(--orange)' : 'var(--text3)') + ';' +
             'font-weight:' + (!isPetit ? '700' : '500') + ';' +
-            'cursor:pointer;font-family:\'DM Sans\',sans-serif">🏗️ Grand déplacement</button>'+
+            'cursor:pointer;font-family:\'DM Sans\',sans-serif">✈️ Grand déplacement</button>'+
         '</div>'+
       '</div>'+
       // Petit tableau récapitulatif INA
@@ -2385,13 +2547,50 @@ function eqUpdateInaField(id, key, prop, value) {
 }
 
 /* Change la zone PT ou IT propre à un équipier (pré-remplit aussi le
-   montant unitaire avec le barème de cette zone). */
+   montant unitaire avec le barème de cette zone). Pour IT, force aussi
+   la grille en mode "classique" puisqu'on cible une zone Z1-Z5. */
 function eqSetRowZone(id, key, zone) {
   const row = eqRows.find(r => r.id === id);
   if (!row || !row.ina || (key !== 'pt' && key !== 'it')) return;
   row.ina[key].zone = zone;
+  if (key === 'it') row.ina.it.grid = 'classique';
   const bareme = (key === 'pt' ? ZONES_PT : ZONES_IT).find(z => z.id === zone);
   if (bareme) row.ina[key].mt = bareme.price;
+  eqRenderDetailRow(id);
+  eqRenderZoneCell(id);
+  eqCalcRow(id);
+}
+
+/* Bascule la grille (Classique Z1-Z5 vs ACOSS PACA km) pour l'IT
+   d'un équipier précis, et pré-remplit le montant en conséquence. */
+function eqSetRowGridIt(id, grid) {
+  const row = eqRows.find(r => r.id === id);
+  if (!row || !row.ina) return;
+  if (grid !== 'classique' && grid !== 'acoss') return;
+  row.ina.it.grid = grid;
+  if (grid === 'classique') {
+    const z = ZONES_IT.find(x => x.id === (row.ina.it.zone || 1));
+    if (z) row.ina.it.mt = z.price;
+  } else {
+    const acossId = row.ina.it.acossId || 1;
+    const z = ZONES_IT_ACOSS.find(x => x.id === acossId);
+    if (z) row.ina.it.mt = z.price;
+    row.ina.it.acossId = acossId;
+  }
+  eqRenderDetailRow(id);
+  eqRenderZoneCell(id);
+  eqCalcRow(id);
+}
+
+/* Sélectionne une tranche kilométrique ACOSS pour l'IT d'un équipier. */
+function eqSetRowAcossIt(id, acossId) {
+  const row = eqRows.find(r => r.id === id);
+  if (!row || !row.ina) return;
+  const z = ZONES_IT_ACOSS.find(x => x.id === acossId);
+  if (!z) return;
+  row.ina.it.grid = 'acoss';
+  row.ina.it.acossId = acossId;
+  row.ina.it.mt = z.price;
   eqRenderDetailRow(id);
   eqRenderZoneCell(id);
   eqCalcRow(id);
@@ -2455,6 +2654,138 @@ function eqRefreshTotal() {
   sv2('eq-tot-mb',  fc(mb_t), mb_t>=0?'var(--orange)':'var(--red)');
   sv2('eq-tot-pct', fp2(pct_t), mb_t>=0?'var(--orange)':'var(--red)');
   sv2('eq-tot-net', fc(withRes.reduce((a,r)=>a+r.result.net_verse,0)));
+}
+
+/* ── Partage de l'équipe par lien ──────────────────────────────────── */
+/* Génère une URL contenant l'ensemble de l'état (formulaire + équipe
+   + snapshots INA) encodé en base64 dans le hash. Le destinataire ouvre
+   le lien : l'app détecte le hash et propose de charger les données.
+   Tout transite côté client, pas de backend. */
+function eqShare() {
+  if (!eqRows.length) {
+    alert("L'équipe est vide — ajoutez d'abord au moins un intérimaire.");
+    return;
+  }
+  let state, json, b64, url;
+  try {
+    state = captureState();
+    state._sharedAt = Date.now();
+    json = JSON.stringify(state);
+    // base64 UTF-8 safe
+    b64 = btoa(unescape(encodeURIComponent(json)));
+    url = location.origin + location.pathname + '#share=' + b64;
+  } catch (e) {
+    alert('Erreur lors de la préparation du lien : ' + (e && e.message ? e.message : e));
+    return;
+  }
+  if (url.length > 60000) {
+    alert('Le lien dépasse 60 000 caractères, certains navigateurs vont le tronquer. Utilisez plutôt l\'export Excel pour cette équipe.');
+    return;
+  }
+
+  const cliName = (state.params && state.params._clientName) || '';
+  const n = eqRows.length;
+  const subject = 'Équipe ' + (cliName ? '— ' + cliName + ' ' : '') + '(' + n + ' intérimaire' + (n>1?'s':'') + ')';
+  const message = 'Lien à ouvrir dans le Calculateur de Marge — il chargera l\'équipe complète avec son détail INA prêt pour le contrat.';
+
+  // Web Share API (mobile / navigateurs récents)
+  if (navigator.share) {
+    navigator.share({ title: subject, text: message, url: url })
+      .catch(err => {
+        // L'utilisateur a annulé OU API refusée → fallback presse-papiers.
+        if (err && err.name === 'AbortError') return;
+        _eqShareCopyToClipboard(url, subject);
+      });
+    return;
+  }
+  _eqShareCopyToClipboard(url, subject);
+}
+
+function _eqShareCopyToClipboard(url, subject) {
+  const showLinkModal = () => {
+    // Modal léger : textarea + boutons "Copier" et "Email"
+    const overlay = document.createElement('div');
+    overlay.style.cssText =
+      'position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:99997;'+
+      'display:flex;align-items:center;justify-content:center;padding:20px;'+
+      'animation:fadeIn 0.18s ease';
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    overlay.innerHTML =
+      '<div style="background:#fff;border-radius:12px;max-width:560px;width:100%;'+
+        'box-shadow:0 12px 40px rgba(0,0,0,0.25);padding:22px 22px 18px;'+
+        'font-family:\'DM Sans\',sans-serif" onclick="event.stopPropagation()">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+          '<div style="font-size:14px;font-weight:700;color:var(--text)">🔗 Partager l\'équipe</div>'+
+          '<button onclick="this.closest(\'.tuto-overlay,div\').parentElement.remove()" '+
+            'style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--text3);padding:0;line-height:1">✕</button>'+
+        '</div>'+
+        '<p style="font-size:11px;color:var(--text3);margin:0 0 12px;line-height:1.5">'+
+          'Copiez le lien ci-dessous et envoyez-le à votre collaborateur. En l\'ouvrant, il chargera la même équipe avec tout son détail INA.'+
+        '</p>'+
+        '<textarea id="_share-url-ta" readonly rows="3" '+
+          'style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px;'+
+          'font-size:11px;font-family:\'DM Mono\',monospace;background:var(--surface);'+
+          'color:var(--text);resize:none;outline:none;word-break:break-all" onclick="this.select()">' +
+          url.replace(/&/g,'&amp;').replace(/</g,'&lt;') +
+        '</textarea>'+
+        '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:flex-end">'+
+          '<a href="mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(url) + '" '+
+            'class="btn-add" style="text-decoration:none;display:inline-block;padding:8px 14px;font-size:12px">📧 Email</a>'+
+          '<button onclick="window.open(\'https://wa.me/?text=\'+encodeURIComponent(' + JSON.stringify(subject + ' — ' + url) + '))" '+
+            'class="btn-add" style="padding:8px 14px;font-size:12px;background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#16a34a">💬 WhatsApp</button>'+
+          '<button id="_share-copy-btn" '+
+            'class="btn-add" style="padding:8px 14px;font-size:12px;background:var(--blue);border-color:var(--blue);color:#fff">📋 Copier</button>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(overlay);
+    document.getElementById('_share-copy-btn').onclick = () => {
+      const ta = document.getElementById('_share-url-ta');
+      ta.select(); ta.setSelectionRange(0, ta.value.length);
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(ta.value).then(() => {
+            const btn = document.getElementById('_share-copy-btn');
+            if (btn) { btn.textContent = '✅ Copié !'; setTimeout(() => overlay.remove(), 700); }
+          }).catch(() => document.execCommand('copy'));
+        } else {
+          document.execCommand('copy');
+          const btn = document.getElementById('_share-copy-btn');
+          if (btn) { btn.textContent = '✅ Copié !'; setTimeout(() => overlay.remove(), 700); }
+        }
+      } catch { /* selectionnez manuellement */ }
+    };
+  };
+  showLinkModal();
+}
+
+/* Au chargement de la page : si l'URL contient #share=..., on propose
+   de charger l'équipe partagée (et on nettoie le hash). */
+function eqLoadFromShareLink() {
+  const hash = location.hash || '';
+  if (!hash.startsWith('#share=')) return;
+  const b64 = hash.substring(7);
+  let state;
+  try {
+    const json = decodeURIComponent(escape(atob(b64)));
+    state = JSON.parse(json);
+  } catch (e) {
+    console.error('Lien partagé invalide', e);
+    history.replaceState(null, '', location.pathname);
+    return;
+  }
+  history.replaceState(null, '', location.pathname);
+  const n = state.rows ? state.rows.length : 0;
+  const cli = state.params && state.params._clientName ? ' (chez ' + state.params._clientName + ')' : '';
+  const sharedDate = state._sharedAt ? new Date(state._sharedAt).toLocaleDateString('fr-FR') : '';
+  const msg = `Charger l'équipe partagée${cli} — ${n} intérimaire${n>1?'s':''}${sharedDate?' · partagée le '+sharedDate:''} ?\n\n⚠️ Vos données actuelles seront remplacées.`;
+  if (confirm(msg)) {
+    try {
+      restoreState(state);
+      if (typeof doAutoSave === 'function') doAutoSave();
+    } catch (e) {
+      alert('Erreur au chargement : ' + (e && e.message ? e.message : e));
+    }
+  }
 }
 
 function eqExport() {
@@ -3200,6 +3531,10 @@ loadClients();
 if(clients.length){ renderClients(); updateClientSelects(); document.getElementById('count-clients').textContent=clients.length; }
 // Chargement sauvegarde automatique
 loadAutoSave();
+// Si l'URL contient un lien partagé, on propose de charger l'équipe
+// transmise par un collaborateur (après loadAutoSave pour que l'état
+// par défaut soit en place avant la confirmation).
+try { eqLoadFromShareLink(); } catch(e) { console.error(e); }
 // Rendu historique sauvegardes
 renderSaves();
 // Initialiser les flèches collapse sur toutes les cards

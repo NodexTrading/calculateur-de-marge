@@ -218,13 +218,13 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     category: "Indemnités INA",
     title: "Présets Petit / Grand déplacement",
-    icon: "🏗️",
+    icon: "✈️",
     tab: "calcul",
     highlight: ".ina-grid",
     body: [
       "Trois boutons rapides permettent de pré-remplir les indemnités :",
       "• 🏠 Petit déplacement : panier + ind. transport.",
-      "• 🏗️ Grand déplacement : repas + prime trajet.",
+      "• ✈️ Grand déplacement : repas + prime trajet.",
       "• ✕ Vider : remet toutes les INA à zéro.",
     ],
   },
