@@ -38,3 +38,4 @@ bun.lockb
 *.sln
 *.sw?
 .vercel
+.calc_script.js

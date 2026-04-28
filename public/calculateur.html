@@ -847,18 +847,19 @@ function installPWA() {
             <col style="width:11%"><!-- Nom -->
             <col style="width:8%"> <!-- Client -->
             <col style="width:8%"> <!-- Chantier -->
-            <col style="width:7%"> <!-- TX -->
+            <col style="width:6%"> <!-- TX -->
             <col style="width:4%"> <!-- Tot H -->
-            <col style="width:7%"> <!-- TF -->
-            <col style="width:6%"> <!-- THM -->
-            <col style="width:6%"> <!-- Sal Brut -->
+            <col style="width:6%"> <!-- TF -->
+            <col style="width:5%"> <!-- THM -->
+            <col style="width:5%"> <!-- Sal Brut -->
             <col style="width:5%"> <!-- INA -->
             <col style="width:4%"> <!-- Véh -->
             <col style="width:4%"> <!-- Carb -->
-            <col style="width:7%"> <!-- MB nette -->
+            <col style="width:6%"> <!-- MB nette -->
             <col style="width:5%"> <!-- %MB -->
             <col style="width:5%"> <!-- Retenue -->
             <col style="width:7%"> <!-- Net versé -->
+            <col style="width:8%"> <!-- Zone · Dépl. -->
             <col style="width:3%"> <!-- del -->
           </colgroup>
           <thead>
@@ -2002,7 +2003,8 @@ function eqSnapInaFromGlobal() {
   };
 }
 
-/* Affiche la cellule "Zone · Dépl" depuis le snapshot de la ligne */
+/* Affiche la cellule "Zone · Dépl" depuis le snapshot de la ligne.
+   Bouton compact sur UNE seule ligne, ne déborde plus sur la colonne ✕. */
 function eqRenderZoneCell(id) {
   const row = eqRows.find(r => r.id === id);
   const el  = document.getElementById('eq-zonedep-' + id);
@@ -2011,22 +2013,22 @@ function eqRenderZoneCell(id) {
   const ina = row.ina;
   const detailRow = document.getElementById('eq-detail-' + id);
   const isOpen = detailRow && detailRow.style.display !== 'none';
-  const arrow = isOpen ? '▲' : '▼';
-  const deplHtml = ina.depl === 'grand'
-    ? '<span style="color:var(--orange);font-weight:700">🏗️ Grand</span>'
-    : '<span style="color:var(--blue);font-weight:700">🏠 Petit</span>';
-  const zoneHtml = '<span style="color:var(--orange);font-weight:700">PT&nbsp;Z' + ina.pt.zone + '</span>'
-                 + ' <span style="color:var(--text3)">·</span> '
-                 + '<span style="color:var(--orange);font-weight:700">IT&nbsp;Z' + ina.it.zone + '</span>';
+  const arrow  = isOpen ? '▲' : '▼';
+  const sameZ  = ina.pt.zone === ina.it.zone;
+  const zoneTxt = sameZ ? ('Z' + ina.pt.zone) : ('Z' + ina.pt.zone + '/Z' + ina.it.zone);
+  const deplIcon = ina.depl === 'grand' ? '🏗️' : '🏠';
   el.innerHTML =
     '<button type="button" onclick="eqToggleDetail(' + id + ')" '+
-    'style="border:1px solid var(--border);background:#fff;cursor:pointer;font-size:9px;'+
-    'line-height:1.4;padding:3px 6px;border-radius:5px;text-align:center;width:100%;'+
-    'font-family:\'DM Sans\',sans-serif" '+
+    'title="Détail INA pour le contrat" '+
+    'style="border:1px solid var(--border);background:' + (isOpen ? 'rgba(29,78,216,.06)' : '#fff') + ';' +
+    'cursor:pointer;font-size:10px;line-height:1;padding:5px 4px;border-radius:5px;'+
+    'width:100%;font-family:\'DM Sans\',sans-serif;display:inline-flex;align-items:center;'+
+    'justify-content:center;gap:3px;white-space:nowrap;overflow:hidden" '+
     'onmouseover="this.style.borderColor=\'var(--blue)\'" '+
     'onmouseout="this.style.borderColor=\'var(--border)\'">'+
-      zoneHtml + '<br>' + deplHtml +
-      ' <span style="color:var(--text3);margin-left:4px">' + arrow + '</span>'+
+      '<span style="font-weight:700;color:var(--orange);font-family:\'DM Mono\',monospace">' + zoneTxt + '</span>' +
+      '<span>' + deplIcon + '</span>' +
+      '<span style="color:var(--text3);font-size:9px">' + arrow + '</span>'+
     '</button>';
 }
 
@@ -2211,7 +2213,6 @@ function eqCalcRow(id) {
   if(mbEl)  { mbEl.textContent=fc(mb);       mbEl.style.color =mb>=0?'var(--green)':'var(--red)'; }
   if(pctEl) { pctEl.textContent=fp2(pct_mb); pctEl.style.color=mb>=0?'var(--green)':'var(--red)'; }
 
-  const row = eqRows.find(r2=>r2.id===id);
   if(row) row.result={tf:r.tf,thm:r.thm,sal_brut:r.sal_brut,ina_tot:r.ina,mb,pct_mb,net_ina,net_verse,tx,total_h:r.total_h,veh,carb,retenue};
   eqRefreshTotal();
   triggerAutoSave();
@@ -2229,73 +2230,69 @@ function eqToggleDetail(id) {
   eqRenderZoneCell(id); // refresh arrow
 }
 
-/* Construit l'HTML d'une carte INA dans la sous-ligne. */
-function eqInaCardHTML(id, key, icon, label, opts) {
+/* Construit une LIGNE INA dans le petit tableau de détail. */
+function eqInaTableRowHTML(id, key, icon, label, tag) {
   const row = eqRows.find(r => r.id === id);
   if (!row || !row.ina) return '';
   const data = row.ina[key];
   const stot = (parseFloat(data.nb)||0) * (parseFloat(data.mt)||0);
   const showZone = key === 'pt' || key === 'it';
-  const zonePicker = showZone ? (
-    '<div style="display:flex;gap:3px;align-items:center;margin-bottom:5px;flex-wrap:wrap">' +
-    '<span style="font-size:9px;color:var(--text3);font-weight:600">Zone</span>' +
+  const factOn = !!data.fact;
+  // Cellule Zone : sélecteur Z1-Z5 pour pt/it, tiret sinon
+  const zoneCell = showZone ? (
+    '<div style="display:inline-flex;gap:2px">' +
     [1,2,3,4,5].map(z => {
       const active = data.zone === z;
       return '<button type="button" onclick="eqSetRowZone(' + id + ',\'' + key + '\',' + z + ')" '+
         'style="border:1px solid ' + (active ? 'var(--orange)' : 'var(--border2)') + ';' +
         'background:' + (active ? 'rgba(234,108,0,.12)' : '#fff') + ';' +
-        'color:' + (active ? 'var(--orange)' : 'var(--text2)') + ';' +
+        'color:' + (active ? 'var(--orange)' : 'var(--text3)') + ';' +
         'font-weight:' + (active ? '700' : '500') + ';' +
-        'border-radius:3px;padding:2px 6px;font-size:9px;cursor:pointer;font-family:\'DM Sans\',sans-serif">'+
+        'border-radius:3px;padding:2px 5px;font-size:9px;cursor:pointer;font-family:\'DM Sans\',sans-serif;min-width:22px">'+
         'Z' + z + '</button>';
     }).join('') +
     '</div>'
-  ) : '';
+  ) : '<span style="color:var(--text3);font-size:9px">—</span>';
 
-  const tagLabel = opts.tag || '';
-  const factOn  = !!data.fact;
   return ''+
-    '<div style="background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px 10px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;gap:6px">'+
-        '<div style="font-size:10px;font-weight:700;color:var(--text2)">' + icon + ' ' + label + '</div>'+
-        (tagLabel ? '<span style="font-size:8px;background:rgba(29,78,216,.1);color:var(--blue);border-radius:3px;padding:1px 5px;white-space:nowrap">' + tagLabel + '</span>' : '') +
-      '</div>'+
-      zonePicker +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">'+
-        '<div style="display:flex;flex-direction:column;gap:2px">'+
-          '<label style="font-size:8px;color:var(--text3);font-weight:600">Nb jours</label>'+
-          '<input type="number" min="0" step="1" value="' + data.nb + '" '+
-            'oninput="eqUpdateInaField(' + id + ',\'' + key + '\',\'nb\',this.value)" '+
-            'style="border:1px solid var(--border2);border-radius:4px;padding:4px 5px;font-size:11px;font-weight:700;font-family:\'DM Mono\',monospace;color:var(--text);background:#fff;text-align:center;outline:none;-moz-appearance:textfield">'+
-        '</div>'+
-        '<div style="display:flex;flex-direction:column;gap:2px">'+
-          '<label style="font-size:8px;color:var(--text3);font-weight:600">Montant €</label>'+
-          '<input type="number" min="0" step="0.01" value="' + data.mt + '" '+
-            'oninput="eqUpdateInaField(' + id + ',\'' + key + '\',\'mt\',this.value)" '+
-            'style="border:1px solid var(--border2);border-radius:4px;padding:4px 5px;font-size:11px;font-weight:700;font-family:\'DM Mono\',monospace;color:var(--orange);background:#fff;text-align:center;outline:none;-moz-appearance:textfield">'+
-        '</div>'+
-      '</div>'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:5px;gap:6px;flex-wrap:wrap">'+
-        '<div style="font-size:10px;color:var(--text3)">= <strong style="color:var(--text);font-family:\'DM Mono\',monospace" id="eq-detail-tot-' + key + '-' + id + '">' + stot.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €</strong></div>'+
-        '<div style="display:flex;gap:2px">'+
-          '<button type="button" onclick="eqUpdateInaField(' + id + ',\'' + key + '\',\'fact\',true)" '+
-            'style="font-size:9px;padding:3px 7px;border-radius:3px;border:1px solid ' + (factOn ? 'var(--green)' : 'var(--border2)') + ';' +
-            'background:' + (factOn ? 'rgba(22,163,74,.12)' : '#fff') + ';' +
-            'color:' + (factOn ? 'var(--green)' : 'var(--text3)') + ';' +
-            'font-weight:' + (factOn ? '700' : '500') + ';' +
-            'cursor:pointer;font-family:\'DM Sans\',sans-serif">✓ Facturée</button>'+
-          '<button type="button" onclick="eqUpdateInaField(' + id + ',\'' + key + '\',\'fact\',false)" '+
-            'style="font-size:9px;padding:3px 7px;border-radius:3px;border:1px solid ' + (!factOn ? 'var(--red)' : 'var(--border2)') + ';' +
-            'background:' + (!factOn ? 'rgba(220,38,38,.1)' : '#fff') + ';' +
-            'color:' + (!factOn ? 'var(--red)' : 'var(--text3)') + ';' +
-            'font-weight:' + (!factOn ? '700' : '500') + ';' +
-            'cursor:pointer;font-family:\'DM Sans\',sans-serif">✗ Non fact.</button>'+
-        '</div>'+
-      '</div>'+
-    '</div>';
+    '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:6px 8px;font-size:10px;font-weight:600;color:var(--text2);white-space:nowrap">' +
+        '<span style="margin-right:4px">' + icon + '</span>' + label +
+        (tag ? ' <span style="font-size:8px;background:rgba(29,78,216,.1);color:var(--blue);border-radius:3px;padding:1px 4px;margin-left:4px;font-weight:500">' + tag + '</span>' : '') +
+      '</td>'+
+      '<td style="padding:6px 6px;text-align:center">' + zoneCell + '</td>'+
+      '<td style="padding:6px 6px;text-align:center">'+
+        '<input type="number" min="0" step="1" value="' + data.nb + '" '+
+          'oninput="eqUpdateInaField(' + id + ',\'' + key + '\',\'nb\',this.value)" '+
+          'style="border:1px solid var(--border2);border-radius:4px;padding:4px 5px;font-size:11px;font-weight:700;font-family:\'DM Mono\',monospace;color:var(--text);background:#fff;text-align:center;width:60px;outline:none;-moz-appearance:textfield">'+
+      '</td>'+
+      '<td style="padding:6px 6px;text-align:center">'+
+        '<input type="number" min="0" step="0.01" value="' + data.mt + '" '+
+          'oninput="eqUpdateInaField(' + id + ',\'' + key + '\',\'mt\',this.value)" '+
+          'style="border:1px solid var(--border2);border-radius:4px;padding:4px 5px;font-size:11px;font-weight:700;font-family:\'DM Mono\',monospace;color:var(--orange);background:#fff;text-align:center;width:70px;outline:none;-moz-appearance:textfield">'+
+      '</td>'+
+      '<td style="padding:6px 8px;text-align:right;font-family:\'DM Mono\',monospace;font-size:11px;font-weight:700;color:var(--text)" id="eq-detail-tot-' + key + '-' + id + '">' +
+        stot.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €' +
+      '</td>'+
+      '<td style="padding:6px 6px;text-align:center;white-space:nowrap">'+
+        '<button type="button" onclick="eqUpdateInaField(' + id + ',\'' + key + '\',\'fact\',true)" '+
+          'style="font-size:9px;padding:3px 7px;border-radius:3px;border:1px solid ' + (factOn ? 'var(--green)' : 'var(--border2)') + ';' +
+          'background:' + (factOn ? 'rgba(22,163,74,.12)' : '#fff') + ';' +
+          'color:' + (factOn ? 'var(--green)' : 'var(--text3)') + ';' +
+          'font-weight:' + (factOn ? '700' : '500') + ';' +
+          'cursor:pointer;font-family:\'DM Sans\',sans-serif;margin-right:2px">✓ Facturée</button>'+
+        '<button type="button" onclick="eqUpdateInaField(' + id + ',\'' + key + '\',\'fact\',false)" '+
+          'style="font-size:9px;padding:3px 7px;border-radius:3px;border:1px solid ' + (!factOn ? 'var(--red)' : 'var(--border2)') + ';' +
+          'background:' + (!factOn ? 'rgba(220,38,38,.1)' : '#fff') + ';' +
+          'color:' + (!factOn ? 'var(--red)' : 'var(--text3)') + ';' +
+          'font-weight:' + (!factOn ? '700' : '500') + ';' +
+          'cursor:pointer;font-family:\'DM Sans\',sans-serif">✗ Non fact.</button>'+
+      '</td>'+
+    '</tr>';
 }
 
-/* Redessine la sous-ligne dépliable d'une équipière. */
+/* Redessine la sous-ligne dépliable d'un équipier sous la forme d'un
+   petit tableau récapitulatif (idéal pour la préparation du contrat). */
 function eqRenderDetailRow(id) {
   const cell = document.getElementById('eq-detail-cell-' + id);
   const row  = eqRows.find(r => r.id === id);
@@ -2304,12 +2301,20 @@ function eqRenderDetailRow(id) {
   const ina = row.ina;
   const nom = (document.getElementById('eq-nom-'+id)?.value || '').trim() || ('Intérimaire #' + id);
   const isPetit = ina.depl !== 'grand';
+  // Total INA facturé pour cette ligne (somme des sous-totaux dont fact=true)
+  const totFact = ['pp','ip','pt','it'].reduce((acc, k) => {
+    const d = ina[k];
+    if (!d || !d.fact) return acc;
+    return acc + (parseFloat(d.nb)||0) * (parseFloat(d.mt)||0);
+  }, 0);
   cell.innerHTML = ''+
-    '<div style="padding:14px 16px">'+
+    '<div style="padding:12px 16px;background:#fafbfc">'+
+      // En-tête : nom + bouton petit/grand déplacement
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap">'+
         '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">'+
-          '📋 Détail INA — pour le contrat ('+ nom +')</div>'+
-        '<div style="display:flex;gap:5px">'+
+          '📋 Détail INA — ' + nom +
+        '</div>'+
+        '<div style="display:flex;gap:4px">'+
           '<button type="button" onclick="eqSetRowDepl(' + id + ',\'petit\')" '+
             'style="font-size:10px;padding:5px 10px;border-radius:5px;border:1px solid ' + (isPetit ? 'var(--blue)' : 'var(--border2)') + ';' +
             'background:' + (isPetit ? 'rgba(29,78,216,.1)' : '#fff') + ';' +
@@ -2324,12 +2329,36 @@ function eqRenderDetailRow(id) {
             'cursor:pointer;font-family:\'DM Sans\',sans-serif">🏗️ Grand déplacement</button>'+
         '</div>'+
       '</div>'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">'+
-        eqInaCardHTML(id, 'pp', '🥪', 'Prime Panier',     {tag:'× coef'}) +
-        eqInaCardHTML(id, 'ip', '🍽️', 'Indemnité Repas',  {tag:'× 1'}) +
-        eqInaCardHTML(id, 'pt', '🛣️', 'Prime Trajet',     {tag:'× coef'}) +
-        eqInaCardHTML(id, 'it', '🚗', 'Indemnité Transport', {tag:'× client'}) +
-      '</div>'+
+      // Petit tableau récapitulatif INA
+      '<table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:6px;overflow:hidden">'+
+        '<thead>'+
+          '<tr style="background:var(--surface);border-bottom:2px solid var(--border2)">'+
+            '<th style="padding:7px 8px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Indemnité</th>'+
+            '<th style="padding:7px 6px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Zone</th>'+
+            '<th style="padding:7px 6px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Nb jours</th>'+
+            '<th style="padding:7px 6px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Montant €</th>'+
+            '<th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Total</th>'+
+            '<th style="padding:7px 6px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Facturation</th>'+
+          '</tr>'+
+        '</thead>'+
+        '<tbody>'+
+          eqInaTableRowHTML(id, 'pp', '🥪', 'Prime Panier',         '× coef') +
+          eqInaTableRowHTML(id, 'ip', '🍽️', 'Indemnité Repas',      '× 1') +
+          eqInaTableRowHTML(id, 'pt', '🛣️', 'Prime Trajet',         '× coef') +
+          eqInaTableRowHTML(id, 'it', '🚗', 'Indemnité Transport',  '× client') +
+        '</tbody>'+
+        '<tfoot>'+
+          '<tr style="background:rgba(234,108,0,.06);border-top:2px solid rgba(234,108,0,.25)">'+
+            '<td colspan="4" style="padding:6px 8px;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">'+
+              'Total INA facturées'+
+            '</td>'+
+            '<td style="padding:6px 8px;text-align:right;font-family:\'DM Mono\',monospace;font-size:11px;font-weight:700;color:var(--orange)">'+
+              totFact.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €' +
+            '</td>'+
+            '<td></td>'+
+          '</tr>'+
+        '</tfoot>'+
+      '</table>'+
     '</div>';
 }
 
