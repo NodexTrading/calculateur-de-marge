@@ -34,13 +34,32 @@ export function TutorialWidget({ open, onOpenChange, runCommand }: Props) {
     return map;
   }, []);
 
-  // Quand l'étape change, on demande à l'iframe de basculer sur le bon onglet
-  // et de surligner l'élément cible.
+  // Quand l'étape change : on bascule sur le bon onglet, on rejoue les
+  // commandes de setup éventuelles (pour pré-remplir un exemple) puis on
+  // surligne la zone cible. L'ordre tab → setup → highlight est important :
+  // certaines commandes de setup (run_calc, apply_preset…) supposent que
+  // les bons champs sont visibles dans le DOM.
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
     (async () => {
       try {
         if (step.tab) await runCommand("switch_tab", { tab: step.tab });
+        if (cancelled) return;
+        if (step.setup && step.setup.length) {
+          for (const cmd of step.setup) {
+            if (cancelled) return;
+            try {
+              await runCommand(cmd.action, cmd.params || {});
+            } catch {
+              /* continue malgré l'erreur d'une commande isolée */
+            }
+          }
+          // petite pause pour laisser le DOM se mettre à jour avant de
+          // calculer le rect du surlignage.
+          await new Promise((r) => setTimeout(r, 120));
+        }
+        if (cancelled) return;
         if (step.highlight) {
           await runCommand("highlight", { selector: step.highlight });
         } else {
@@ -50,6 +69,9 @@ export function TutorialWidget({ open, onOpenChange, runCommand }: Props) {
         /* iframe pas prête, on ignore */
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [open, step, runCommand]);
 
   // Nettoyage du surlignage à la fermeture.

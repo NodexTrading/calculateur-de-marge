@@ -1,3 +1,19 @@
+/** Une commande à envoyer au calculateur via le bridge postMessage avant
+ *  que l'étape ne s'affiche. Utile pour auto-remplir un exemple afin que
+ *  les zones expliquées (résultats, waterfall, simulateur…) soient
+ *  réellement visibles à l'écran. */
+export type SetupCommand =
+  | { action: "set_field"; params: { name: string; value: number | string } }
+  | {
+      action: "set_fields";
+      params: { fields: { name: string; value: number | string }[] };
+    }
+  | { action: "apply_preset"; params: { type: "petit" | "grand" | "reset" } }
+  | { action: "select_zone_pt"; params: { zone: 1 | 2 | 3 | 4 | 5 } }
+  | { action: "select_zone_it"; params: { zone: 1 | 2 | 3 | 4 | 5 } }
+  | { action: "run_calc"; params?: Record<string, never> }
+  | { action: "reset"; params?: Record<string, never> };
+
 export type TutorialStep = {
   /** Catégorie de l'étape (sert au regroupement dans le sommaire). */
   category: string;
@@ -17,7 +33,63 @@ export type TutorialStep = {
   fields?: { id: string; desc: string }[];
   /** Barème zonal éventuel à afficher. */
   zones?: { label: string; values: number[] };
+  /** Commandes envoyées AVANT l'affichage du surlignage : auto-remplit
+   *  l'exemple "14€/h × 35h, TF 1500€" pour que les zones de résultats
+   *  soient réellement parlantes pendant le tutoriel. */
+  setup?: SetupCommand[];
 };
+
+// ─── Jeux d'exemples partagés entre étapes ───────────────────────────────
+// Mission type pour l'onglet Calcul : 14 €/h, 35 h normales,
+// petit déplacement, total facturé 1500 €.
+const EXAMPLE_CALC: SetupCommand[] = [
+  {
+    action: "set_fields",
+    params: {
+      fields: [
+        { name: "tx_horaire", value: 14 },
+        { name: "hn", value: 35 },
+        { name: "hs25", value: 0 },
+        { name: "hs50", value: 0 },
+        { name: "tf_input", value: 1500 },
+      ],
+    },
+  },
+  { action: "apply_preset", params: { type: "petit" } },
+  { action: "run_calc" },
+];
+
+// Onglet Simulateur : même base, marge cible 15 %.
+const EXAMPLE_SIM: SetupCommand[] = [
+  {
+    action: "set_fields",
+    params: {
+      fields: [
+        { name: "sim-tx", value: 14 },
+        { name: "sim-hn", value: 35 },
+        { name: "sim-hs25", value: 0 },
+        { name: "sim-hs50", value: 0 },
+        { name: "sim-mb-cible", value: 15 },
+      ],
+    },
+  },
+];
+
+// Onglet Coef Inverse : on connaît TX et TF, on cherche le coefficient.
+const EXAMPLE_INV: SetupCommand[] = [
+  {
+    action: "set_fields",
+    params: {
+      fields: [
+        { name: "inv-tx", value: 14 },
+        { name: "inv-hn", value: 35 },
+        { name: "inv-hs25", value: 0 },
+        { name: "inv-hs50", value: 0 },
+        { name: "inv-tf", value: 1500 },
+      ],
+    },
+  },
+];
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
   // ─────────── INTRODUCTION ───────────
@@ -225,7 +297,9 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     highlight: ".btn-calc",
     body: [
       "Les calculs sont automatiques à chaque saisie, mais ce bouton force un recalcul complet et fait défiler vers la zone Résultats.",
+      "👉 Pour la suite du tutoriel, on remplit automatiquement un exemple : taux horaire 14 €/h × 35 h, total facturé 1500 €, petit déplacement. Vous voyez ainsi de vrais chiffres dans les zones expliquées.",
     ],
+    setup: EXAMPLE_CALC,
   },
   {
     category: "Résultats",
@@ -288,11 +362,13 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     body: [
       "Saisissez le taux horaire, les heures, la marge cible et les indemnités : l'app calcule automatiquement le prix de vente nécessaire pour atteindre cette marge.",
       "Idéal pour préparer un devis ou répondre à un appel d'offres avec une rentabilité minimale imposée.",
+      "👉 Exemple pré-rempli : 14 €/h × 35 h, marge cible 15 %.",
     ],
     fields: [
       { id: "sim-tx", desc: "Taux horaire brut versé à l'intérimaire." },
       { id: "sim-mb-cible", desc: "Marge brute cible en pourcentage." },
     ],
+    setup: EXAMPLE_SIM,
   },
 
   // ─────────── COEF INVERSE ───────────
@@ -303,6 +379,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     tab: "inverse",
     body: [
       "Vous connaissez le total facturé négocié et le salaire net visé pour l'intérimaire ? Cet onglet remonte au coefficient et au taux horaire qui font tomber les comptes juste.",
+      "👉 Exemple pré-rempli : 14 €/h × 35 h pour un total facturé de 1500 €.",
     ],
     fields: [
       { id: "inv-tx", desc: "Taux horaire brut connu." },
@@ -311,6 +388,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     tips: [
       "Très utile lorsqu'un client impose un budget global pour la mission.",
     ],
+    setup: EXAMPLE_INV,
   },
 
   // ─────────── CLIENTS ───────────
