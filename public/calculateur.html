@@ -14,6 +14,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
 
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -148,6 +149,110 @@ header {
 }
 .pg input:focus,.pg select:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(29,78,216,.1); }
 .pg select option { background:#fff; }
+
+/* ── Bibliothèque de modèles de mission ── */
+.quick-actions { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.quick-action-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  background:linear-gradient(135deg, rgba(29,78,216,.06) 0%, rgba(124,58,237,.05) 100%);
+  border:1.5px solid rgba(29,78,216,.18);
+  color:var(--blue);
+  padding:7px 14px;
+  font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600;
+  border-radius:7px; cursor:pointer;
+  transition:all .15s;
+}
+.quick-action-btn:hover {
+  background:rgba(29,78,216,.1);
+  border-color:var(--blue);
+  transform:translateY(-1px);
+  box-shadow:0 2px 8px rgba(29,78,216,.12);
+}
+.tpl-modal-overlay {
+  position:fixed; inset:0; background:rgba(15,23,42,.55);
+  z-index:99996; display:flex; align-items:center; justify-content:center;
+  padding:20px; animation:fadeIn .18s ease;
+}
+.tpl-modal {
+  background:#fff; border-radius:14px;
+  max-width:780px; width:100%; max-height:90vh;
+  display:flex; flex-direction:column;
+  box-shadow:0 16px 48px rgba(0,0,0,.3);
+  font-family:'DM Sans',sans-serif;
+}
+.tpl-modal-head {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 22px 14px; border-bottom:1px solid var(--border);
+}
+.tpl-modal-head h3 { font-size:15px; font-weight:700; color:var(--text); margin:0; }
+.tpl-modal-close {
+  border:none; background:none; cursor:pointer; font-size:18px;
+  color:var(--text3); padding:4px 8px; border-radius:6px;
+}
+.tpl-modal-close:hover { background:var(--surface); color:var(--text); }
+.tpl-modal-body { overflow-y:auto; padding:18px 22px; flex:1; }
+.tpl-grid {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+  gap:10px; margin-bottom:20px;
+}
+.tpl-card {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:10px; padding:14px; cursor:pointer;
+  transition:all .15s; position:relative;
+}
+.tpl-card:hover {
+  border-color:var(--blue);
+  background:rgba(29,78,216,.04);
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(15,23,42,.08);
+}
+.tpl-card.custom { border-color:rgba(124,58,237,.3); background:rgba(124,58,237,.04); }
+.tpl-card.custom:hover { border-color:#7c3aed; background:rgba(124,58,237,.08); }
+.tpl-emoji { font-size:24px; margin-bottom:6px; }
+.tpl-name { font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; line-height:1.3; }
+.tpl-desc { font-size:11px; color:var(--text3); line-height:1.4; }
+.tpl-tags {
+  display:flex; gap:4px; flex-wrap:wrap; margin-top:8px;
+}
+.tpl-tag {
+  font-size:9px; font-weight:600; padding:2px 6px; border-radius:3px;
+  background:rgba(29,78,216,.1); color:var(--blue);
+}
+.tpl-tag.orange { background:rgba(234,108,0,.1); color:var(--orange); }
+.tpl-card-del {
+  position:absolute; top:6px; right:6px;
+  border:none; background:rgba(220,38,38,.1); color:var(--red);
+  width:22px; height:22px; border-radius:5px;
+  font-size:11px; cursor:pointer; opacity:0; transition:opacity .15s;
+}
+.tpl-card:hover .tpl-card-del { opacity:1; }
+.tpl-section-title {
+  font-size:11px; font-weight:700; color:var(--text3);
+  text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;
+}
+.tpl-empty {
+  padding:14px; background:var(--surface); border-radius:8px;
+  font-size:11px; color:var(--text3); text-align:center; font-style:italic;
+}
+.tpl-modal-foot {
+  border-top:1px solid var(--border); padding:14px 22px;
+  background:var(--surface); border-radius:0 0 14px 14px;
+}
+.tpl-save-row {
+  display:flex; gap:8px; align-items:center;
+}
+.tpl-save-row input {
+  flex:1; border:1px solid var(--border2); border-radius:6px;
+  padding:8px 10px; font-size:12px; font-family:'DM Sans',sans-serif;
+  outline:none;
+}
+.tpl-save-row input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(29,78,216,.08); }
+.tpl-save-row button {
+  background:var(--blue); color:#fff; border:none; border-radius:6px;
+  padding:8px 16px; font-size:11px; font-weight:600; cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+}
+.tpl-save-row button:hover { background:rgba(29,78,216,.9); }
 
 /* ── Panneau Paramètres techniques verrouillé (lecture seule) ── */
 .params-panel.locked .pg label { color:#9ca3af; }
@@ -436,14 +541,81 @@ button:active { transform:scale(.97); }
 
 
 /* ── RESPONSIVE ── */
-@media (max-width:700px) {
+/* Tablette / petit laptop : on serre légèrement et on laisse le scroll
+   horizontal s'occuper du tableau équipe. */
+@media (max-width:1024px) {
+  .header-date        { display:none; }
+  .tab-bar {
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    flex-wrap:nowrap;
+  }
+  .tab-bar::-webkit-scrollbar { height:4px; }
+  .tab-bar::-webkit-scrollbar-thumb { background:rgba(0,0,0,.15); border-radius:2px; }
+  .tab-btn { white-space:nowrap; flex-shrink:0; }
+}
+
+/* Phablette / grand mobile : grilles de formulaires plus compactes,
+   onglets scrollables, tableau équipe avec colonne Nom collante. */
+@media (max-width:768px) {
   .field-row          { grid-template-columns:repeat(3,1fr); }
   .ina-grid           { grid-template-columns:repeat(2,1fr); }
   .result-hero        { grid-template-columns:1fr; }
   .tiles              { grid-template-columns:repeat(2,1fr); }
   .h-value            { font-size:28px !important; }
-  .header-date        { display:none; }
   .clients-grid       { grid-template-columns:1fr; }
+  .params-grid        { grid-template-columns:repeat(2,1fr); }
+
+  /* Rend la 1re colonne (Nom) du tableau équipe collante quand on
+     scrolle horizontalement, pour ne pas perdre l'identification de
+     la ligne. */
+  #eq-main-table th:first-child,
+  #eq-main-table td:first-child {
+    position:sticky; left:0;
+    background:#fff; z-index:2;
+    box-shadow:1px 0 0 var(--border);
+  }
+  #eq-main-table thead th:first-child { background:var(--surface); }
+
+  /* Compactage de la barre Calcul/Heures du formulaire principal :
+     le bloc 6 colonnes devient 3×2 puis 2×3. */
+  .page > .card .card-body div[style*="repeat(6,1fr)"] {
+    grid-template-columns:repeat(3,1fr) !important;
+    gap:8px !important;
+  }
+}
+
+/* Mobile : tout en 1-2 colonnes, padding réduit, modale templates
+   plein écran pour rester confortable. */
+@media (max-width:540px) {
+  body { font-size:13px; }
+  .page { padding:0 8px; }
+  .field-row          { grid-template-columns:repeat(2,1fr); }
+  .ina-grid           { grid-template-columns:1fr; }
+  .tiles              { grid-template-columns:1fr; }
+  .params-grid        { grid-template-columns:1fr; }
+  .page > .card .card-body div[style*="repeat(6,1fr)"],
+  .page > .card .card-body div[style*="repeat(3,1fr)"] {
+    grid-template-columns:repeat(2,1fr) !important;
+  }
+  .card-head { padding:10px 12px; font-size:12px; }
+  .card-body { padding:12px; }
+  .params-btn { padding:8px 10px; font-size:11px; }
+  /* La modale Templates passe en plein écran sur mobile */
+  .tpl-modal {
+    max-width:100%; max-height:100%; height:100vh;
+    border-radius:0;
+  }
+  .tpl-modal-foot { border-radius:0; }
+  .tpl-grid { grid-template-columns:1fr; }
+  /* Sous-ligne détail INA : table en 1 colonne */
+  .eq-detail-row td > div > table {
+    display:block;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  /* Bouton tutoriel un peu plus petit pour ne pas masquer le contenu */
+  /* (le bouton React reste cliquable, c'est juste pour donner de l'air) */
 }
 
 /* ── Projecteur tutoriel (piloté par postMessage) ── */
@@ -506,53 +678,18 @@ button:active { transform:scale(.97); }
 
 
 <script>
-// ── Service Worker inline (PWA installable) ──
-if('serviceWorker' in navigator) {
-  const swCode = `
-const CACHE = 'forma-interim-v1';
-self.addEventListener('install', e => {
-  self.skipWaiting();
-});
-self.addEventListener('activate', e => {
-  e.waitUntil(clients.claim());
-});
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.open(CACHE).then(cache =>
-      cache.match(e.request).then(cached => {
-        const fresh = fetch(e.request).then(resp => {
-          cache.put(e.request, resp.clone());
-          return resp;
-        }).catch(()=>cached);
-        return cached || fresh;
-      })
-    )
-  );
-});
-`;
-  const blob = new Blob([swCode], {type:'application/javascript'});
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl).catch(()=>{});
+// ── Service Worker (PWA installable + offline-first) ──
+// Le SW est dans /sw.js (fichier dédié pour permettre le pré-cache des
+// assets critiques avec une strategy cache-first/network-first propre).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+  });
 }
 
-// ── Bouton d'installation PWA ──
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const btn = document.getElementById('pwa-install-btn');
-  if(btn) btn.style.display = 'flex';
-});
-window.addEventListener('appinstalled', () => {
-  const btn = document.getElementById('pwa-install-btn');
-  if(btn) btn.style.display = 'none';
-  deferredPrompt = null;
-});
-function installPWA() {
-  if(!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; });
-}
+// L'install PWA et l'indicateur offline sont gérés par la coquille React
+// (cf. src/components/pwa/PWAControls.tsx). Le calculateur.html est
+// chargé dans une iframe et n'a donc pas besoin de son propre bouton.
 </script>
 </head>
 <body>
@@ -562,10 +699,6 @@ function installPWA() {
     <img src="data:image/png;base64,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" style="width:28px;height:28px;border-radius:6px;object-fit:cover" alt="Forma Interim">
     <div class="logo-text">Calculateur Marge <span>Intérim</span> BTP</div>
   </div>
-  <button id="pwa-install-btn" onclick="installPWA()"
-  style="display:none;align-items:center;gap:6px;background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer">
-  📲 Installer l'app
-</button>
   <div class="header-date" id="date-display"></div>
 </header>
 
@@ -584,6 +717,11 @@ function installPWA() {
 <!-- ═══════════════ ONGLET CALCUL ═══════════════ -->
 <div class="tab-panel active" id="panel-calcul">
 <div class="page">
+  <div class="quick-actions">
+    <button class="quick-action-btn" onclick="openTemplatesModal()" title="Charger un modèle de mission préenregistré">
+      <span style="font-size:14px">📋</span> Modèles de mission
+    </button>
+  </div>
   <button class="params-btn" id="params-btn" onclick="toggleParams()">
     <span>⚙</span> Paramètres techniques <span class="arr">▾</span>
   </button>
@@ -2605,6 +2743,267 @@ function eqSetRowDepl(id, depl) {
   eqRenderDetailRow(id);
   eqRenderZoneCell(id);
   // Pas besoin de recalculer : le déplacement n'affecte que l'affichage.
+}
+
+/* ── Bibliothèque de modèles de mission ────────────────────────────────
+   Permet de pré-remplir le formulaire principal en 1 clic à partir d'un
+   modèle (« Maçon gros œuvre PACA », « Coffreur grand déplacement »…)
+   pour éviter la saisie répétitive des 12 champs identiques. Les modèles
+   intégrés (BUILTIN_TEMPLATES) ne sont pas supprimables. L'utilisateur
+   peut sauvegarder des modèles personnalisés à partir de l'état courant
+   (stockés dans localStorage sous TPL_KEY). */
+const TPL_KEY = 'cm-templates-v1';
+const BUILTIN_TEMPLATES = [
+  {
+    id: 'builtin-macon-paca-z1',
+    name: 'Maçon gros œuvre PACA Z1',
+    emoji: '🧱',
+    desc: 'Mission standard 35 h, petit déplacement, zone 1.',
+    tags: ['Petit dépl.', 'Z1'],
+    builtin: true,
+    data: {
+      tx_horaire: 14, coef: 1.96, hn: 35, hs25: 0, hs50: 0,
+      depl: 'petit',
+      pp: { nb: 5, mt: 1.80, fact: true },
+      ip: { nb: 0, mt: 10.40, fact: true },
+      pt: { nb: 5, mt: 2.05, fact: true, zone: 1 },
+      it: { nb: 5, mt: 3.65, fact: true, zone: 1, grid: 'classique', acossId: 1 },
+    },
+  },
+  {
+    id: 'builtin-coffreur-grand-depl',
+    name: 'Coffreur grand déplacement',
+    emoji: '✈️',
+    desc: 'Chantier éloigné, repas + prime trajet zone 3.',
+    tags: ['Grand dépl.', 'Z3'],
+    builtin: true,
+    data: {
+      tx_horaire: 16, coef: 2.00, hn: 35, hs25: 0, hs50: 0,
+      depl: 'grand',
+      pp: { nb: 0, mt: 1.80, fact: true },
+      ip: { nb: 5, mt: 10.40, fact: true },
+      pt: { nb: 5, mt: 4.38, fact: true, zone: 3 },
+      it: { nb: 5, mt: 8.63, fact: true, zone: 3, grid: 'classique', acossId: 3 },
+    },
+  },
+  {
+    id: 'builtin-mission-courte',
+    name: 'Mission courte 1 semaine',
+    emoji: '⏱️',
+    desc: 'Manœuvre 5 jours, sans heures sup, INA petit dépl.',
+    tags: ['Court', 'Z1'],
+    builtin: true,
+    data: {
+      tx_horaire: 12, coef: 1.85, hn: 35, hs25: 0, hs50: 0,
+      depl: 'petit',
+      pp: { nb: 5, mt: 1.80, fact: true },
+      ip: { nb: 0, mt: 10.40, fact: true },
+      pt: { nb: 5, mt: 2.05, fact: true, zone: 1 },
+      it: { nb: 5, mt: 3.65, fact: true, zone: 1, grid: 'classique', acossId: 1 },
+    },
+  },
+  {
+    id: 'builtin-chef-equipe-hs',
+    name: 'Chef d\'équipe avec HS',
+    emoji: '🏗️',
+    desc: 'Encadrement, 35 h + 4 h HS25, panier + transport Z2.',
+    tags: ['HS25', 'Z2'],
+    builtin: true,
+    data: {
+      tx_horaire: 18, coef: 2.05, hn: 35, hs25: 4, hs50: 0,
+      depl: 'petit',
+      pp: { nb: 5, mt: 1.80, fact: true },
+      ip: { nb: 0, mt: 10.40, fact: true },
+      pt: { nb: 5, mt: 3.25, fact: true, zone: 2 },
+      it: { nb: 5, mt: 6.42, fact: true, zone: 2, grid: 'classique', acossId: 2 },
+    },
+  },
+  {
+    id: 'builtin-acoss-30km',
+    name: 'Mission ACOSS 30-40 km',
+    emoji: '🚗',
+    desc: 'Petit déplacement avec barème ACOSS PACA tranche 4.',
+    tags: ['ACOSS', '30-40 km'],
+    builtin: true,
+    data: {
+      tx_horaire: 15, coef: 1.95, hn: 35, hs25: 0, hs50: 0,
+      depl: 'petit',
+      pp: { nb: 5, mt: 1.80, fact: true },
+      ip: { nb: 0, mt: 10.40, fact: true },
+      pt: { nb: 5, mt: 5.81, fact: true, zone: 4 },
+      it: { nb: 5, mt: 12.10, fact: true, zone: 4, grid: 'acoss', acossId: 4 },
+    },
+  },
+];
+
+function loadCustomTemplates() {
+  try { return JSON.parse(localStorage.getItem(TPL_KEY) || '[]'); } catch { return []; }
+}
+function saveCustomTemplates(list) {
+  try { localStorage.setItem(TPL_KEY, JSON.stringify(list)); } catch {}
+}
+
+function openTemplatesModal() {
+  // Crée l'overlay et le modal s'il n'existe pas
+  const old = document.getElementById('tpl-modal-overlay');
+  if (old) old.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'tpl-modal-overlay';
+  overlay.className = 'tpl-modal-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) closeTemplatesModal(); };
+  overlay.innerHTML =
+    '<div class="tpl-modal" onclick="event.stopPropagation()">' +
+      '<div class="tpl-modal-head">' +
+        '<h3>📋 Modèles de mission</h3>' +
+        '<button class="tpl-modal-close" onclick="closeTemplatesModal()">✕</button>' +
+      '</div>' +
+      '<div class="tpl-modal-body" id="tpl-modal-body"></div>' +
+      '<div class="tpl-modal-foot">' +
+        '<div class="tpl-section-title" style="margin-bottom:6px">💾 Sauvegarder l\'état actuel comme modèle</div>' +
+        '<div class="tpl-save-row">' +
+          '<input type="text" id="tpl-new-name" placeholder="Nom du modèle (ex. Manœuvre routier Z2)" maxlength="50">' +
+          '<button onclick="saveCurrentAsTemplate()">Sauvegarder</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  renderTemplatesModalBody();
+}
+
+function closeTemplatesModal() {
+  const o = document.getElementById('tpl-modal-overlay');
+  if (o) o.remove();
+}
+
+function renderTemplatesModalBody() {
+  const body = document.getElementById('tpl-modal-body');
+  if (!body) return;
+  const customs = loadCustomTemplates();
+  const tplCardHTML = (t, isCustom) => {
+    const tags = (t.tags || []).map(x => '<span class="tpl-tag' + (isCustom ? ' orange' : '') + '">' + x + '</span>').join('');
+    const delBtn = isCustom
+      ? '<button class="tpl-card-del" onclick="event.stopPropagation();deleteCustomTemplate(\'' + t.id + '\')" title="Supprimer">✕</button>'
+      : '';
+    return '<div class="tpl-card' + (isCustom ? ' custom' : '') + '" onclick="applyTemplate(\'' + t.id + '\',' + (isCustom ? 'true' : 'false') + ')">' +
+      delBtn +
+      '<div class="tpl-emoji">' + (t.emoji || '📋') + '</div>' +
+      '<div class="tpl-name">' + t.name + '</div>' +
+      '<div class="tpl-desc">' + (t.desc || '') + '</div>' +
+      (tags ? '<div class="tpl-tags">' + tags + '</div>' : '') +
+    '</div>';
+  };
+  let html = '';
+  html += '<div class="tpl-section-title">🏆 Modèles intégrés</div>';
+  html += '<div class="tpl-grid">' + BUILTIN_TEMPLATES.map(t => tplCardHTML(t, false)).join('') + '</div>';
+  html += '<div class="tpl-section-title">⭐ Vos modèles personnalisés</div>';
+  if (customs.length) {
+    html += '<div class="tpl-grid">' + customs.map(t => tplCardHTML(t, true)).join('') + '</div>';
+  } else {
+    html += '<div class="tpl-empty">Aucun modèle personnalisé pour le moment. Saisissez une mission complète puis utilisez le formulaire ci-dessous pour la sauvegarder.</div>';
+  }
+  body.innerHTML = html;
+}
+
+function applyTemplate(id, isCustom) {
+  const list = isCustom ? loadCustomTemplates() : BUILTIN_TEMPLATES;
+  const tpl = list.find(t => t.id === id);
+  if (!tpl) { alert('Modèle introuvable.'); return; }
+  const d = tpl.data || {};
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+
+  // Champs de base
+  setVal('tx_horaire', d.tx_horaire);
+  setVal('coef',       d.coef);
+  setVal('hn',         d.hn);
+  setVal('hs25',       d.hs25);
+  setVal('hs50',       d.hs50);
+  // INA
+  if (d.pp) { setVal('nb_pp', d.pp.nb); setVal('mt_pp', d.pp.mt); inaFact.pp = !!d.pp.fact; if (typeof inaSetFact === 'function') inaSetFact('pp', !!d.pp.fact); }
+  if (d.ip) { setVal('nb_ip', d.ip.nb); setVal('mt_ip', d.ip.mt); inaFact.ip = !!d.ip.fact; if (typeof inaSetFact === 'function') inaSetFact('ip', !!d.ip.fact); }
+  if (d.pt) {
+    setVal('nb_pt', d.pt.nb); setVal('mt_pt', d.pt.mt);
+    inaFact.pt = !!d.pt.fact; if (typeof inaSetFact === 'function') inaSetFact('pt', !!d.pt.fact);
+    if (d.pt.zone) { activeZonePt = d.pt.zone; if (typeof buildZoneBtns === 'function') buildZoneBtns('zone-btns-pt', ZONES_PT, activeZonePt, selectZonePt); }
+  }
+  if (d.it) {
+    setVal('nb_it', d.it.nb); setVal('mt_it', d.it.mt);
+    inaFact.it = !!d.it.fact; if (typeof inaSetFact === 'function') inaSetFact('it', !!d.it.fact);
+    if (d.it.zone) activeZoneIt = d.it.zone;
+    activeGridIt = d.it.grid || 'classique';
+    activeAcossIdIt = d.it.acossId || 1;
+    if (typeof setGridIt === 'function') setGridIt(activeGridIt);
+    if (activeGridIt === 'classique' && typeof buildZoneBtns === 'function') {
+      buildZoneBtns('zone-btns-it', ZONES_IT, activeZoneIt, selectZoneIt);
+    }
+  }
+  if (d.depl) simDepl = d.depl;
+  // Recalcul + autosave
+  if (typeof calc === 'function') calc();
+  if (typeof triggerAutoSave === 'function') triggerAutoSave();
+  closeTemplatesModal();
+  // Petit toast non bloquant
+  showToast('✅ Modèle « ' + tpl.name + ' » chargé');
+}
+
+function saveCurrentAsTemplate() {
+  const input = document.getElementById('tpl-new-name');
+  if (!input) return;
+  const name = (input.value || '').trim();
+  if (!name) { input.focus(); input.style.borderColor = 'var(--red)'; setTimeout(() => input.style.borderColor = '', 1500); return; }
+
+  const tpl = {
+    id: 'custom-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+    name: name,
+    emoji: '⭐',
+    desc: 'Modèle personnalisé créé le ' + new Date().toLocaleDateString('fr-FR'),
+    tags: [],
+    data: {
+      tx_horaire: parseFloat(g('tx_horaire')) || 0,
+      coef: parseFloat(g('coef')) || 0,
+      hn: parseFloat(g('hn')) || 35,
+      hs25: parseFloat(g('hs25')) || 0,
+      hs50: parseFloat(g('hs50')) || 0,
+      depl: simDepl,
+      pp: { nb: parseFloat(g('nb_pp')) || 0, mt: parseFloat(g('mt_pp')) || 0, fact: !!inaFact.pp },
+      ip: { nb: parseFloat(g('nb_ip')) || 0, mt: parseFloat(g('mt_ip')) || 0, fact: !!inaFact.ip },
+      pt: { nb: parseFloat(g('nb_pt')) || 0, mt: parseFloat(g('mt_pt')) || 0, fact: !!inaFact.pt, zone: activeZonePt },
+      it: {
+        nb: parseFloat(g('nb_it')) || 0, mt: parseFloat(g('mt_it')) || 0,
+        fact: !!inaFact.it, zone: activeZoneIt,
+        grid: activeGridIt, acossId: activeAcossIdIt,
+      },
+    },
+  };
+  const list = loadCustomTemplates();
+  list.unshift(tpl);
+  saveCustomTemplates(list);
+  input.value = '';
+  renderTemplatesModalBody();
+  showToast('💾 Modèle « ' + name + ' » sauvegardé');
+}
+
+function deleteCustomTemplate(id) {
+  if (!confirm('Supprimer ce modèle personnalisé ?')) return;
+  const list = loadCustomTemplates().filter(t => t.id !== id);
+  saveCustomTemplates(list);
+  renderTemplatesModalBody();
+}
+
+/* Petit toast en bas-droit, disparait après 2.5 s. */
+function showToast(msg) {
+  let t = document.getElementById('cm-toast');
+  if (t) t.remove();
+  t = document.createElement('div');
+  t.id = 'cm-toast';
+  t.textContent = msg;
+  t.style.cssText =
+    'position:fixed;bottom:24px;right:24px;z-index:99999;' +
+    'background:var(--text);color:#fff;padding:10px 16px;border-radius:8px;' +
+    'font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:500;' +
+    'box-shadow:0 8px 24px rgba(0,0,0,.2);' +
+    'animation:fadeIn .2s ease;';
+  document.body.appendChild(t);
+  setTimeout(() => { try { t.remove(); } catch {} }, 2500);
 }
 
 function eqRefreshTotal() {

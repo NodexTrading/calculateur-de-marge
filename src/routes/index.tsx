@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TutorialWidget } from "@/components/tutorial/TutorialWidget";
+import { PWAControls } from "@/components/pwa/PWAControls";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -78,6 +79,7 @@ function Index() {
         onOpenChange={setTutorialOpen}
         runCommand={runCommand}
       />
+      <PWAControls />
     </div>
   );
 }
