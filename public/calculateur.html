@@ -2774,16 +2774,23 @@ const BUILTIN_TEMPLATES = [
     id: 'builtin-coffreur-grand-depl',
     name: 'Coffreur grand déplacement',
     emoji: '✈️',
-    desc: 'Chantier éloigné, repas + prime trajet zone 3.',
-    tags: ['Grand dépl.', 'Z3'],
+    desc: 'TX 13,02 €/h × 39 h (35 + 4 HS25), grand déplacement Z5, facturé 1 395 €.',
+    tags: ['Grand dépl.', '39h', 'TF 1395€'],
     builtin: true,
     data: {
-      tx_horaire: 16, coef: 2.00, hn: 35, hs25: 0, hs50: 0,
+      tx_horaire: 13.02,
+      // coef vide : il sera auto-calculé à partir de tf_input par
+      // l'engine (champ orange "Total Facturé" qui prime sur le coef).
+      coef: '',
+      hn: 35, hs25: 4, hs50: 0,
+      tf_input: 1395,
       depl: 'grand',
+      // INA grand déplacement standard : pas de panier, repas 5j,
+      // prime trajet et indemnité transport zone 5 (les plus hautes).
       pp: { nb: 0, mt: 1.80, fact: true },
       ip: { nb: 5, mt: 10.40, fact: true },
-      pt: { nb: 5, mt: 4.38, fact: true, zone: 3 },
-      it: { nb: 5, mt: 8.63, fact: true, zone: 3, grid: 'classique', acossId: 3 },
+      pt: { nb: 5, mt: 6.90, fact: true, zone: 5 },
+      it: { nb: 5, mt: 14.80, fact: true, zone: 5, grid: 'classique', acossId: 5 },
     },
   },
   {
@@ -2913,10 +2920,19 @@ function applyTemplate(id, isCustom) {
 
   // Champs de base
   setVal('tx_horaire', d.tx_horaire);
-  setVal('coef',       d.coef);
+  setVal('coef',       d.coef != null ? d.coef : '');
   setVal('hn',         d.hn);
   setVal('hs25',       d.hs25);
   setVal('hs50',       d.hs50);
+  // Total facturé orange : si renseigné dans le modèle, il pilote le
+  // coef automatiquement via onTfInput. Sinon on l'efface pour que le
+  // coef reprenne la main.
+  if (d.tf_input != null && d.tf_input !== '') {
+    setVal('tf_input', d.tf_input);
+    if (typeof onTfInput === 'function') onTfInput();
+  } else {
+    setVal('tf_input', '');
+  }
   // INA
   if (d.pp) { setVal('nb_pp', d.pp.nb); setVal('mt_pp', d.pp.mt); inaFact.pp = !!d.pp.fact; if (typeof inaSetFact === 'function') inaSetFact('pp', !!d.pp.fact); }
   if (d.ip) { setVal('nb_ip', d.ip.nb); setVal('mt_ip', d.ip.mt); inaFact.ip = !!d.ip.fact; if (typeof inaSetFact === 'function') inaSetFact('ip', !!d.ip.fact); }
