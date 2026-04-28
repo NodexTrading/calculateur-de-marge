@@ -12,7 +12,9 @@ export type SetupCommand =
   | { action: "select_zone_pt"; params: { zone: 1 | 2 | 3 | 4 | 5 } }
   | { action: "select_zone_it"; params: { zone: 1 | 2 | 3 | 4 | 5 } }
   | { action: "run_calc"; params?: Record<string, never> }
-  | { action: "reset"; params?: Record<string, never> };
+  | { action: "reset"; params?: Record<string, never> }
+  | { action: "ensure_params_open"; params?: Record<string, never> }
+  | { action: "ensure_history_demo"; params?: Record<string, never> };
 
 export type TutorialStep = {
   /** Catégorie de l'étape (sert au regroupement dans le sommaire). */
@@ -130,6 +132,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     highlight: "#params-panel",
     body: [
       "Cette zone repliable contient les constantes de calcul. À ouvrir uniquement si la législation change ou si vous travaillez avec un taux non-standard.",
+      "👉 Le tutoriel ouvre automatiquement le panneau pour vous montrer son contenu.",
     ],
     fields: [
       { id: "p_tx_chg", desc: "Taux des charges patronales en %." },
@@ -139,7 +142,10 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
       { id: "p_ifm", desc: "Taux d'Indemnité de Fin de Mission (%)." },
       { id: "p_cp", desc: "Taux de Congés Payés (%)." },
     ],
-    tips: ["Cliquez sur le bandeau « ⚙ Paramètres techniques » pour le déplier."],
+    tips: [
+      "Hors tutoriel, cliquez sur le bandeau « ⚙ Paramètres techniques » pour le déplier ou le replier.",
+    ],
+    setup: [{ action: "ensure_params_open" }],
   },
   {
     category: "Onglet Calcul",
@@ -350,7 +356,9 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     highlight: "#history-section",
     body: [
       "Chaque clic sur « + Historique » archive la mission courante. Vous pouvez recharger une ligne pour la dupliquer ou la modifier.",
+      "👉 Le tutoriel ajoute automatiquement la mission de l'exemple à l'historique pour que la zone ait du contenu à afficher.",
     ],
+    setup: [{ action: "ensure_history_demo" }],
   },
 
   // ─────────── SIMULATEUR ───────────

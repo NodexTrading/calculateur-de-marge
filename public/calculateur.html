@@ -3344,6 +3344,35 @@ function simCalc() {
           break;
         }
         case 'reset':           if(typeof resetForm==='function') resetForm(); result={ok:true}; break;
+        case 'ensure_params_open': {
+          // Ouvre le panneau "Paramètres techniques" s'il est replié,
+          // idempotent : ne fait rien s'il est déjà ouvert.
+          const pnl = document.getElementById('params-panel');
+          const pbtn = document.getElementById('params-btn');
+          if (pnl && !pnl.classList.contains('open')) {
+            if (typeof toggleParams === 'function') toggleParams();
+            else { pnl.classList.add('open'); pbtn && pbtn.classList.add('open'); }
+          }
+          result = { params_open: true };
+          break;
+        }
+        case 'ensure_history_demo': {
+          // Garantit qu'au moins une ligne d'historique soit visible pour
+          // que la zone "Historique" ait un contenu a montrer pendant le
+          // tutoriel. Si la liste est vide, on enregistre la mission
+          // courante (necessite que TX et coef soient remplis -- l'etape
+          // "Bouton Calculer" du tutoriel le fait via son setup).
+          let added = false;
+          if (typeof histData !== 'undefined' && Array.isArray(histData) && histData.length === 0) {
+            if (typeof saveHistory === 'function') {
+              try { saveHistory(); added = true; } catch {}
+            }
+          }
+          const sec = document.getElementById('history-section');
+          if (sec) sec.style.display = 'block';
+          result = { demo_added: added };
+          break;
+        }
         case 'highlight': {
           const sel = String(params.selector||'').trim();
           if(!sel) throw new Error('selector manquant');
