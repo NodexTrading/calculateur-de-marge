@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { TutorialWidget } from "@/components/tutorial/TutorialWidget";
 
 export const Route = createFileRoute("/")({
@@ -8,6 +8,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
   const pendingRef = useRef<
     Map<
       string,
@@ -53,14 +54,30 @@ function Index() {
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-white">
-      <iframe
-        ref={iframeRef}
-        src="/calculateur.html"
-        title="Calculateur de Marge Forma Interim"
-        className="w-full h-full border-0"
+    <div className="fixed inset-0 bg-white flex">
+      {/* Zone calculateur — prend toute la largeur quand le tuto est fermé,
+          le reste de la largeur (à côté du panneau) quand il est ouvert.
+          Sur mobile, l'iframe disparaît derrière le panneau plein écran. */}
+      <div
+        className={
+          tutorialOpen
+            ? "hidden md:block md:flex-1 md:min-w-0 h-full"
+            : "flex-1 h-full"
+        }
+      >
+        <iframe
+          ref={iframeRef}
+          src="/calculateur.html"
+          title="Calculateur de Marge Forma Interim"
+          className="w-full h-full border-0"
+        />
+      </div>
+
+      <TutorialWidget
+        open={tutorialOpen}
+        onOpenChange={setTutorialOpen}
+        runCommand={runCommand}
       />
-      <TutorialWidget runCommand={runCommand} />
     </div>
   );
 }
