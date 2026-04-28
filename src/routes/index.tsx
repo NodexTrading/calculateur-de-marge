@@ -4,16 +4,6 @@ import { TutorialWidget } from "@/components/tutorial/TutorialWidget";
 
 export const Route = createFileRoute("/")({
   component: Index,
-  head: () => ({
-    meta: [
-      { title: "Calculateur de Marge — Forma Interim BTP" },
-      {
-        name: "description",
-        content:
-          "Calculateur de marge intérim BTP avec tutoriel visuel intégré qui explique chaque onglet, zone et catégorie pas à pas.",
-      },
-    ],
-  }),
 });
 
 function Index() {

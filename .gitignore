@@ -16,14 +16,16 @@ dist-ssr
 .nitro
 *.local
 
-# Wrangler / Cloudflare
-.wrangler/
-.dev.vars
-
 # Lockfiles & local env
 bun.lockb
 .env
 .env.local
+
+# Vercel
+.vercel/
+
+# Anciens artefacts wrangler résiduels
+.wrangler/
 
 # Editor directories and files
 .vscode/*

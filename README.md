@@ -1,6 +1,6 @@
 # Calculateur de Marge — Forma Interim BTP
 
-Application web (TanStack Start + Vite + React 19) qui calcule la marge brute
+Application web (Vite + React 19 + TanStack Router, SPA statique) qui calcule la marge brute
 d'une mission d'intérim BTP à partir du taux horaire, du coefficient et des
 indemnités INA (panier, repas, prime trajet, indemnité transport).
 
@@ -71,9 +71,26 @@ surbrillance via le bridge postMessage de l'iframe.
 ## 📦 Build
 
 ```bash
-npm run build       # build prod
+npm run build       # build prod → dist/
 npm run preview     # serveur statique de la build
 ```
+
+## ☁️ Déploiement Vercel
+
+Le projet est configuré pour un déploiement statique sur Vercel via
+`vercel.json` (framework `vite`, output `dist/`). Aucune fonction
+serveur n'est nécessaire — tout tourne dans le navigateur.
+
+```bash
+# Avec la CLI Vercel
+npx vercel
+npx vercel --prod
+```
+
+Sinon, dans le dashboard Vercel :
+1. *Add New Project* → importer le repo GitHub.
+2. Vercel détecte automatiquement Vite ; aucun réglage à modifier.
+3. *Deploy*.
 
 ## 📝 Licence
 
