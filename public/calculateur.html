@@ -1983,18 +1983,57 @@ const eqRows = [];function eqClear() {
   document.getElementById('eq-tfoot').style.display = 'none';
   document.getElementById('eq-synthese').style.display = 'none';
   eqUpdateCount();
-}function eqRefreshZoneDep() {
-  let html;
-  if(simDepl === 'grand') {
-    html = '<span style="font-size:10px;font-weight:700;color:var(--orange)">🏗️ Grand</span>';
-  } else {
-    const zLabel = 'Z' + activeZonePt;
-    html = '<span style="font-weight:700;color:var(--orange)">' + zLabel + '</span><br><span style="font-size:9px;color:var(--blue)">🏠 Petit</span>';
-  }
-  eqRows.forEach(r => {
-    const el = document.getElementById('eq-zonedep-' + r.id);
-    if(el) el.innerHTML = html;
-  });
+}
+/* ── Snapshot INA propre à chaque équipier ─────────────────────────── */
+/* Chaque ligne d'équipe stocke son propre jeu d'INA + zones + déplace-
+   ment, capturé à l'ajout depuis le formulaire global. Ce snapshot est
+   ensuite indépendant : modifier le formulaire principal n'affecte plus
+   les lignes existantes. Indispensable pour :
+     - Permettre 2 équipiers en Z1 et 1 en Z2 sans qu'ils soient
+       écrasés par la zone globale
+     - Voir le détail des INA par équipier pour préparer le contrat   */
+function eqSnapInaFromGlobal() {
+  return {
+    depl: typeof simDepl === 'string' ? simDepl : 'petit',
+    pp: { nb: g('nb_pp'), mt: g('mt_pp'), fact: inaFact ? inaFact.pp !== false : true },
+    ip: { nb: g('nb_ip'), mt: g('mt_ip'), fact: inaFact ? inaFact.ip !== false : true },
+    pt: { nb: g('nb_pt'), mt: g('mt_pt'), fact: inaFact ? inaFact.pt !== false : true, zone: activeZonePt || 1 },
+    it: { nb: g('nb_it'), mt: g('mt_it'), fact: inaFact ? inaFact.it !== false : true, zone: activeZoneIt || 1 },
+  };
+}
+
+/* Affiche la cellule "Zone · Dépl" depuis le snapshot de la ligne */
+function eqRenderZoneCell(id) {
+  const row = eqRows.find(r => r.id === id);
+  const el  = document.getElementById('eq-zonedep-' + id);
+  if (!row || !el) return;
+  if (!row.ina) row.ina = eqSnapInaFromGlobal();
+  const ina = row.ina;
+  const detailRow = document.getElementById('eq-detail-' + id);
+  const isOpen = detailRow && detailRow.style.display !== 'none';
+  const arrow = isOpen ? '▲' : '▼';
+  const deplHtml = ina.depl === 'grand'
+    ? '<span style="color:var(--orange);font-weight:700">🏗️ Grand</span>'
+    : '<span style="color:var(--blue);font-weight:700">🏠 Petit</span>';
+  const zoneHtml = '<span style="color:var(--orange);font-weight:700">PT&nbsp;Z' + ina.pt.zone + '</span>'
+                 + ' <span style="color:var(--text3)">·</span> '
+                 + '<span style="color:var(--orange);font-weight:700">IT&nbsp;Z' + ina.it.zone + '</span>';
+  el.innerHTML =
+    '<button type="button" onclick="eqToggleDetail(' + id + ')" '+
+    'style="border:1px solid var(--border);background:#fff;cursor:pointer;font-size:9px;'+
+    'line-height:1.4;padding:3px 6px;border-radius:5px;text-align:center;width:100%;'+
+    'font-family:\'DM Sans\',sans-serif" '+
+    'onmouseover="this.style.borderColor=\'var(--blue)\'" '+
+    'onmouseout="this.style.borderColor=\'var(--border)\'">'+
+      zoneHtml + '<br>' + deplHtml +
+      ' <span style="color:var(--text3);margin-left:4px">' + arrow + '</span>'+
+    '</button>';
+}
+
+/* Rétro-compatibilité : redessine toutes les zones depuis leur snapshot.
+   La fonction n'écrase plus les lignes avec la zone globale. */
+function eqRefreshZoneDep() {
+  eqRows.forEach(r => eqRenderZoneCell(r.id));
 }
 
 function eqRefreshTotal() {
@@ -2035,19 +2074,31 @@ function eqRefreshTotal() {
 function eqAdd() {
   document.getElementById('eq-empty').style.display = 'none';
   const id = eqCtr++;
-  eqRows.push({id, result:null});
+  // Snapshot de l'INA courante : la ligne devient indépendante du
+  // formulaire global, ce qui permet plusieurs équipiers avec des
+  // zones différentes dans la même équipe.
+  eqRows.push({id, result:null, ina: eqSnapInaFromGlobal()});
   const tbody = document.getElementById('eq-tbody');
   const tr = document.createElement('tr');
   tr.id = 'eq-row-' + id;
   tr.style.borderBottom = '1px solid var(--border)';
   tr.innerHTML = buildEqRowHTML(id);
   tbody.appendChild(tr);
+  // Sous-ligne dépliable avec le détail des INA (utile pour le contrat).
+  const trDetail = document.createElement('tr');
+  trDetail.id = 'eq-detail-' + id;
+  trDetail.className = 'eq-detail-row';
+  trDetail.style.display = 'none';
+  trDetail.innerHTML = '<td colspan="17" style="padding:0;background:#fafbfc;border-bottom:2px solid var(--border)" id="eq-detail-cell-' + id + '"></td>';
+  tbody.appendChild(trDetail);
+  eqRenderDetailRow(id);
   // Peupler le select client
   const cliSel = document.getElementById('eq-cli-'+id);
   if(cliSel){
     const optHtml = '<option value="">— Aucun —</option>' + clients.map(c=>`<option value="${c.id}">${c.name||'Client '+c.id}</option>`).join('');
     cliSel.innerHTML = optHtml;
   }
+  eqRenderZoneCell(id);
   // Le select chantier reste caché jusqu'à sélection d'un client
   eqUpdateCount();
   triggerAutoSave();
@@ -2072,6 +2123,7 @@ function eqCliChange(id) {
 
 function eqDel(id) {
   document.getElementById('eq-row-'+id)?.remove();
+  document.getElementById('eq-detail-'+id)?.remove();
   const idx = eqRows.findIndex(r=>r.id===id);
   if(idx!==-1) eqRows.splice(idx,1);
   if(!eqRows.length) {
@@ -2105,18 +2157,30 @@ function eqCalcRow(id) {
   const coef = g('coef'), hn = g('hn'), hs25 = g('hs25'), hs50 = g('hs50');
   if(!coef) { eqRefreshTotal(); return; }
 
-  const nb_pp=g('nb_pp'),mt_pp=g('mt_pp'),nb_pt=g('nb_pt'),mt_pt=g('mt_pt');
-  const nb_ip=g('nb_ip'),mt_ip=g('mt_ip'),nb_it=g('nb_it'),mt_it=g('mt_it');
+  // Récupère ou crée le snapshot INA propre à la ligne (back-compat).
+  const row = eqRows.find(r2 => r2.id === id);
+  if (row && !row.ina) row.ina = eqSnapInaFromGlobal();
+  const ina = (row && row.ina) ? row.ina : eqSnapInaFromGlobal();
+
+  const nb_pp = ina.pp.nb, mt_pp = ina.pp.mt;
+  const nb_ip = ina.ip.nb, mt_ip = ina.ip.mt;
+  const nb_pt = ina.pt.nb, mt_pt = ina.pt.mt;
+  const nb_it = ina.it.nb, mt_it = ina.it.mt;
+  const factOverride = {
+    pp: !!ina.pp.fact, ip: !!ina.ip.fact,
+    pt: !!ina.pt.fact, it: !!ina.it.fact,
+  };
 
   // Client de la ligne équipe (pas du formulaire principal)
   const clientId = document.getElementById('eq-cli-'+id)?.value || '';
 
-  // Utilise exactement computeMarge → même formule que le formulaire
+  // Utilise exactement computeMarge → même formule que le formulaire,
+  // mais avec les INA propres à la ligne (zones, valeurs, facturation).
   const r = computeMarge({
     tx, coef, hn, hs25, hs50,
     nb_pp, mt_pp, nb_ip, mt_ip, nb_pt, mt_pt, nb_it, mt_it,
     clientId,
-    fact: inaFact
+    fact: factOverride
   });
 
   const veh     = parseFloat(document.getElementById('eq-veh-'+id)?.value)||0;
@@ -2137,16 +2201,10 @@ function eqCalcRow(id) {
   set('eq-rsal-'+id, fc(r.sal_brut));
   set('eq-rina-'+id, fc(r.ina));
   set('eq-rnet-'+id, fc(net_verse));
-  // Afficher zone et déplacement depuis les paramètres globaux du formulaire
-  const zoneEl = document.getElementById('eq-zonedep-'+id);
-  if(zoneEl) {
-    if(simDepl === 'grand') {
-      zoneEl.innerHTML = '<span style="font-size:10px;font-weight:700;color:var(--orange)">🏗️ Grand</span>';
-    } else {
-      const zLabel = 'Z'+activeZonePt;
-      zoneEl.innerHTML = '<span style="font-weight:700;color:var(--orange)">'+zLabel+'</span><br><span style="font-size:9px;color:var(--blue)">🏠 Petit</span>';
-    }
-  }
+  // Affiche la zone & le déplacement depuis le SNAPSHOT propre à la ligne
+  // (et plus depuis les variables globales : un changement dans le
+  // formulaire principal n'écrase plus les zones des équipiers déjà ajoutés).
+  eqRenderZoneCell(id);
 
   const mbEl  = document.getElementById('eq-rmb-'+id);
   const pctEl = document.getElementById('eq-rpct-'+id);
@@ -2157,6 +2215,168 @@ function eqCalcRow(id) {
   if(row) row.result={tf:r.tf,thm:r.thm,sal_brut:r.sal_brut,ina_tot:r.ina,mb,pct_mb,net_ina,net_verse,tx,total_h:r.total_h,veh,carb,retenue};
   eqRefreshTotal();
   triggerAutoSave();
+}
+
+/* ── Détail INA dépliable par équipier ───────────────────────────────
+   La sous-ligne masquée par défaut affiche les 4 catégories INA avec
+   leur nb / montant / total / facturé pour faciliter la préparation
+   du contrat. Tous les champs sont éditables. Une modification met à
+   jour le snapshot row.ina puis recalcule la ligne. */
+function eqToggleDetail(id) {
+  const tr = document.getElementById('eq-detail-' + id);
+  if (!tr) return;
+  tr.style.display = tr.style.display === 'none' ? '' : 'none';
+  eqRenderZoneCell(id); // refresh arrow
+}
+
+/* Construit l'HTML d'une carte INA dans la sous-ligne. */
+function eqInaCardHTML(id, key, icon, label, opts) {
+  const row = eqRows.find(r => r.id === id);
+  if (!row || !row.ina) return '';
+  const data = row.ina[key];
+  const stot = (parseFloat(data.nb)||0) * (parseFloat(data.mt)||0);
+  const showZone = key === 'pt' || key === 'it';
+  const zonePicker = showZone ? (
+    '<div style="display:flex;gap:3px;align-items:center;margin-bottom:5px;flex-wrap:wrap">' +
+    '<span style="font-size:9px;color:var(--text3);font-weight:600">Zone</span>' +
+    [1,2,3,4,5].map(z => {
+      const active = data.zone === z;
+      return '<button type="button" onclick="eqSetRowZone(' + id + ',\'' + key + '\',' + z + ')" '+
+        'style="border:1px solid ' + (active ? 'var(--orange)' : 'var(--border2)') + ';' +
+        'background:' + (active ? 'rgba(234,108,0,.12)' : '#fff') + ';' +
+        'color:' + (active ? 'var(--orange)' : 'var(--text2)') + ';' +
+        'font-weight:' + (active ? '700' : '500') + ';' +
+        'border-radius:3px;padding:2px 6px;font-size:9px;cursor:pointer;font-family:\'DM Sans\',sans-serif">'+
+        'Z' + z + '</button>';
+    }).join('') +
+    '</div>'
+  ) : '';
+
+  const tagLabel = opts.tag || '';
+  const factOn  = !!data.fact;
+  return ''+
+    '<div style="background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px 10px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;gap:6px">'+
+        '<div style="font-size:10px;font-weight:700;color:var(--text2)">' + icon + ' ' + label + '</div>'+
+        (tagLabel ? '<span style="font-size:8px;background:rgba(29,78,216,.1);color:var(--blue);border-radius:3px;padding:1px 5px;white-space:nowrap">' + tagLabel + '</span>' : '') +
+      '</div>'+
+      zonePicker +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">'+
+        '<div style="display:flex;flex-direction:column;gap:2px">'+
+          '<label style="font-size:8px;color:var(--text3);font-weight:600">Nb jours</label>'+
+          '<input type="number" min="0" step="1" value="' + data.nb + '" '+
+            'oninput="eqUpdateInaField(' + id + ',\'' + key + '\',\'nb\',this.value)" '+
+            'style="border:1px solid var(--border2);border-radius:4px;padding:4px 5px;font-size:11px;font-weight:700;font-family:\'DM Mono\',monospace;color:var(--text);background:#fff;text-align:center;outline:none;-moz-appearance:textfield">'+
+        '</div>'+
+        '<div style="display:flex;flex-direction:column;gap:2px">'+
+          '<label style="font-size:8px;color:var(--text3);font-weight:600">Montant €</label>'+
+          '<input type="number" min="0" step="0.01" value="' + data.mt + '" '+
+            'oninput="eqUpdateInaField(' + id + ',\'' + key + '\',\'mt\',this.value)" '+
+            'style="border:1px solid var(--border2);border-radius:4px;padding:4px 5px;font-size:11px;font-weight:700;font-family:\'DM Mono\',monospace;color:var(--orange);background:#fff;text-align:center;outline:none;-moz-appearance:textfield">'+
+        '</div>'+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:5px;gap:6px;flex-wrap:wrap">'+
+        '<div style="font-size:10px;color:var(--text3)">= <strong style="color:var(--text);font-family:\'DM Mono\',monospace" id="eq-detail-tot-' + key + '-' + id + '">' + stot.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €</strong></div>'+
+        '<div style="display:flex;gap:2px">'+
+          '<button type="button" onclick="eqUpdateInaField(' + id + ',\'' + key + '\',\'fact\',true)" '+
+            'style="font-size:9px;padding:3px 7px;border-radius:3px;border:1px solid ' + (factOn ? 'var(--green)' : 'var(--border2)') + ';' +
+            'background:' + (factOn ? 'rgba(22,163,74,.12)' : '#fff') + ';' +
+            'color:' + (factOn ? 'var(--green)' : 'var(--text3)') + ';' +
+            'font-weight:' + (factOn ? '700' : '500') + ';' +
+            'cursor:pointer;font-family:\'DM Sans\',sans-serif">✓ Facturée</button>'+
+          '<button type="button" onclick="eqUpdateInaField(' + id + ',\'' + key + '\',\'fact\',false)" '+
+            'style="font-size:9px;padding:3px 7px;border-radius:3px;border:1px solid ' + (!factOn ? 'var(--red)' : 'var(--border2)') + ';' +
+            'background:' + (!factOn ? 'rgba(220,38,38,.1)' : '#fff') + ';' +
+            'color:' + (!factOn ? 'var(--red)' : 'var(--text3)') + ';' +
+            'font-weight:' + (!factOn ? '700' : '500') + ';' +
+            'cursor:pointer;font-family:\'DM Sans\',sans-serif">✗ Non fact.</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+}
+
+/* Redessine la sous-ligne dépliable d'une équipière. */
+function eqRenderDetailRow(id) {
+  const cell = document.getElementById('eq-detail-cell-' + id);
+  const row  = eqRows.find(r => r.id === id);
+  if (!cell || !row) return;
+  if (!row.ina) row.ina = eqSnapInaFromGlobal();
+  const ina = row.ina;
+  const nom = (document.getElementById('eq-nom-'+id)?.value || '').trim() || ('Intérimaire #' + id);
+  const isPetit = ina.depl !== 'grand';
+  cell.innerHTML = ''+
+    '<div style="padding:14px 16px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">'+
+          '📋 Détail INA — pour le contrat ('+ nom +')</div>'+
+        '<div style="display:flex;gap:5px">'+
+          '<button type="button" onclick="eqSetRowDepl(' + id + ',\'petit\')" '+
+            'style="font-size:10px;padding:5px 10px;border-radius:5px;border:1px solid ' + (isPetit ? 'var(--blue)' : 'var(--border2)') + ';' +
+            'background:' + (isPetit ? 'rgba(29,78,216,.1)' : '#fff') + ';' +
+            'color:' + (isPetit ? 'var(--blue)' : 'var(--text3)') + ';' +
+            'font-weight:' + (isPetit ? '700' : '500') + ';' +
+            'cursor:pointer;font-family:\'DM Sans\',sans-serif">🏠 Petit déplacement</button>'+
+          '<button type="button" onclick="eqSetRowDepl(' + id + ',\'grand\')" '+
+            'style="font-size:10px;padding:5px 10px;border-radius:5px;border:1px solid ' + (!isPetit ? 'var(--orange)' : 'var(--border2)') + ';' +
+            'background:' + (!isPetit ? 'rgba(234,108,0,.1)' : '#fff') + ';' +
+            'color:' + (!isPetit ? 'var(--orange)' : 'var(--text3)') + ';' +
+            'font-weight:' + (!isPetit ? '700' : '500') + ';' +
+            'cursor:pointer;font-family:\'DM Sans\',sans-serif">🏗️ Grand déplacement</button>'+
+        '</div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">'+
+        eqInaCardHTML(id, 'pp', '🥪', 'Prime Panier',     {tag:'× coef'}) +
+        eqInaCardHTML(id, 'ip', '🍽️', 'Indemnité Repas',  {tag:'× 1'}) +
+        eqInaCardHTML(id, 'pt', '🛣️', 'Prime Trajet',     {tag:'× coef'}) +
+        eqInaCardHTML(id, 'it', '🚗', 'Indemnité Transport', {tag:'× client'}) +
+      '</div>'+
+    '</div>';
+}
+
+/* Mise à jour d'un champ INA depuis la sous-ligne, recalcule la marge. */
+function eqUpdateInaField(id, key, prop, value) {
+  const row = eqRows.find(r => r.id === id);
+  if (!row) return;
+  if (!row.ina) row.ina = eqSnapInaFromGlobal();
+  if (prop === 'fact') {
+    row.ina[key].fact = !!value;
+  } else if (prop === 'nb') {
+    row.ina[key].nb = parseFloat(value) || 0;
+  } else if (prop === 'mt') {
+    row.ina[key].mt = parseFloat(value) || 0;
+  }
+  // Met à jour le sous-total dans la carte sans recréer le DOM (évite
+  // de perdre le focus de l'input pendant la saisie).
+  const stot = (parseFloat(row.ina[key].nb)||0) * (parseFloat(row.ina[key].mt)||0);
+  const stEl = document.getElementById('eq-detail-tot-' + key + '-' + id);
+  if (stEl) stEl.textContent = stot.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  // Pour le toggle facturée, on doit redessiner pour mettre à jour les boutons
+  if (prop === 'fact') eqRenderDetailRow(id);
+  eqCalcRow(id);
+}
+
+/* Change la zone PT ou IT propre à un équipier (pré-remplit aussi le
+   montant unitaire avec le barème de cette zone). */
+function eqSetRowZone(id, key, zone) {
+  const row = eqRows.find(r => r.id === id);
+  if (!row || !row.ina || (key !== 'pt' && key !== 'it')) return;
+  row.ina[key].zone = zone;
+  const bareme = (key === 'pt' ? ZONES_PT : ZONES_IT).find(z => z.id === zone);
+  if (bareme) row.ina[key].mt = bareme.price;
+  eqRenderDetailRow(id);
+  eqRenderZoneCell(id);
+  eqCalcRow(id);
+}
+
+/* Bascule petit/grand déplacement pour un équipier. */
+function eqSetRowDepl(id, depl) {
+  const row = eqRows.find(r => r.id === id);
+  if (!row) return;
+  if (!row.ina) row.ina = eqSnapInaFromGlobal();
+  row.ina.depl = depl;
+  eqRenderDetailRow(id);
+  eqRenderZoneCell(id);
+  // Pas besoin de recalculer : le déplacement n'affecte que l'affichage.
 }
 
 function eqRefreshTotal() {
@@ -2491,7 +2711,10 @@ function captureState() {
     const cliName = cliObj ? (cliObj.name||'Client '+cliObj.id) : '';
     const chanObj = cliObj && cliObj.chantiers ? cliObj.chantiers.find(ch=>ch.id==chan) : null;
     const chanName = chanObj ? (chanObj.name||'Chantier '+chanObj.id) : '';
-    return {id:r.id, nom, cli, cliName, chan, chanName, tx, veh, carb, ret, result:r.result||null};
+    // Le snapshot INA propre à la ligne doit être sérialisé tel quel pour
+    // que la sous-ligne dépliable (détail contrat) soit reconstruite à
+    // l'identique au prochain chargement.
+    return {id:r.id, nom, cli, cliName, chan, chanName, tx, veh, carb, ret, ina:r.ina||null, result:r.result||null};
   });
 
   return {
@@ -2531,12 +2754,22 @@ function restoreState(state) {
   eqRows.length=0;
   eqCtr = state.eqCtr||1;
   (state.rows||[]).forEach(r=>{
-    eqRows.push({id:r.id, result:null});
+    // Restaure le snapshot INA propre à la ligne (back-compat : les
+    // anciennes sauvegardes sans .ina utilisent les valeurs globales).
+    eqRows.push({id:r.id, result:null, ina: r.ina || eqSnapInaFromGlobal()});
     const tbody = document.getElementById('eq-tbody');
     const tr = document.createElement('tr');
     tr.id='eq-row-'+r.id; tr.style.borderBottom='1px solid var(--border)';
     tr.innerHTML=buildEqRowHTML(r.id);
     tbody.appendChild(tr);
+    // Sous-ligne dépliable détail INA (cachée par défaut au chargement).
+    const trDetail = document.createElement('tr');
+    trDetail.id='eq-detail-'+r.id;
+    trDetail.className='eq-detail-row';
+    trDetail.style.display='none';
+    trDetail.innerHTML='<td colspan="17" style="padding:0;background:#fafbfc;border-bottom:2px solid var(--border)" id="eq-detail-cell-'+r.id+'"></td>';
+    tbody.appendChild(trDetail);
+    eqRenderDetailRow(r.id);
     // Remplir les valeurs
     const set=(sid,v)=>{const el=document.getElementById(sid);if(el)el.value=v;};
     set('eq-nom-'+r.id, r.nom);
@@ -2555,6 +2788,7 @@ function restoreState(state) {
     const chanSel = document.getElementById('eq-chan-'+r.id);
     if(chanSel && r.chan) { chanSel.value=r.chan; }
     eqCalcRow(r.id);
+    eqRenderZoneCell(r.id);
   });
   eqUpdateCount();
   if(state.rows && state.rows.length) document.getElementById('eq-empty').style.display='none';
