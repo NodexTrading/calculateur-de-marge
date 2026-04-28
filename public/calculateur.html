@@ -2774,7 +2774,7 @@ const BUILTIN_TEMPLATES = [
     id: 'builtin-coffreur-grand-depl',
     name: 'Coffreur grand déplacement',
     emoji: '✈️',
-    desc: 'TX 13,02 €/h × 39 h (35 + 4 HS25), grand déplacement Z5, facturé 1 395 €.',
+    desc: 'TX 13,02 €/h × 39 h, INA grand déplacement standard, facturé 1 395 €.',
     tags: ['Grand dépl.', '39h', 'TF 1395€'],
     builtin: true,
     data: {
@@ -2784,13 +2784,11 @@ const BUILTIN_TEMPLATES = [
       coef: '',
       hn: 35, hs25: 4, hs50: 0,
       tf_input: 1395,
+      // inaPreset déclenche le bouton "✈️ Grand dépl." du formulaire :
+      // 0 panier, 9 repas × 21,40 €, 0 prime trajet, 4 transports ×
+      // 56,80 €. Equivaut a cliquer manuellement sur le preset.
+      inaPreset: 'grand',
       depl: 'grand',
-      // INA grand déplacement standard : pas de panier, repas 5j,
-      // prime trajet et indemnité transport zone 5 (les plus hautes).
-      pp: { nb: 0, mt: 1.80, fact: true },
-      ip: { nb: 5, mt: 10.40, fact: true },
-      pt: { nb: 5, mt: 6.90, fact: true, zone: 5 },
-      it: { nb: 5, mt: 14.80, fact: true, zone: 5, grid: 'classique', acossId: 5 },
     },
   },
   {
@@ -2918,7 +2916,16 @@ function applyTemplate(id, isCustom) {
   const d = tpl.data || {};
   const setVal = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
 
-  // Champs de base
+  // 1. Si le modèle déclare un preset INA (« petit » / « grand »),
+  //    on le déclenche AVANT toute personnalisation. Cela appelle
+  //    inaPreset() qui met simDepl à jour, remplit nb/mt pour les 4
+  //    INA selon les valeurs standard BTP, et lance calc(). Les
+  //    overrides ci-dessous écrasent ensuite ce qui doit l'être.
+  if (d.inaPreset && typeof inaPreset === 'function') {
+    inaPreset(d.inaPreset);
+  }
+
+  // 2. Champs de base : taux, coef, heures
   setVal('tx_horaire', d.tx_horaire);
   setVal('coef',       d.coef != null ? d.coef : '');
   setVal('hn',         d.hn);
@@ -2933,7 +2940,9 @@ function applyTemplate(id, isCustom) {
   } else {
     setVal('tf_input', '');
   }
-  // INA
+  // 3. Overrides INA spécifiques au modèle (s'écrasent par-dessus
+  //    le preset). Pour le modèle Coffreur on n'a aucun override → les
+  //    valeurs grand-déplacement standard du preset restent en place.
   if (d.pp) { setVal('nb_pp', d.pp.nb); setVal('mt_pp', d.pp.mt); inaFact.pp = !!d.pp.fact; if (typeof inaSetFact === 'function') inaSetFact('pp', !!d.pp.fact); }
   if (d.ip) { setVal('nb_ip', d.ip.nb); setVal('mt_ip', d.ip.mt); inaFact.ip = !!d.ip.fact; if (typeof inaSetFact === 'function') inaSetFact('ip', !!d.ip.fact); }
   if (d.pt) {
@@ -2952,8 +2961,15 @@ function applyTemplate(id, isCustom) {
       buildZoneBtns('zone-btns-it', ZONES_IT, activeZoneIt, selectZoneIt);
     }
   }
-  if (d.depl) simDepl = d.depl;
-  // Recalcul + autosave
+  // 4. Mode petit/grand déplacement : on synchronise aussi l'onglet
+  //    Simulateur (toggle visuel sim-depl-petit / sim-depl-grand).
+  if (d.depl) {
+    simDepl = d.depl;
+    if (typeof simSetDepl === 'function') {
+      try { simSetDepl(d.depl); } catch {}
+    }
+  }
+  // 5. Recalcul + autosave
   if (typeof calc === 'function') calc();
   if (typeof triggerAutoSave === 'function') triggerAutoSave();
   closeTemplatesModal();
