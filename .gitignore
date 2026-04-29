@@ -39,3 +39,6 @@ bun.lockb
 *.sw?
 .vercel
 .calc_script.js
+
+# Mockups internes (exploration de design — non déployés)
+mockups/
