@@ -1343,6 +1343,7 @@ if ('serviceWorker' in navigator) {
         <button class="btn-add" style="padding:5px 14px;font-size:11px" onclick="eqAdd()">+ Ajouter</button>
         <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.25);color:var(--green)" onclick="eqShare()" title="Partager cette équipe par lien">🔗 Partager</button>
         <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(234,108,0,.08);border-color:rgba(234,108,0,.25);color:var(--orange)" onclick="eqExport()" title="Exporter en Excel">📊 Excel</button>
+        <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.30);color:var(--purple)" onclick="eqToFacturation()" title="Envoyer l'équipe vers l'app Facturation Mensuelle">📤 Facturation mensuelle</button>
         <button class="btn-del" style="padding:5px 10px;font-size:11px" onclick="eqClear()" title="Vider l'équipe">🗑</button>
       </div>
     </div>
@@ -3454,6 +3455,42 @@ function eqRefreshTotal() {
    + snapshots INA) encodé en base64 dans le hash. Le destinataire ouvre
    le lien : l'app détecte le hash et propose de charger les données.
    Tout transite côté client, pas de backend. */
+/* ════════ Pont vers Facturation Mensuelle BTP ════════ */
+function eqToFacturation() {
+  if (!eqRows.length) {
+    alert("L'équipe est vide — ajoutez d'abord au moins un intérimaire.");
+    return;
+  }
+  // Construire la liste des intérimaires avec leur sal net hebdo + tarif facture hebdo
+  const emps = eqRows.map(row => {
+    const r = eqCalcRow(row);
+    return {
+      nom: row.nom || '',
+      // Net hebdo : 80,6 % du sal_brut (hors INA, qui sont à part dans la facturation)
+      salNetHebdo: Number((r.sal_brut * 0.806).toFixed(2)),
+      // Facture hebdo : Total Facturé tel que calculé par le calculateur
+      factureHebdo: Number(r.tf.toFixed(2))
+    };
+  });
+  const payload = {
+    chantier: '',
+    year: new Date().getFullYear(),
+    month: new Date().getMonth(),
+    emps: emps
+  };
+  let b64;
+  try {
+    b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  } catch (e) {
+    alert("Erreur lors de l'encodage des données.");
+    return;
+  }
+  // URL de l'app Facturation Mensuelle (à adapter quand le déploiement Vercel sera prêt)
+  const FACT_URL = 'https://facturation-mensuelle-btp.vercel.app/';
+  const url = FACT_URL + '#data=' + b64;
+  window.open(url, '_blank', 'noopener');
+}
+
 function eqShare() {
   if (!eqRows.length) {
     alert("L'équipe est vide — ajoutez d'abord au moins un intérimaire.");
