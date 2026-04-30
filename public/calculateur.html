@@ -3461,17 +3461,27 @@ function eqToFacturation() {
     alert("L'équipe est vide — ajoutez d'abord au moins un intérimaire.");
     return;
   }
-  // Construire la liste des intérimaires avec leur sal net hebdo + tarif facture hebdo
-  const emps = eqRows.map(row => {
-    const r = eqCalcRow(row);
-    return {
-      nom: row.nom || '',
-      // Net hebdo : 80,6 % du sal_brut (hors INA, qui sont à part dans la facturation)
-      salNetHebdo: Number((r.sal_brut * 0.806).toFixed(2)),
-      // Facture hebdo : Total Facturé tel que calculé par le calculateur
-      factureHebdo: Number(r.tf.toFixed(2))
-    };
-  });
+  // Force le recalcul de chaque ligne pour s'assurer que row.result est à jour
+  eqRows.forEach(r => { try { eqCalcRow(r.id); } catch(e){} });
+
+  const emps = [];
+  for (const row of eqRows) {
+    const nom = (document.getElementById('eq-nom-' + row.id)?.value || '').trim() || ('Intérimaire #' + row.id);
+    const res = row.result;
+    if (!res) continue; // ligne sans résultat (pas de TX ou pas de Coef)
+    emps.push({
+      nom,
+      // Salaire NET hebdo (hors INA — les INA sont gérées à part dans la facturation)
+      salNetHebdo: Number((res.sal_brut * 0.806).toFixed(2)),
+      // Facture hebdo = Total Facturé du calculateur
+      factureHebdo: Number((res.tf).toFixed(2))
+    });
+  }
+  if (!emps.length) {
+    alert("Aucun intérimaire calculable. Vérifie qu'au moins une ligne a un TX horaire et que le coef du formulaire principal est rempli.");
+    return;
+  }
+
   const payload = {
     chantier: '',
     year: new Date().getFullYear(),
@@ -3485,10 +3495,8 @@ function eqToFacturation() {
     alert("Erreur lors de l'encodage des données.");
     return;
   }
-  // URL de l'app Facturation Mensuelle (à adapter quand le déploiement Vercel sera prêt)
   const FACT_URL = 'https://facturation-mensuelle-btp.vercel.app/';
-  const url = FACT_URL + '#data=' + b64;
-  window.open(url, '_blank', 'noopener');
+  window.open(FACT_URL + '#data=' + b64, '_blank', 'noopener');
 }
 
 function eqShare() {
