@@ -3456,24 +3456,23 @@ function eqRefreshTotal() {
    le lien : l'app détecte le hash et propose de charger les données.
    Tout transite côté client, pas de backend. */
 /* ════════ Pont vers Facturation Mensuelle BTP ════════ */
+let _factWin = null; // référence au tab Facturation déjà ouvert
+
 function eqToFacturation() {
   if (!eqRows.length) {
     alert("L'équipe est vide — ajoutez d'abord au moins un intérimaire.");
     return;
   }
-  // Force le recalcul de chaque ligne pour s'assurer que row.result est à jour
   eqRows.forEach(r => { try { eqCalcRow(r.id); } catch(e){} });
 
   const emps = [];
   for (const row of eqRows) {
     const nom = (document.getElementById('eq-nom-' + row.id)?.value || '').trim() || ('Intérimaire #' + row.id);
     const res = row.result;
-    if (!res) continue; // ligne sans résultat (pas de TX ou pas de Coef)
+    if (!res) continue;
     emps.push({
       nom,
-      // Salaire NET hebdo (hors INA — les INA sont gérées à part dans la facturation)
       salNetHebdo: Number((res.sal_brut * 0.806).toFixed(2)),
-      // Facture hebdo = Total Facturé du calculateur
       factureHebdo: Number((res.tf).toFixed(2))
     });
   }
@@ -3486,7 +3485,7 @@ function eqToFacturation() {
     chantier: '',
     year: new Date().getFullYear(),
     month: new Date().getMonth(),
-    emps: emps
+    emps
   };
   let b64;
   try {
@@ -3495,8 +3494,20 @@ function eqToFacturation() {
     alert("Erreur lors de l'encodage des données.");
     return;
   }
+  // base64url (URL-safe) pour éviter les soucis avec + / =
+  const b64url = b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
   const FACT_URL = 'https://facturation-mensuelle-btp.vercel.app/';
-  window.open(FACT_URL + '#data=' + b64, '_blank', 'noopener');
+  const url = FACT_URL + '#data=' + b64url + '&t=' + Date.now();
+
+  // Réutiliser l'onglet Facturation déjà ouvert s'il existe encore
+  if (_factWin && !_factWin.closed) {
+    try { _factWin.location.href = url; } catch (e) {
+      _factWin = window.open(url, 'forma-facturation');
+    }
+    try { _factWin.focus(); } catch(e) {}
+  } else {
+    _factWin = window.open(url, 'forma-facturation');
+  }
 }
 
 function eqShare() {
