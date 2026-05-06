@@ -158,7 +158,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Paramètres techniques (verrouillés 🔒)",
     icon: "⚙️",
     tab: "calcul",
-    highlight: "#params-panel",
+    highlight: "#params-btn",
     body: [
       "Cette zone contient les constantes légales du calcul : charges patronales, SMIC, Fillon/RGDU, IFM, CP.",
       "🔒 Les champs sont volontairement verrouillés en lecture seule. Personne ne doit les modifier dans l'usage courant — leur valeur est légalement fixée et toute erreur fausserait toutes les marges calculées.",
@@ -182,7 +182,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Sélection du client & badges",
     icon: "🏢",
     tab: "calcul",
-    highlight: ".client-selector-row",
+    highlight: "#client-select",
     body: [
       "Choisissez un client pré-enregistré pour appliquer automatiquement ses barèmes. Trois badges se mettent à jour à droite :",
       "• Ind. Transport × N — multiplicateur d'indemnité transport propre au client.",
@@ -251,9 +251,9 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Présets Petit / Grand déplacement",
     icon: "✈️",
     tab: "calcul",
-    highlight: ".ina-grid",
+    highlight: "[onclick=\"inaPreset('petit')\"]",
     body: [
-      "Trois boutons rapides permettent de pré-remplir les indemnités :",
+      "Trois boutons rapides juste au-dessus des cases INA permettent de pré-remplir les indemnités :",
       "• 🏠 Petit déplacement : panier + ind. transport.",
       "• ✈️ Grand déplacement : repas + prime trajet.",
       "• ✕ Vider : remet toutes les INA à zéro.",
@@ -264,7 +264,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Toggle Facturée / Non facturée",
     icon: "🔁",
     tab: "calcul",
-    highlight: "#ina-item-pp",
+    highlight: "#ina-on-pp",
     body: [
       "Chaque INA possède un toggle « ✓ Facturée » / « ✗ Non fact. » en haut à gauche de sa case.",
       "• Facturée : l'indemnité apparaît sur la facture client (refacturée, parfois × coef).",
@@ -353,7 +353,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Bouton Calculer + Historique + Réinitialiser",
     icon: "🧮",
     tab: "calcul",
-    highlight: ".btn-row",
+    highlight: ".btn-calc",
     body: [
       "Trois actions principales sous le formulaire :",
       "• Calculer la marge — force un recalcul complet et fait défiler vers la zone Résultats.",
@@ -368,7 +368,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Marge Brute & Pourcentage",
     icon: "📊",
     tab: "calcul",
-    highlight: "#res-sec-hero",
+    highlight: ".hero-box.hero-mb",
     body: [
       "Affiche la marge brute en euros et son pourcentage sur le total facturé. La jauge colorée (rouge → vert) indique la santé de la mission.",
     ],
@@ -384,7 +384,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Détail en cascade (waterfall)",
     icon: "💧",
     tab: "calcul",
-    highlight: "#res-sec-wf",
+    highlight: "table.wf",
     body: [
       "Décomposition ligne par ligne :",
       "+ Total Facturé",
@@ -401,7 +401,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Tuiles synthétiques",
     icon: "🔢",
     tab: "calcul",
-    highlight: "#res-sec-tiles",
+    highlight: ".tiles",
     body: [
       "5 tuiles résument les chiffres clés : Total Heures, Taux Horaire Moyen (THM), Salaire Brut, INA Total, et Net + INA reçu par l'intérimaire.",
     ],
@@ -412,7 +412,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Replier sections individuellement",
     icon: "🪗",
     tab: "calcul",
-    highlight: "#res-toggle-btn",
+    highlight: "#btn-sec-hero",
     body: [
       "L'en-tête de la carte Résultats est cliquable : il replie / déplie tout le bloc résultat. Une fois un calcul lancé, des pastilles apparaissent à droite (« Résumé », « Détail », « Chiffres ») pour masquer/afficher chaque sous-section indépendamment :",
       "• Résumé — la jauge marge brute principale.",
@@ -429,7 +429,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Historique des missions",
     icon: "📜",
     tab: "calcul",
-    highlight: "#history-section",
+    highlight: "#history-section .card-head",
     body: [
       "Chaque clic sur « + Historique » archive la mission courante avec tous ses paramètres et résultats. Vous pouvez recharger une ligne pour la dupliquer ou la modifier.",
       "Le bouton « Effacer l'historique » remet la liste à zéro (avec confirmation).",
@@ -444,7 +444,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Pourquoi une équipe sur la même mission ?",
     icon: "👷",
     tab: "calcul",
-    highlight: "#equipe-card",
+    highlight: "#equipe-card .card-head",
     body: [
       "Sur un même chantier, plusieurs intérimaires partagent généralement les mêmes coef, heures et INA — mais chacun a son propre TX horaire et son barème transport.",
       "Cette section permet de saisir une équipe entière en réutilisant les paramètres du formulaire principal, et calcule la marge consolidée pour tout le chantier.",
@@ -459,7 +459,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Synthèse compacte de l'équipe",
     icon: "🧮",
     tab: "calcul",
-    highlight: "#equipe-card",
+    highlight: "#equipe-count",
     body: [
       "Une fois au moins un intérimaire ajouté, une bande de synthèse apparaît juste sous l'en-tête avec 8 indicateurs consolidés :",
       "• TF : total facturé client.",
@@ -477,7 +477,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Détail par intérimaire (16 colonnes)",
     icon: "📋",
     tab: "calcul",
-    highlight: "#eq-main-table",
+    highlight: "#eq-main-table thead",
     body: [
       "Une ligne par intérimaire avec 16 colonnes : Nom · Client · Chantier · TX · Heures · TF · THM · Salaire Brut · INA · 🚗 Véhicule · ⛽ Carburant · MB · % MB · Retenue · Net versé · Zone & Déplacement.",
       "Cliquez sur une ligne pour déplier un panneau détail qui permet de surcharger par mec : zone trajet/transport (Z1-Z5 ou ACOSS), déplacement (Petit/Grand), facturation des INA (✓/✗), retenues, frais véhicule.",
@@ -492,7 +492,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "🔗 Partager · 📊 Excel · 📤 Facturation",
     icon: "📤",
     tab: "calcul",
-    highlight: "#equipe-card .card-head",
+    highlight: "[onclick=\"eqShare()\"]",
     body: [
       "Cinq actions disponibles dans l'en-tête de la carte Équipe :",
       "• + Ajouter — ajoute une ligne intérimaire (vierge à remplir).",
@@ -547,7 +547,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Gestion des fiches clients",
     icon: "🏢",
     tab: "clients",
-    highlight: "#clients-grid",
+    highlight: "[onclick=\"addClient()\"]",
     body: [
       "Créez et modifiez les fiches clients. Chaque fiche stocke ses propres barèmes via 3 sous-onglets :",
       "• INA — multiplicateur d'Indemnité Transport propre au client (× 1, × 1,5, × 2…).",
