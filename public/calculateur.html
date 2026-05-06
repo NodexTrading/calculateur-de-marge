@@ -4742,42 +4742,57 @@ function simCalc() {
       if(!document.body.contains(el)){ hideSpotlight(); return; }
       const rect = el.getBoundingClientRect();
       const PAD = 6;
-      ring.style.top    = (rect.top    - PAD) + 'px';
-      ring.style.left   = (rect.left   - PAD) + 'px';
-      ring.style.width  = (rect.width  + PAD*2) + 'px';
-      ring.style.height = (rect.height + PAD*2) + 'px';
-      ring.style.borderRadius = radius + 'px';
+      // Compense le `zoom` appliqué sur le <body> : `getBoundingClientRect`
+      // retourne des coordonnées dans l'espace visuel (post-zoom), mais le
+      // ring/flèche sont enfants de body donc leur `position:fixed` est
+      // re-zoomé. On divise par le facteur de zoom pour neutraliser.
+      let zoom = 1;
+      try {
+        const z = parseFloat(getComputedStyle(document.body).zoom);
+        if(!Number.isNaN(z) && z > 0) zoom = z;
+      } catch {}
+      const top    = (rect.top    - PAD) / zoom;
+      const left   = (rect.left   - PAD) / zoom;
+      const width  = (rect.width  + PAD*2) / zoom;
+      const height = (rect.height + PAD*2) / zoom;
+      ring.style.top    = top    + 'px';
+      ring.style.left   = left   + 'px';
+      ring.style.width  = width  + 'px';
+      ring.style.height = height + 'px';
+      ring.style.borderRadius = (radius / zoom) + 'px';
 
       // Choix de la direction de la flèche selon la place dispo autour
       // de la cible. Préférence : droite > bas > haut > gauche.
+      // On raisonne en coordonnées visuelles (rect brut) puis on divise
+      // les positions finales par le zoom comme pour le ring.
       const vw = window.innerWidth, vh = window.innerHeight;
       const ARROW_W = 72, ARROW_H = 36, GAP = 18;
-      let dir, top, left;
+      let dir, atop, aleft;
       if(vw - rect.right > ARROW_W + GAP + 12){
         dir = 'left';
-        top  = rect.top + rect.height/2 - ARROW_H/2;
-        left = rect.right + GAP;
+        atop  = rect.top + rect.height/2 - ARROW_H/2;
+        aleft = rect.right + GAP;
       } else if(vh - rect.bottom > ARROW_W + GAP + 12){
         dir = 'up';
-        top  = rect.bottom + GAP;
-        left = rect.left + rect.width/2 - ARROW_H/2;
+        atop  = rect.bottom + GAP;
+        aleft = rect.left + rect.width/2 - ARROW_H/2;
       } else if(rect.top > ARROW_W + GAP + 12){
         dir = 'down';
-        top  = rect.top - GAP - ARROW_W;
-        left = rect.left + rect.width/2 - ARROW_H/2;
+        atop  = rect.top - GAP - ARROW_W;
+        aleft = rect.left + rect.width/2 - ARROW_H/2;
       } else if(rect.left > ARROW_W + GAP + 12){
         dir = 'right';
-        top  = rect.top + rect.height/2 - ARROW_H/2;
-        left = rect.left - GAP - ARROW_W;
+        atop  = rect.top + rect.height/2 - ARROW_H/2;
+        aleft = rect.left - GAP - ARROW_W;
       } else {
         // Pas la place autour : on colle la flèche en bas à droite de la cible.
         dir = 'left';
-        top  = rect.top + rect.height/2 - ARROW_H/2;
-        left = Math.min(rect.right + GAP, vw - ARROW_W - 4);
+        atop  = rect.top + rect.height/2 - ARROW_H/2;
+        aleft = Math.min(rect.right + GAP, vw - ARROW_W - 4);
       }
       arrow.dataset.dir = dir;
-      arrow.style.top  = top  + 'px';
-      arrow.style.left = left + 'px';
+      arrow.style.top  = (atop  / zoom) + 'px';
+      arrow.style.left = (aleft / zoom) + 'px';
     }
 
     // Centre la cible dans le viewport puis place le projecteur.
