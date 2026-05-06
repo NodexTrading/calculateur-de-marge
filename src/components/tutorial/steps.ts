@@ -112,9 +112,10 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     category: "Introduction",
     title: "Les 5 onglets de l'application",
     icon: "🗂️",
-    highlight: ".tab-bar",
+    tab: "calcul",
+    highlight: ".tab-btn.active",
     body: [
-      "L'app est organisée en 5 onglets accessibles depuis la barre supérieure :",
+      "L'app est organisée en 5 onglets accessibles depuis la barre supérieure (l'onglet « Calcul » actuellement actif est surligné) :",
       "• Calcul — saisie principale d'une mission, calcul de la marge, historique et gestion d'équipe.",
       "• Simulateur — détermine le prix de vente pour atteindre une marge cible.",
       "• 🔍 Coef Inverse — retrouve le coefficient à partir d'un total facturé connu.",
