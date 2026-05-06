@@ -376,6 +376,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
       "8 → 15 % : standard intérim BTP.",
       "Au-delà de 15 % : marge confortable.",
     ],
+    setup: EXAMPLE_CALC,
   },
   {
     category: "Résultats",
@@ -392,6 +393,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
       "− Indemnités INA (selon Facturée/Non facturée)",
       "= Marge Brute",
     ],
+    setup: EXAMPLE_CALC,
   },
   {
     category: "Résultats",
@@ -402,20 +404,22 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     body: [
       "5 tuiles résument les chiffres clés : Total Heures, Taux Horaire Moyen (THM), Salaire Brut, INA Total, et Net + INA reçu par l'intérimaire.",
     ],
+    setup: EXAMPLE_CALC,
   },
   {
     category: "Résultats",
     title: "Replier sections individuellement",
     icon: "🪗",
     tab: "calcul",
-    highlight: "#res-section-btns",
+    highlight: "#res-toggle-btn",
     body: [
-      "Le bouton « Sections » dans l'en-tête de la carte Résultats ouvre 3 toggles indépendants :",
-      "• Marge — afficher/masquer la jauge principale.",
-      "• Waterfall — afficher/masquer le détail en cascade.",
-      "• Tuiles — afficher/masquer les chiffres synthétiques.",
+      "L'en-tête de la carte Résultats est cliquable : il replie / déplie tout le bloc résultat. Une fois un calcul lancé, des pastilles apparaissent à droite (« Résumé », « Détail », « Chiffres ») pour masquer/afficher chaque sous-section indépendamment :",
+      "• Résumé — la jauge marge brute principale.",
+      "• Détail — la cascade de calcul.",
+      "• Chiffres — les tuiles synthétiques.",
       "Pratique pour ne garder à l'écran que ce qui vous intéresse pendant une négociation client.",
     ],
+    setup: EXAMPLE_CALC,
   },
 
   // ─────────── HISTORIQUE ───────────
@@ -430,7 +434,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
       "Le bouton « Effacer l'historique » remet la liste à zéro (avec confirmation).",
       "👉 Le tutoriel ajoute automatiquement la mission de l'exemple à l'historique pour que la zone ait du contenu à afficher.",
     ],
-    setup: [{ action: "ensure_history_demo" }],
+    setup: [...EXAMPLE_CALC, { action: "ensure_history_demo" }],
   },
 
   // ─────────── ÉQUIPE — MÊME MISSION ───────────
@@ -454,14 +458,17 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Synthèse compacte de l'équipe",
     icon: "🧮",
     tab: "calcul",
-    highlight: "#eq-synthese",
+    highlight: "#equipe-card",
     body: [
-      "La synthèse en haut du tableau affiche les 8 indicateurs consolidés de l'équipe :",
+      "Une fois au moins un intérimaire ajouté, une bande de synthèse apparaît juste sous l'en-tête avec 8 indicateurs consolidés :",
       "• TF : total facturé client.",
       "• MB / % MB : marge brute et son pourcentage.",
       "• Coût moy. / Net moy. / TX moy. : coût agence, net versé moyen, TX moyen.",
       "• Frais véh. : déduction des frais véhicule + carburant déclarés.",
       "• MB nette : marge après déduction de tous les frais véhicule.",
+    ],
+    tips: [
+      "La bande synthèse reste cachée tant que l'équipe est vide — c'est normal. Cliquez « + Ajouter » pour la voir apparaître.",
     ],
   },
   {
@@ -471,8 +478,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     tab: "calcul",
     highlight: "#eq-main-table",
     body: [
-      "Une ligne par intérimaire avec : Nom · Client · Chantier · TX · Heures · TF · THM · Salaire Brut · INA · 🚗 Véhicule · ⛽ Carburant · MB · % MB · Retenue · Net versé · Zone & Déplacement.",
-      "Cliquez la ligne pour ouvrir un panneau détail qui permet de surcharger par mec : zone trajet/transport (Z1-Z5 ou ACOSS), déplacement (Petit/Grand), facturation des INA (✓/✗), retenues, frais véhicule.",
+      "Une ligne par intérimaire avec 16 colonnes : Nom · Client · Chantier · TX · Heures · TF · THM · Salaire Brut · INA · 🚗 Véhicule · ⛽ Carburant · MB · % MB · Retenue · Net versé · Zone & Déplacement.",
+      "Cliquez sur une ligne pour déplier un panneau détail qui permet de surcharger par mec : zone trajet/transport (Z1-Z5 ou ACOSS), déplacement (Petit/Grand), facturation des INA (✓/✗), retenues, frais véhicule.",
     ],
     tips: [
       "Une retenue (acompte sur paie ou avance) est déduite du Net versé sans toucher au salaire brut ni à la marge.",
@@ -486,11 +493,12 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     tab: "calcul",
     highlight: "#equipe-card .card-head",
     body: [
-      "Trois actions de sortie pour l'équipe :",
-      "• 🔗 Partager — génère un lien WhatsApp / partageable contenant l'équipe complète encodée. Le destinataire ouvre le lien et voit la même équipe sans rien réinstaller.",
-      "• 📊 Excel — exporte l'équipe au format Excel (.xlsx) pour archivage ou envoi compta.",
-      "• 📤 Facturation mensuelle — envoie l'équipe directement vers l'app Facturation Mensuelle BTP (création automatique du tableau du chantier avec les bons mecs et tarifs).",
-      "🗑 Vide complètement l'équipe (avec confirmation).",
+      "Cinq actions disponibles dans l'en-tête de la carte Équipe :",
+      "• + Ajouter — ajoute une ligne intérimaire (vierge à remplir).",
+      "• 🔗 Partager — génère un lien partageable (WhatsApp, e-mail) contenant l'équipe complète encodée. Le destinataire ouvre le lien et retrouve la même équipe.",
+      "• 📊 Excel — exporte l'équipe en .xlsx pour archivage ou envoi compta.",
+      "• 📤 Facturation mensuelle — envoie l'équipe directement vers l'app Facturation Mensuelle BTP (création automatique du tableau chantier avec les bons mecs et tarifs).",
+      "• 🗑 — vide complètement l'équipe (avec confirmation).",
     ],
   },
 
