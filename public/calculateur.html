@@ -1148,11 +1148,25 @@ if ('serviceWorker' in navigator) {
       <div class="sec-title">Taux &amp; Heures</div>
       <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px">
 
-        <div style="display:flex;flex-direction:column;gap:5px">
-          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">TX Horaire</label>
-          <input type="number" id="tx_horaire" placeholder="13.02" step="0.01" oninput="calc()"
-            style="border:2px solid var(--blue);border-radius:8px;padding:12px 10px;font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue);background:#fff;text-align:center;outline:none;width:100%;-moz-appearance:textfield;transition:border-color .15s">
-          <span style="font-size:10px;color:var(--text3);text-align:center">€/h</span>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;gap:2px;margin-bottom:1px">
+            <button type="button" id="mode-brut-btn" onclick="setInputMode('brut')"
+              style="flex:1;border:1px solid var(--blue);background:var(--blue);color:#fff;padding:3px 4px;font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-transform:uppercase;letter-spacing:.4px;border-radius:4px;transition:all .15s">€/h Brut</button>
+            <button type="button" id="mode-net-btn" onclick="setInputMode('net')"
+              style="flex:1;border:1px solid var(--border2);background:#fff;color:var(--text3);padding:3px 4px;font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-transform:uppercase;letter-spacing:.4px;border-radius:4px;transition:all .15s">Salaire Net</button>
+          </div>
+          <div id="tx_horaire_cell" style="display:flex;flex-direction:column;gap:5px">
+            <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">TX Horaire</label>
+            <input type="number" id="tx_horaire" placeholder="13.02" step="0.01" oninput="calc()"
+              style="border:2px solid var(--blue);border-radius:8px;padding:12px 10px;font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue);background:#fff;text-align:center;outline:none;width:100%;-moz-appearance:textfield;transition:border-color .15s">
+            <span style="font-size:10px;color:var(--text3);text-align:center">€/h</span>
+          </div>
+          <div id="net_input_cell" style="display:none;flex-direction:column;gap:5px">
+            <label style="font-size:10px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.6px">Salaire Net</label>
+            <input type="number" id="net_input" placeholder="1500" step="0.01" oninput="onNetInput()"
+              style="border:2px solid #16a34a;border-radius:8px;padding:12px 10px;font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:#16a34a;background:#fff;text-align:center;outline:none;width:100%;-moz-appearance:textfield;transition:border-color .15s">
+            <span id="net-derived" style="font-size:10px;color:var(--text3);text-align:center">€ Net</span>
+          </div>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:5px">
@@ -2262,7 +2276,92 @@ function onClientChange(){
   tfEl._editing = false;
 }
 
+/* ════ MODE BRUT / NET ════ */
+let inputMode = 'brut';
+function setInputMode(mode){
+  inputMode = mode;
+  const isBrut = mode === 'brut';
+  const b = document.getElementById('mode-brut-btn'), n = document.getElementById('mode-net-btn');
+  b.style.background = isBrut ? 'var(--blue)' : '#fff';
+  b.style.color      = isBrut ? '#fff' : 'var(--text3)';
+  b.style.borderColor= isBrut ? 'var(--blue)' : 'var(--border2)';
+  n.style.background = !isBrut ? '#16a34a' : '#fff';
+  n.style.color      = !isBrut ? '#fff' : 'var(--text3)';
+  n.style.borderColor= !isBrut ? '#16a34a' : 'var(--border2)';
+  document.getElementById('tx_horaire_cell').style.display = isBrut ? 'flex' : 'none';
+  document.getElementById('net_input_cell').style.display  = isBrut ? 'none' : 'flex';
+  if(!isBrut){
+    // Si un tx existe déjà, pré-remplir le net équivalent pour transition fluide
+    const tx = parseFloat(g('tx_horaire')) || 0;
+    if(tx > 0){
+      const hn=g('hn'),hs25=g('hs25'),hs50=g('hs50'),eff_h=hn+hs25*1.25+hs50*1.5;
+      const taux_ifm=g('p_ifm')/100,taux_cp=g('p_cp')/100;
+      const nb_pp=g('nb_pp'),mt_pp=g('mt_pp'),nb_ip=g('nb_ip'),mt_ip=g('mt_ip');
+      const nb_pt=g('nb_pt'),mt_pt=g('mt_pt'),nb_it=g('nb_it'),mt_it=g('mt_it');
+      const st_pp=nb_pp*mt_pp,st_ip=nb_ip*mt_ip,st_pt=nb_pt*mt_pt,st_it=nb_it*mt_it;
+      const fpp=inaFact.pp,fip=inaFact.ip,fpt=inaFact.pt,fit=inaFact.it;
+      const ina_v=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
+      const sal_brut=tx*eff_h*(1+taux_ifm)*(1+taux_cp)+(fpp?st_pp:0)+(fpt?st_pt:0);
+      const net=sal_brut*0.806+ina_v;
+      document.getElementById('net_input').value = net.toFixed(2);
+    }
+    setTimeout(()=>document.getElementById('net_input').focus(),0);
+  } else {
+    setTimeout(()=>document.getElementById('tx_horaire').focus(),0);
+  }
+  calc();
+}
+
+function syncNetToTx(){
+  const netEl = document.getElementById('net_input');
+  if(!netEl) return false;
+  const net = parseFloat(netEl.value) || 0;
+  const derived = document.getElementById('net-derived');
+  if(net <= 0){
+    if(derived) derived.innerHTML = '€ Net';
+    return false;
+  }
+  const hn=g('hn'),hs25=g('hs25'),hs50=g('hs50'),eff_h=hn+hs25*1.25+hs50*1.5;
+  if(eff_h <= 0){
+    if(derived) derived.innerHTML = '<span style="color:#ef4444">⚠ Saisis les heures</span>';
+    return false;
+  }
+  const nb_pp=g('nb_pp'),mt_pp=g('mt_pp'),nb_ip=g('nb_ip'),mt_ip=g('mt_ip');
+  const nb_pt=g('nb_pt'),mt_pt=g('mt_pt'),nb_it=g('nb_it'),mt_it=g('mt_it');
+  const st_pp=nb_pp*mt_pp,st_ip=nb_ip*mt_ip,st_pt=nb_pt*mt_pt,st_it=nb_it*mt_it;
+  const fpp=inaFact.pp,fip=inaFact.ip,fpt=inaFact.pt,fit=inaFact.it;
+  const ina_v=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
+  // Inverse de  net = sal_brut * 0.806 + ina_versée
+  const sal_brut = (net - ina_v) / 0.806;
+  // Inverse de  sal_brut = tx*eff_h*(1+ifm)*(1+cp) + PP_fact + PT_fact
+  const taux_ifm=g('p_ifm')/100,taux_cp=g('p_cp')/100;
+  const ina_brut=(fpp?st_pp:0)+(fpt?st_pt:0);
+  const tx=(sal_brut-ina_brut)/(eff_h*(1+taux_ifm)*(1+taux_cp));
+  if(tx <= 0){
+    document.getElementById('tx_horaire').value='';
+    if(derived) derived.innerHTML='<span style="color:#ef4444">⚠ Net trop faible</span>';
+    return false;
+  }
+  document.getElementById('tx_horaire').value=tx.toFixed(2);
+  if(derived) derived.innerHTML=`→ <strong style="color:var(--blue)">${tx.toFixed(2)} €/h brut</strong> &nbsp;·&nbsp; ${(tx*0.806).toFixed(2)} €/h net`;
+  // Dériver le coef depuis TF si saisi
+  const tf_val=parseFloat(g('tf_input'))||0;
+  const tfEl=document.getElementById('tf_input');
+  if(tf_val>0 && !tfEl._editing){
+    const base_coef=tx*eff_h+(fpp?st_pp:0)+(fpt?st_pt:0);
+    const ina_l=(fip?st_ip:0)+(fit?st_it:0);
+    if(base_coef>0) document.getElementById('coef').value=((tf_val-ina_l)/base_coef).toFixed(4);
+  }
+  return true;
+}
+function onNetInput(){ calc(); }
+
 function calc(){
+  if(inputMode === 'net' && !calc._reentrant){
+    calc._reentrant = true;
+    syncNetToTx();
+    calc._reentrant = false;
+  }
   const tx=g('tx_horaire'),coef=g('coef'),hn=g('hn'),hs25=g('hs25'),hs50=g('hs50');
   const nb_pp=g('nb_pp'),mt_pp=g('mt_pp'),nb_ip=g('nb_ip'),mt_ip=g('mt_ip');
   const nb_pt=g('nb_pt'),mt_pt=g('mt_pt'),nb_it=g('nb_it'),mt_it=g('mt_it');
@@ -2310,7 +2409,7 @@ function renderHistory(){
 }
 function deleteHist(i){histData.splice(i,1);if(!histData.length)document.getElementById('history-section').style.display='none';renderHistory();}
 function clearHistory(){if(!histData.length)return;if(!confirm('Effacer tout ?'))return;histData.length=0;document.getElementById('history-section').style.display='none';document.getElementById('hist-body').innerHTML='';}
-function resetForm(){['tx_horaire','coef'].forEach(id=>document.getElementById(id).value='');document.getElementById('hn').value=35;['hs25','hs50','nb_pp','nb_ip','nb_pt','nb_it'].forEach(id=>document.getElementById(id).value=0);['st_pp','st_ip','st_pt','st_it'].forEach(id=>sv(id,'0,00 €'));document.getElementById('results-card').style.display='none';}
+function resetForm(){['tx_horaire','coef'].forEach(id=>document.getElementById(id).value='');const ni=document.getElementById('net_input');if(ni)ni.value='';const nd=document.getElementById('net-derived');if(nd)nd.innerHTML='€ Net';document.getElementById('hn').value=35;['hs25','hs50','nb_pp','nb_ip','nb_pt','nb_it'].forEach(id=>document.getElementById(id).value=0);['st_pp','st_ip','st_pt','st_it'].forEach(id=>sv(id,'0,00 €'));document.getElementById('results-card').style.display='none';if(inputMode!=='brut')setInputMode('brut');}
 
 
 /* ════ CLIENTS ════ */
