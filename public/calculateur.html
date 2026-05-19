@@ -1146,14 +1146,14 @@ if ('serviceWorker' in navigator) {
         </div>
       </div>
       <div class="sec-title">Taux &amp; Heures</div>
-      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;align-items:end">
 
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <div style="display:flex;gap:2px;margin-bottom:1px">
+        <div style="display:flex;flex-direction:column;gap:5px;justify-content:flex-end">
+          <div style="display:flex;gap:2px;background:#f3f4f6;border-radius:6px;padding:2px;margin-bottom:1px">
             <button type="button" id="mode-brut-btn" onclick="setInputMode('brut')"
-              style="flex:1;border:1px solid var(--blue);background:var(--blue);color:#fff;padding:3px 4px;font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-transform:uppercase;letter-spacing:.4px;border-radius:4px;transition:all .15s">€/h Brut</button>
+              style="flex:1;border:none;background:var(--blue);color:#fff;padding:3px 4px;font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-transform:uppercase;letter-spacing:.4px;border-radius:4px;transition:all .15s">€/h Brut</button>
             <button type="button" id="mode-net-btn" onclick="setInputMode('net')"
-              style="flex:1;border:1px solid var(--border2);background:#fff;color:var(--text3);padding:3px 4px;font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-transform:uppercase;letter-spacing:.4px;border-radius:4px;transition:all .15s">Salaire Net</button>
+              style="flex:1;border:none;background:transparent;color:var(--text3);padding:3px 4px;font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-transform:uppercase;letter-spacing:.4px;border-radius:4px;transition:all .15s">Salaire Net</button>
           </div>
           <div id="tx_horaire_cell" style="display:flex;flex-direction:column;gap:5px">
             <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">TX Horaire</label>
@@ -2282,12 +2282,10 @@ function setInputMode(mode){
   inputMode = mode;
   const isBrut = mode === 'brut';
   const b = document.getElementById('mode-brut-btn'), n = document.getElementById('mode-net-btn');
-  b.style.background = isBrut ? 'var(--blue)' : '#fff';
+  b.style.background = isBrut ? 'var(--blue)' : 'transparent';
   b.style.color      = isBrut ? '#fff' : 'var(--text3)';
-  b.style.borderColor= isBrut ? 'var(--blue)' : 'var(--border2)';
-  n.style.background = !isBrut ? '#16a34a' : '#fff';
+  n.style.background = !isBrut ? '#16a34a' : 'transparent';
   n.style.color      = !isBrut ? '#fff' : 'var(--text3)';
-  n.style.borderColor= !isBrut ? '#16a34a' : 'var(--border2)';
   document.getElementById('tx_horaire_cell').style.display = isBrut ? 'flex' : 'none';
   document.getElementById('net_input_cell').style.display  = isBrut ? 'none' : 'flex';
   if(!isBrut){
@@ -3702,31 +3700,117 @@ function _eqShareCopyToClipboard(url, subject) {
           'color:var(--text);resize:none;outline:none;word-break:break-all" onclick="this.select()">' +
           url.replace(/&/g,'&amp;').replace(/</g,'&lt;') +
         '</textarea>'+
-        '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:flex-end">'+
-          '<a href="mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(url) + '" '+
-            'class="btn-add" style="text-decoration:none;display:inline-block;padding:8px 14px;font-size:12px">📧 Email</a>'+
-          '<button onclick="window.open(\'https://wa.me/?text=\'+encodeURIComponent(' + JSON.stringify(subject + ' — ' + url) + '))" '+
+        '<div id="_share-status" style="font-size:11px;color:var(--text3);margin-top:10px;min-height:14px;line-height:1.4"></div>'+
+        '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:flex-end">'+
+          '<button id="_share-email-btn" '+
+            'class="btn-add" style="padding:8px 14px;font-size:12px">📧 Email</button>'+
+          '<button id="_share-wa-btn" '+
             'class="btn-add" style="padding:8px 14px;font-size:12px;background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#16a34a">💬 WhatsApp</button>'+
           '<button id="_share-copy-btn" '+
             'class="btn-add" style="padding:8px 14px;font-size:12px;background:var(--blue);border-color:var(--blue);color:#fff">📋 Copier</button>'+
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
-    document.getElementById('_share-copy-btn').onclick = () => {
+
+    // ── Bouton Copier (presse-papier) ──
+    const copyUrlToClipboard = () => {
       const ta = document.getElementById('_share-url-ta');
       ta.select(); ta.setSelectionRange(0, ta.value.length);
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(ta.value).then(() => {
-            const btn = document.getElementById('_share-copy-btn');
-            if (btn) { btn.textContent = '✅ Copié !'; setTimeout(() => overlay.remove(), 700); }
-          }).catch(() => document.execCommand('copy'));
-        } else {
-          document.execCommand('copy');
-          const btn = document.getElementById('_share-copy-btn');
-          if (btn) { btn.textContent = '✅ Copié !'; setTimeout(() => overlay.remove(), 700); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(ta.value)
+          .then(() => true)
+          .catch(() => { try { return document.execCommand('copy'); } catch(e){ return false; } });
+      }
+      try { return Promise.resolve(document.execCommand('copy')); } catch(e){ return Promise.resolve(false); }
+    };
+
+    document.getElementById('_share-copy-btn').onclick = () => {
+      copyUrlToClipboard().then(ok => {
+        const btn = document.getElementById('_share-copy-btn');
+        if (btn && ok) { btn.textContent = '✅ Copié !'; setTimeout(() => overlay.remove(), 700); }
+      });
+    };
+
+    // ── Bouton WhatsApp ──
+    // Avec WhatsApp, on inclut l'URL directement (WhatsApp gère bien les
+    // URL longues — limite ~65000 caractères).
+    document.getElementById('_share-wa-btn').onclick = () => {
+      window.open('https://wa.me/?text=' + encodeURIComponent(subject + ' — ' + url), '_blank', 'noopener');
+    };
+
+    // ── Bouton Email (mailto: robuste) ──
+    // PROBLÈME résolu : les clients mail (Gmail/Outlook/Mail Windows)
+    // tronquent un mailto: à ~2000 caractères. Un lien d'équipe encodée
+    // dépasse souvent cette limite → le destinataire reçoit un body vide
+    // ou un lien cassé. Solution : copier le lien dans le presse-papier
+    // AVANT d'ouvrir le client mail, et inclure dans le body un message
+    // court demandant à l'utilisateur de coller (Ctrl+V). Si l'URL est
+    // assez courte, on tente quand même de l'inclure dans le body en bonus.
+    document.getElementById('_share-email-btn').onclick = () => {
+      // Marge de sécurité sous la limite mailto: la plus restrictive (~2000)
+      const SHORT_LIMIT = 1500;
+      const isShort = url.length < SHORT_LIMIT;
+      const bodyShort =
+        'Lien à ouvrir dans le Calculateur de Marge :\n\n' +
+        url + '\n\n' +
+        'Il chargera l\'équipe complète avec son détail INA prêt pour le contrat.';
+      const bodyLong =
+        '👉 Le lien a été copié dans votre presse-papier.\n\n' +
+        'Collez-le ici avec Ctrl+V (ou Cmd+V sur Mac) puis envoyez le mail.\n\n' +
+        'Il chargera l\'équipe complète dans le Calculateur de Marge avec son détail INA prêt pour le contrat.';
+      const body = isShort ? bodyShort : bodyLong;
+      const href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+
+      const status = document.getElementById('_share-status');
+      const btn = document.getElementById('_share-email-btn');
+
+      const openMail = () => {
+        // Méthode la plus fiable pour mailto: dans une iframe : créer un
+        // <a> ancré au document parent et le cliquer. window.open(mailto:)
+        // peut être bloqué silencieusement par certains navigateurs.
+        try {
+          const a = document.createElement('a');
+          a.href = href;
+          a.rel = 'noopener';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => a.remove(), 100);
+        } catch (e) {
+          // Dernier recours : navigation directe
+          try { window.location.href = href; } catch(e2) {}
         }
-      } catch { /* selectionnez manuellement */ }
+      };
+
+      // Copier d'abord le lien dans le presse-papier (toujours, même si court)
+      copyUrlToClipboard().then(copied => {
+        openMail();
+        if (btn) {
+          const orig = btn.textContent;
+          btn.textContent = isShort ? '📧 Mail ouvert' : '📋 Lien copié — Ctrl+V dans le mail';
+          btn.style.background = 'var(--green)';
+          btn.style.borderColor = 'var(--green)';
+          btn.style.color = '#fff';
+          setTimeout(() => {
+            btn.textContent = orig;
+            btn.style.background = '';
+            btn.style.borderColor = '';
+            btn.style.color = '';
+          }, 4000);
+        }
+        if (status) {
+          if (!copied && !isShort) {
+            status.textContent = '⚠️ Lien trop long et copie impossible. Copiez-le manuellement depuis la zone ci-dessus puis collez-le dans le mail.';
+            status.style.color = 'var(--red)';
+          } else if (isShort) {
+            status.textContent = '✅ Le client mail s\'ouvre avec le lien dans le corps du message.';
+            status.style.color = 'var(--green)';
+          } else {
+            status.textContent = '✅ Lien copié. Dans le mail qui vient de s\'ouvrir, faites Ctrl+V dans le corps du message puis envoyez.';
+            status.style.color = 'var(--green)';
+          }
+        }
+      });
     };
   };
   showLinkModal();
