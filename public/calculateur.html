@@ -1381,7 +1381,7 @@ if ('serviceWorker' in navigator) {
       <div style="display:flex;gap:8px;align-items:center">
         <span style="font-size:10px;color:var(--text3)" id="equipe-count">0 intérimaire</span>
         <button class="btn-add" style="padding:5px 14px;font-size:11px" onclick="eqAdd()">+ Ajouter</button>
-        <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.25);color:var(--green)" onclick="eqShare()" title="Partager cette équipe par lien">🔗 Partager</button>
+        <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.25);color:var(--green)" onclick="eqShare(this)" title="Partager cette équipe par lien">🔗 Partager</button>
         <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(234,108,0,.08);border-color:rgba(234,108,0,.25);color:var(--orange)" onclick="eqExport()" title="Exporter en Excel">📊 Excel</button>
         <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.30);color:var(--purple)" onclick="eqToFacturation()" title="Envoyer l'équipe vers l'app Facturation Mensuelle">📤 Facturation mensuelle</button>
         <button class="btn-del" style="padding:5px 10px;font-size:11px" onclick="eqClear()" title="Vider l'équipe">🗑</button>
@@ -3633,25 +3633,79 @@ function eqToFacturation() {
   }
 }
 
-function eqShare() {
+/* ──────────────────────────────────────────────────────────────────
+   Stockage des partages dans Supabase → liens COURTS (.../#s=<id>).
+   Avant, toute l'équipe était encodée en base64 dans l'URL : le lien
+   atteignait 5 000–20 000 caractères et était tronqué par les mails.
+   Désormais on stocke le payload côté Supabase et on ne partage qu'un
+   id court de 8 caractères.
+   ⚠️ Renseigne les 2 constantes ci-dessous (Dashboard Supabase →
+   Settings → API). Tant qu'elles ne sont pas valides, on retombe
+   automatiquement sur l'ancien lien base64 (aucune régression). ────── */
+const SUPABASE_URL   = 'https://podlybqnzifojoeqklmv.supabase.co';
+const SUPABASE_ANON  = 'sb_publishable_8qEkvZAK2NE21SN4-PURJQ_CIcK4jm0';
+const SHARE_TTL_DAYS = 90;
+const _supaReady = /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(SUPABASE_URL) && SUPABASE_ANON.length > 40;
+const _supaBase  = SUPABASE_URL.replace(/\/$/, '');
+
+/* id court URL-safe (8 caractères base62) tiré du CSPRNG. */
+function _shareNewId() {
+  const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const buf = new Uint32Array(8);
+  crypto.getRandomValues(buf);
+  let s = '';
+  for (let i = 0; i < 8; i++) s += A[buf[i] % A.length];
+  return s;
+}
+
+/* Envoie le payload dans Supabase, renvoie l'id court.
+   Réessaie en cas de collision de clé primaire (409, très rare). */
+async function _shareUpload(payload, attempt) {
+  attempt = attempt || 0;
+  const id = _shareNewId();
+  const expires_at = new Date(Date.now() + SHARE_TTL_DAYS * 86400000).toISOString();
+  const res = await fetch(_supaBase + '/rest/v1/shares', {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': 'Bearer ' + SUPABASE_ANON,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({ id, kind: 'team', payload, expires_at })
+  });
+  if (res.status === 409 && attempt < 3) return _shareUpload(payload, attempt + 1);
+  if (!res.ok) throw new Error('Supabase ' + res.status + ' ' + (await res.text().catch(() => '')));
+  return id;
+}
+
+/* Récupère le payload d'un partage depuis son id court. */
+async function _shareFetch(id) {
+  const res = await fetch(
+    _supaBase + '/rest/v1/shares?id=eq.' + encodeURIComponent(id) + '&select=payload',
+    { headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON } }
+  );
+  if (!res.ok) throw new Error('Supabase ' + res.status);
+  const arr = await res.json();
+  if (!arr || !arr.length) throw new Error('introuvable');
+  return arr[0].payload;
+}
+
+async function eqShare(btn) {
   if (!eqRows.length) {
     alert("L'équipe est vide — ajoutez d'abord au moins un intérimaire.");
     return;
   }
-  let state, json, b64, url;
+  let state, json, b64, longUrl;
   try {
     state = captureState();
     state._sharedAt = Date.now();
     json = JSON.stringify(state);
-    // base64 UTF-8 safe
+    // base64 UTF-8 safe (utilisé en repli si Supabase indisponible)
     b64 = btoa(unescape(encodeURIComponent(json)));
-    url = location.origin + location.pathname + '#share=' + b64;
+    longUrl = location.origin + location.pathname + '#share=' + b64;
   } catch (e) {
     alert('Erreur lors de la préparation du lien : ' + (e && e.message ? e.message : e));
-    return;
-  }
-  if (url.length > 60000) {
-    alert('Le lien dépasse 60 000 caractères, certains navigateurs vont le tronquer. Utilisez plutôt l\'export Excel pour cette équipe.');
     return;
   }
 
@@ -3659,6 +3713,29 @@ function eqShare() {
   const n = eqRows.length;
   const subject = 'Équipe ' + (cliName ? '— ' + cliName + ' ' : '') + '(' + n + ' intérimaire' + (n>1?'s':'') + ')';
   const message = 'Lien à ouvrir dans le Calculateur de Marge — il chargera l\'équipe complète avec son détail INA prêt pour le contrat.';
+
+  // Indicateur de chargement sur le bouton pendant l'upload réseau
+  let origHtml = null;
+  if (btn) { origHtml = btn.innerHTML; btn.disabled = true; btn.innerHTML = '⏳ Génération…'; }
+
+  // Lien court via Supabase ; repli silencieux sur le base64 si erreur réseau.
+  let url = longUrl;
+  if (_supaReady) {
+    try {
+      const id = await _shareUpload(state);
+      url = location.origin + location.pathname + '#s=' + id;
+    } catch (e) {
+      console.warn('Partage Supabase indisponible — repli sur le lien long :', e);
+    }
+  }
+
+  if (btn && origHtml !== null) { btn.disabled = false; btn.innerHTML = origHtml; }
+
+  // Garde-fou : ne concerne plus que le repli base64.
+  if (url.length > 60000) {
+    alert('Le lien est trop volumineux pour être partagé tel quel. Utilisez plutôt l\'export Excel pour cette équipe.');
+    return;
+  }
 
   // Web Share API (mobile / navigateurs récents)
   if (navigator.share) {
@@ -3818,20 +3895,45 @@ function _eqShareCopyToClipboard(url, subject) {
 
 /* Au chargement de la page : si l'URL contient #share=..., on propose
    de charger l'équipe partagée (et on nettoie le hash). */
-function eqLoadFromShareLink() {
+async function eqLoadFromShareLink() {
   const hash = location.hash || '';
-  if (!hash.startsWith('#share=')) return;
-  const b64 = hash.substring(7);
-  let state;
-  try {
-    const json = decodeURIComponent(escape(atob(b64)));
-    state = JSON.parse(json);
-  } catch (e) {
-    console.error('Lien partagé invalide', e);
-    history.replaceState(null, '', location.pathname);
-    return;
+  let state = null;
+
+  if (hash.startsWith('#s=')) {
+    // Lien court → on récupère le payload depuis Supabase.
+    const id = hash.substring(3).replace(/[^A-Za-z0-9]/g, '');
+    if (!id) return;
+    if (!_supaReady) {
+      console.warn('Lien court reçu mais Supabase non configuré.');
+      history.replaceState(null, '', location.pathname);
+      alert('Ce lien de partage nécessite une configuration manquante. Contactez l\'expéditeur.');
+      return;
+    }
+    try {
+      state = await _shareFetch(id);
+    } catch (e) {
+      console.error('Lien partagé introuvable ou expiré', e);
+      history.replaceState(null, '', location.pathname);
+      alert('Ce lien partagé est introuvable ou a expiré (les partages durent ' + SHARE_TTL_DAYS + ' jours).');
+      return;
+    }
+  } else if (hash.startsWith('#share=')) {
+    // Ancien format : payload en base64 dans l'URL (rétrocompatibilité).
+    const b64 = hash.substring(7);
+    try {
+      const json = decodeURIComponent(escape(atob(b64)));
+      state = JSON.parse(json);
+    } catch (e) {
+      console.error('Lien partagé invalide', e);
+      history.replaceState(null, '', location.pathname);
+      return;
+    }
+  } else {
+    return; // pas de lien de partage dans l'URL
   }
+
   history.replaceState(null, '', location.pathname);
+  if (!state) return;
   const n = state.rows ? state.rows.length : 0;
   const cli = state.params && state.params._clientName ? ' (chez ' + state.params._clientName + ')' : '';
   const sharedDate = state._sharedAt ? new Date(state._sharedAt).toLocaleDateString('fr-FR') : '';
@@ -4592,7 +4694,7 @@ loadAutoSave();
 // Si l'URL contient un lien partagé, on propose de charger l'équipe
 // transmise par un collaborateur (après loadAutoSave pour que l'état
 // par défaut soit en place avant la confirmation).
-try { eqLoadFromShareLink(); } catch(e) { console.error(e); }
+eqLoadFromShareLink().catch(e => console.error(e));
 // Rendu historique sauvegardes
 renderSaves();
 // Initialiser les flèches collapse sur toutes les cards
