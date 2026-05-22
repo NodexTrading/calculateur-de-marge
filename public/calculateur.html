@@ -1438,7 +1438,7 @@ if ('serviceWorker' in navigator) {
               <th style="padding:6px 4px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--blue)">Client</th>
               <th style="padding:6px 4px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#0d9488">Chantier</th>
               <th style="padding:6px 4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--orange)">TX €/h</th>
-              <th style="padding:6px 4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)" title="Heures réelles par intérimaire — ventilées auto : ≤35 normales, 35-39 à +25%, >39 à +50%">Heures</th>
+              <th style="padding:6px 4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)" title="Heures réelles par intérimaire — ventilées auto : ≤35 normales, 35-43 à +25%, >43 à +50%">Heures</th>
               <th style="padding:6px 4px;text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--orange)">TF</th>
               <th style="padding:6px 4px;text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">THM</th>
               <th style="padding:6px 4px;text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Sal.Brut</th>
@@ -2903,12 +2903,12 @@ function eqUpdateCount() {
 }
 
 /* Ventilation automatique des heures saisies par intérimaire :
-   ≤ 35h → heures normales · 35→39h → +25% (4h max) · > 39h → +50%. */
+   ≤ 35h → heures normales · 35→43h → +25% (8h max) · > 43h → +50%. */
 function eqVentile(total){
   total = Math.max(0, parseFloat(total)||0);
   const hn   = Math.min(total, 35);
-  const hs25 = Math.min(Math.max(total-35,0), 4);
-  const hs50 = Math.max(total-39, 0);
+  const hs25 = Math.min(Math.max(total-35,0), 8);
+  const hs50 = Math.max(total-43, 0);
   return {hn, hs25, hs50};
 }
 /* Libellé compact de la ventilation, ex "35+4+6" ou "32h". */
@@ -4368,7 +4368,7 @@ function buildEqRowHTML(id) {
     <td style="padding:3px 4px"><select id="eq-cli-${id}" onchange="eqCliChange(${id})" style="border:1px solid rgba(29,78,216,.25);border-radius:4px;padding:4px 4px;font-size:10px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--blue);width:100%;outline:none;cursor:pointer"><option value="">—</option></select></td>
     <td style="padding:3px 4px"><select id="eq-chan-${id}" onchange="eqCalcRow(${id});triggerAutoSave()" style="border:1px solid rgba(13,148,136,.3);border-radius:4px;padding:4px 4px;font-size:10px;font-family:'DM Sans',sans-serif;background:#fff;color:#0d9488;width:100%;outline:none;cursor:pointer;display:none"><option value="">— Chantier —</option></select></td>
     <td style="padding:3px 3px"><input type="number" id="eq-tx-${id}" placeholder="0" step="0.01" oninput="eqCalcRow(${id});triggerAutoSave()" style="border:2px solid var(--orange);border-radius:5px;padding:5px 3px;font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--orange);background:#fff;text-align:center;width:100%;outline:none;-moz-appearance:textfield"></td>
-    <td style="padding:3px 2px;text-align:center" title="Heures réelles de la semaine — ventilées automatiquement : ≤35 normales · 35→39 à +25% · >39 à +50%">
+    <td style="padding:3px 2px;text-align:center" title="Heures réelles de la semaine — ventilées automatiquement : ≤35 normales · 35→43 à +25% · >43 à +50%">
       <input type="number" id="eq-h-${id}" placeholder="35" step="0.5" min="0" oninput="eqCalcRow(${id});triggerAutoSave()" style="border:1px solid var(--border);border-radius:4px;padding:4px 2px;font-size:12px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);background:#fff;text-align:center;width:100%;outline:none;-moz-appearance:textfield">
       <div id="eq-rh-${id}" style="font-size:8px;color:var(--text3);margin-top:1px;line-height:1;white-space:nowrap">–</div>
     </td>
