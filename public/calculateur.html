@@ -1375,7 +1375,7 @@ if ('serviceWorker' in navigator) {
         <div class="dot"></div>
         <span>Équipe — même mission</span>
         <span style="font-size:10px;font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">
-          (coef, heures &amp; INA repris du formulaire)
+          (coef &amp; INA repris du formulaire · heures saisissables par personne)
         </span>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
@@ -1418,7 +1418,7 @@ if ('serviceWorker' in navigator) {
             <col style="width:8%"> <!-- Client -->
             <col style="width:8%"> <!-- Chantier -->
             <col style="width:6%"> <!-- TX -->
-            <col style="width:4%"> <!-- Tot H -->
+            <col style="width:6%"> <!-- Heures (saisie) -->
             <col style="width:6%"> <!-- TF -->
             <col style="width:5%"> <!-- THM -->
             <col style="width:5%"> <!-- Sal Brut -->
@@ -1438,7 +1438,7 @@ if ('serviceWorker' in navigator) {
               <th style="padding:6px 4px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--blue)">Client</th>
               <th style="padding:6px 4px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#0d9488">Chantier</th>
               <th style="padding:6px 4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--orange)">TX €/h</th>
-              <th style="padding:6px 4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">H</th>
+              <th style="padding:6px 4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)" title="Heures réelles par intérimaire — ventilées auto : ≤35 normales, 35-39 à +25%, >39 à +50%">Heures</th>
               <th style="padding:6px 4px;text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--orange)">TF</th>
               <th style="padding:6px 4px;text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">THM</th>
               <th style="padding:6px 4px;text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Sal.Brut</th>
@@ -1478,7 +1478,7 @@ if ('serviceWorker' in navigator) {
 
       <div id="eq-empty" style="text-align:center;padding:24px;color:var(--text3)">
         <div style="font-size:20px;margin-bottom:6px">👷</div>
-        <p style="font-size:11px;color:var(--text2)">Ajoutez les intérimaires. Le <strong>coef, heures et INA</strong> sont repris du formulaire.</p>
+        <p style="font-size:11px;color:var(--text2)">Ajoutez les intérimaires. Le <strong>coef et les INA</strong> sont repris du formulaire ; les <strong>heures sont saisissables par personne</strong>.</p>
       </div>
     </div>
   </div>
@@ -2842,6 +2842,15 @@ function eqAdd() {
     cliSel.innerHTML = optHtml;
   }
   eqRenderZoneCell(id);
+  // Heures par défaut = total d'heures de la mission (modifiable ensuite).
+  const hEl = document.getElementById('eq-h-'+id);
+  if(hEl){
+    const tot = g('hn')+g('hs25')+g('hs50');
+    hEl.value = tot>0 ? tot : 35;
+    const v = eqVentile(hEl.value);
+    const rh = document.getElementById('eq-rh-'+id);
+    if(rh) rh.textContent = eqVentileLabel(v.hn, v.hs25, v.hs50);
+  }
   // Le select chantier reste caché jusqu'à sélection d'un client
   eqUpdateCount();
   triggerAutoSave();
@@ -2893,12 +2902,37 @@ function eqUpdateCount() {
   document.getElementById('equipe-count').textContent = n+' intérimaire'+(n>1?'s':'');
 }
 
+/* Ventilation automatique des heures saisies par intérimaire :
+   ≤ 35h → heures normales · 35→39h → +25% (4h max) · > 39h → +50%. */
+function eqVentile(total){
+  total = Math.max(0, parseFloat(total)||0);
+  const hn   = Math.min(total, 35);
+  const hs25 = Math.min(Math.max(total-35,0), 4);
+  const hs50 = Math.max(total-39, 0);
+  return {hn, hs25, hs50};
+}
+/* Libellé compact de la ventilation, ex "35+4+6" ou "32h". */
+function eqVentileLabel(hn,hs25,hs50){
+  const r = v => Number.isInteger(v) ? v : parseFloat(v.toFixed(1));
+  if(!hs25 && !hs50) return r(hn)+'h';
+  let s = ''+r(hn);
+  if(hs25) s += '+'+r(hs25);
+  if(hs50) s += '+'+r(hs50);
+  return s;
+}
+
 function eqCalcRow(id) {
   const tx = parseFloat(document.getElementById('eq-tx-'+id)?.value)||0;
   if(!tx) { eqRefreshTotal(); return; }
 
-  const coef = g('coef'), hn = g('hn'), hs25 = g('hs25'), hs50 = g('hs50');
+  const coef = g('coef');
   if(!coef) { eqRefreshTotal(); return; }
+  // Heures propres à la ligne, ventilées automatiquement.
+  // Back-compat : champ vide → on reprend le total d'heures de la mission.
+  const hEl = document.getElementById('eq-h-'+id);
+  let totalH = (hEl && hEl.value!=='') ? parseFloat(hEl.value) : NaN;
+  if(isNaN(totalH)) totalH = g('hn')+g('hs25')+g('hs50');
+  const { hn, hs25, hs50 } = eqVentile(totalH);
 
   // Récupère ou crée le snapshot INA propre à la ligne (back-compat).
   const row = eqRows.find(r2 => r2.id === id);
@@ -2938,7 +2972,7 @@ function eqCalcRow(id) {
   const fp2 = v => v.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' %';
   const set = (sid,val) => { const el=document.getElementById(sid); if(el) el.textContent=val; };
 
-  set('eq-rh-'+id,   r.total_h+'h');
+  set('eq-rh-'+id,   eqVentileLabel(r.hn, r.hs25, r.hs50));
   set('eq-rtf-'+id,  fc(r.tf));
   set('eq-rthm-'+id, fc(r.thm));
   set('eq-rsal-'+id, fc(r.sal_brut));
@@ -2954,7 +2988,7 @@ function eqCalcRow(id) {
   if(mbEl)  { mbEl.textContent=fc(mb);       mbEl.style.color =mb>=0?'var(--green)':'var(--red)'; }
   if(pctEl) { pctEl.textContent=fp2(pct_mb); pctEl.style.color=mb>=0?'var(--green)':'var(--red)'; }
 
-  if(row) row.result={tf:r.tf,thm:r.thm,sal_brut:r.sal_brut,ina_tot:r.ina,mb,pct_mb,net_ina,net_verse,tx,total_h:r.total_h,veh,carb,retenue};
+  if(row) row.result={tf:r.tf,thm:r.thm,sal_brut:r.sal_brut,ina_tot:r.ina,mb,pct_mb,net_ina,net_verse,tx,total_h:r.total_h,hn:r.hn,hs25:r.hs25,hs50:r.hs50,veh,carb,retenue};
   eqRefreshTotal();
   triggerAutoSave();
 }
@@ -4050,25 +4084,26 @@ function eqExport() {
   const tx_chg_pct_g = parseFloat(document.getElementById('p_tx_chg')?.value)||0;
 
   function getVal(res, key) {
+    // Heures propres à l'intérimaire (fallback globales pour anciens résultats).
+    const _hn  = res.hn  != null ? res.hn  : hn_g;
+    const _h25 = res.hs25 != null ? res.hs25 : hs25_g;
+    const _h50 = res.hs50 != null ? res.hs50 : hs50_g;
+    const _eff = _hn + _h25*1.25 + _h50*1.5;
     if(key==='coef_calc'){
       // coef = TF / (tx * eff_h)
-      const eff_h = hn_g + hs25_g*1.25 + hs50_g*1.5;
-      return eff_h>0 ? res.tf/(res.tx*eff_h) : coef_glob;
+      return _eff>0 ? res.tf/(res.tx*_eff) : coef_glob;
     }
-    if(key==='hn_v') return hn_g;
-    if(key==='hs25_v') return hs25_g;
-    if(key==='hs50_v') return hs50_g;
+    if(key==='hn_v') return _hn;
+    if(key==='hs25_v') return _h25;
+    if(key==='hs50_v') return _h50;
     if(key==='brut_av'){
-      const eff_h = hn_g + hs25_g*1.25 + hs50_g*1.5;
-      return res.tx * eff_h;
+      return res.tx * _eff;
     }
     if(key==='ifm_v'){
-      const eff_h = hn_g + hs25_g*1.25 + hs50_g*1.5;
-      return res.tx * eff_h * tifm;
+      return res.tx * _eff * tifm;
     }
     if(key==='cp_v'){
-      const eff_h = hn_g + hs25_g*1.25 + hs50_g*1.5;
-      const brut_base = res.tx * eff_h;
+      const brut_base = res.tx * _eff;
       return (brut_base + brut_base*tifm) * tcp;
     }
     if(key==='tx_chg_pct') return tx_chg_pct_g;
@@ -4223,6 +4258,7 @@ function captureState() {
     const cli  = document.getElementById('eq-cli-'+r.id)?.value||'';
     const chan = document.getElementById('eq-chan-'+r.id)?.value||'';
     const tx   = document.getElementById('eq-tx-'+r.id)?.value||'';
+    const h    = document.getElementById('eq-h-'+r.id)?.value||'';
     const veh  = document.getElementById('eq-veh-'+r.id)?.value||'';
     const carb = document.getElementById('eq-carb-'+r.id)?.value||'';
     const ret  = document.getElementById('eq-ret-'+r.id)?.value||'';
@@ -4234,7 +4270,7 @@ function captureState() {
     // Le snapshot INA propre à la ligne doit être sérialisé tel quel pour
     // que la sous-ligne dépliable (détail contrat) soit reconstruite à
     // l'identique au prochain chargement.
-    return {id:r.id, nom, cli, cliName, chan, chanName, tx, veh, carb, ret, ina:r.ina||null, result:r.result||null};
+    return {id:r.id, nom, cli, cliName, chan, chanName, tx, h, veh, carb, ret, ina:r.ina||null, result:r.result||null};
   });
 
   return {
@@ -4301,6 +4337,9 @@ function restoreState(state) {
     const set=(sid,v)=>{const el=document.getElementById(sid);if(el)el.value=v;};
     set('eq-nom-'+r.id, r.nom);
     set('eq-tx-'+r.id,  r.tx);
+    // Heures par ligne (back-compat : anciennes sauvegardes sans .h → total mission)
+    const _hTot = (r.h!==undefined && r.h!=='') ? r.h : ((g('hn')+g('hs25')+g('hs50'))||'');
+    set('eq-h-'+r.id, _hTot);
     set('eq-veh-'+r.id, r.veh);
     set('eq-carb-'+r.id,r.carb);
     set('eq-ret-'+r.id, r.ret);
@@ -4329,7 +4368,10 @@ function buildEqRowHTML(id) {
     <td style="padding:3px 4px"><select id="eq-cli-${id}" onchange="eqCliChange(${id})" style="border:1px solid rgba(29,78,216,.25);border-radius:4px;padding:4px 4px;font-size:10px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--blue);width:100%;outline:none;cursor:pointer"><option value="">—</option></select></td>
     <td style="padding:3px 4px"><select id="eq-chan-${id}" onchange="eqCalcRow(${id});triggerAutoSave()" style="border:1px solid rgba(13,148,136,.3);border-radius:4px;padding:4px 4px;font-size:10px;font-family:'DM Sans',sans-serif;background:#fff;color:#0d9488;width:100%;outline:none;cursor:pointer;display:none"><option value="">— Chantier —</option></select></td>
     <td style="padding:3px 3px"><input type="number" id="eq-tx-${id}" placeholder="0" step="0.01" oninput="eqCalcRow(${id});triggerAutoSave()" style="border:2px solid var(--orange);border-radius:5px;padding:5px 3px;font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--orange);background:#fff;text-align:center;width:100%;outline:none;-moz-appearance:textfield"></td>
-    <td style="padding:3px 3px;text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)" id="eq-rh-${id}">–</td>
+    <td style="padding:3px 2px;text-align:center" title="Heures réelles de la semaine — ventilées automatiquement : ≤35 normales · 35→39 à +25% · >39 à +50%">
+      <input type="number" id="eq-h-${id}" placeholder="35" step="0.5" min="0" oninput="eqCalcRow(${id});triggerAutoSave()" style="border:1px solid var(--border);border-radius:4px;padding:4px 2px;font-size:12px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);background:#fff;text-align:center;width:100%;outline:none;-moz-appearance:textfield">
+      <div id="eq-rh-${id}" style="font-size:8px;color:var(--text3);margin-top:1px;line-height:1;white-space:nowrap">–</div>
+    </td>
     <td style="padding:3px 4px;text-align:right;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:var(--orange)" id="eq-rtf-${id}">–</td>
     <td style="padding:3px 4px;text-align:right;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)" id="eq-rthm-${id}">–</td>
     <td style="padding:3px 4px;text-align:right;font-family:'DM Mono',monospace;font-size:10px" id="eq-rsal-${id}">–</td>
