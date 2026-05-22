@@ -4957,12 +4957,12 @@ function simCalc() {
   function runCalc(){
     if(typeof calc!=='function') throw new Error('calc indisponible');
     const r = calc();
-    return r ? {tf:r.tf, mb:r.mb, mb_pct:r.pct_mb, sal_brut:r.sal_brut, ina:r.ina, total_h:r.total_h, sal_net_estime: r.sal_brut*0.78} : null;
+    return r ? {tf:r.tf, mb:r.mb, mb_pct:r.pct_mb, sal_brut:r.sal_brut, ina:r.ina, total_h:r.total_h, sal_net_estime: r.sal_brut*0.806} : null;
   }
 
   // Solveur inverse : trouve (tx, coef) tel que TF cible et SAL_NET cible
-  // sal_net ≈ sal_brut * 0.78 (charges salariales ~22%)
-  function solveInverse({tf_target, net_target, hn=35, hs25=0, hs50=0, net_ratio=0.78}){
+  // sal_net ≈ sal_brut * 0.806 (charges salariales ~19,4%) — aligné sur le reste de l'app
+  function solveInverse({tf_target, net_target, hn=35, hs25=0, hs50=0, net_ratio=0.806}){
     if(!tf_target||!net_target) throw new Error('tf_target et net_target requis');
     // on calcule sal_brut cible depuis net cible
     const sal_brut_target = net_target / net_ratio;
