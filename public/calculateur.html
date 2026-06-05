@@ -4283,11 +4283,45 @@ function captureState() {
     return {id:r.id, nom, cli, cliName, chan, chanName, tx, h, veh, carb, ret, ina:r.ina||null, result:r.result||null};
   });
 
+  // ── Collecte des clients/chantiers utilisés (pour le partage) ────
+  // On embarque seulement ceux référencés (par le client principal ou les
+  // lignes équipe), pas la liste complète. Côté restauration, ils seront
+  // fusionnés par NOM avec ceux du destinataire (sans écraser ses coefs).
+  const usedCli = new Set();
+  const usedChan = new Map(); // cliId -> Set(chanIds)
+  const mainCliId = parseInt(params['client-select']);
+  if (mainCliId) usedCli.add(mainCliId);
+  rows.forEach(r => {
+    const cid = parseInt(r.cli);
+    const chid = parseInt(r.chan);
+    if (cid) usedCli.add(cid);
+    if (cid && chid) {
+      if (!usedChan.has(cid)) usedChan.set(cid, new Set());
+      usedChan.get(cid).add(chid);
+    }
+  });
+  const sharedClients = [];
+  clients.forEach(c => {
+    if (!usedCli.has(c.id)) return;
+    const wantedChans = usedChan.get(c.id) || new Set();
+    const sharedChans = (c.chantiers || [])
+      .filter(ch => wantedChans.has(ch.id))
+      .map(ch => ({ id: ch.id, name: ch.name }));
+    sharedClients.push({
+      id: c.id, name: c.name,
+      coefIna:  c.coefIna,
+      coefHs25: c.coefHs25,
+      coefHs50: c.coefHs50,
+      chantiers: sharedChans
+    });
+  });
+
   return {
     ts: Date.now(),
     params,
     rows,
     eqCtr,
+    clients: sharedClients,
     summary: computeSummary(rows)
   };
 }
@@ -4303,6 +4337,60 @@ function computeSummary(rows) {
 /* ── Restauration de l'état ── */
 function restoreState(state) {
   if(!state) return;
+
+  // ── Fusion des clients/chantiers embarqués dans le partage ───────
+  // Pour chaque client partagé : on cherche un client local de même NOM.
+  // S'il existe → on garde celui-là (et ses propres coefs). Sinon on le
+  // crée avec les coefs partagés. Même logique pour les chantiers.
+  // Un mapping {ancien id → nouvel id local} est construit pour remapper
+  // ensuite r.cli, r.chan et params['client-select'].
+  const cliMap = {};
+  const chanMap = {};
+  if (Array.isArray(state.clients) && state.clients.length) {
+    const norm = s => (s || '').trim().toLowerCase();
+    state.clients.forEach(shared => {
+      const sName = norm(shared.name);
+      let local = sName ? clients.find(c => norm(c.name) === sName) : null;
+      if (!local) {
+        local = {
+          id: cIdCtr++,
+          name: shared.name || '',
+          coefIna:  shared.coefIna  != null ? shared.coefIna  : 1,
+          coefHs25: shared.coefHs25 != null ? shared.coefHs25 : null,
+          coefHs50: shared.coefHs50 != null ? shared.coefHs50 : null,
+          chantiers: []
+        };
+        clients.push(local);
+      } else if (!local.chantiers) {
+        local.chantiers = [];
+      }
+      cliMap[shared.id] = local.id;
+      (shared.chantiers || []).forEach(sharedCh => {
+        const sChName = norm(sharedCh.name);
+        let localCh = sChName ? local.chantiers.find(ch => norm(ch.name) === sChName) : null;
+        if (!localCh) {
+          localCh = { id: chIdCtr++, name: sharedCh.name || '' };
+          local.chantiers.push(localCh);
+        }
+        chanMap[sharedCh.id] = localCh.id;
+      });
+    });
+    try { saveClients();         } catch(e){}
+    try { renderClients();       } catch(e){}
+    try { updateClientSelects(); } catch(e){}
+    const elCount = document.getElementById('count-clients');
+    if (elCount) elCount.textContent = clients.length;
+  }
+
+  // Remap du client principal et des références cli/chan dans les rows
+  if (state.params && state.params['client-select'] && cliMap[state.params['client-select']] != null) {
+    state.params['client-select'] = String(cliMap[state.params['client-select']]);
+  }
+  (state.rows || []).forEach(r => {
+    if (r.cli  && cliMap[r.cli]  != null) r.cli  = String(cliMap[r.cli]);
+    if (r.chan && chanMap[r.chan] != null) r.chan = String(chanMap[r.chan]);
+  });
+
   // Formulaire principal
   Object.entries(state.params||{}).forEach(([id,val])=>{
     if(id==='_inaFact') return;
