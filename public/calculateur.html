@@ -3971,14 +3971,24 @@ async function eqLoadFromShareLink() {
   const n = state.rows ? state.rows.length : 0;
   const cli = state.params && state.params._clientName ? ' (chez ' + state.params._clientName + ')' : '';
   const sharedDate = state._sharedAt ? new Date(state._sharedAt).toLocaleDateString('fr-FR') : '';
-  const msg = `Charger l'équipe partagée${cli} — ${n} intérimaire${n>1?'s':''}${sharedDate?' · partagée le '+sharedDate:''} ?\n\n⚠️ Vos données actuelles seront remplacées.`;
-  if (confirm(msg)) {
-    try {
-      restoreState(state);
-      if (typeof doAutoSave === 'function') doAutoSave();
-    } catch (e) {
-      alert('Erreur au chargement : ' + (e && e.message ? e.message : e));
+  // CHARGEMENT AUTOMATIQUE — plus de popup confirm qui peut être ratée/refusée.
+  // Filet de sécurité : l'état actuel est d'abord sauvegardé dans l'historique
+  // pour pouvoir y revenir si on a écrasé un travail en cours par erreur.
+  try {
+    const current = captureState();
+    if (current && current.rows && current.rows.length) {
+      current.type  = 'manuel';
+      current.label = '⏪ Avant chargement partage' + (sharedDate ? ' du ' + sharedDate : '');
+      addToHistory(current);
     }
+  } catch (e) { console.warn('Sauvegarde pré-partage échouée :', e); }
+  try {
+    restoreState(state);
+    if (typeof doAutoSave === 'function') doAutoSave();
+    if (typeof renderSaves  === 'function') renderSaves();
+    showToast(`✅ Équipe partagée chargée — ${n} intérimaire${n>1?'s':''}${cli}${sharedDate ? ' · partagée le ' + sharedDate : ''}`);
+  } catch (e) {
+    alert('Erreur au chargement de l\'équipe partagée : ' + (e && e.message ? e.message : e));
   }
 }
 
