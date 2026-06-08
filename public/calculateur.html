@@ -1383,6 +1383,7 @@ if ('serviceWorker' in navigator) {
         <button class="btn-add" style="padding:5px 14px;font-size:11px" onclick="eqAdd()">+ Ajouter</button>
         <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.25);color:var(--green)" onclick="eqShare(this)" title="Partager cette équipe par lien">🔗 Partager</button>
         <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(234,108,0,.08);border-color:rgba(234,108,0,.25);color:var(--orange)" onclick="eqExport()" title="Exporter en Excel">📊 Excel</button>
+        <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(71,85,105,.08);border-color:rgba(71,85,105,.25);color:#475569" onclick="eqPrint()" title="Imprimer le tableau de l'équipe — mise en page adaptée pour tout voir">🖨 Imprimer</button>
         <button class="btn-add" style="padding:5px 12px;font-size:11px;background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.30);color:var(--purple)" onclick="eqToFacturation()" title="Envoyer l'équipe vers l'app Facturation Mensuelle">📤 Facturation mensuelle</button>
         <button class="btn-del" style="padding:5px 10px;font-size:11px" onclick="eqClear()" title="Vider l'équipe">🗑</button>
       </div>
@@ -3992,6 +3993,124 @@ async function eqLoadFromShareLink() {
   } catch (e) {
     alert('Erreur au chargement de l\'équipe partagée : ' + (e && e.message ? e.message : e));
   }
+}
+
+/* ── Impression de l'équipe ──────────────────────────────────────────
+   Construit une vue récap autonome (vrai tableau, pas des <input>) dans
+   une nouvelle fenêtre, en A4 paysage, dimensionnée pour que TOUT le
+   tableau soit visible, puis lance l'impression. La génération HTML est
+   séparée (testable) de l'effet de bord window.open/print. */
+function _eqBuildPrintHTML() {
+  const withRes = eqRows.filter(r => r.result);
+  const fc  = v => (v==null||isNaN(v)) ? '–' : Number(v).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  const fp2 = v => (v==null||isNaN(v)) ? '–' : Number(v).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' %';
+  const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  const mainCli = getClient(gv('client-select'));
+  const mainCliName = mainCli ? (mainCli.name||'Client '+mainCli.id) : '';
+
+  const sum   = k => withRes.reduce((a,r)=>a+(r.result[k]||0),0);
+  const tf_t  = sum('tf'), mb_t = sum('mb'), sal_t = sum('sal_brut'), ina_t = sum('ina_tot');
+  const net_t = withRes.reduce((a,r)=>a+(r.result.net_verse||0),0);
+  const frais_t = sum('veh') + sum('carb'), ret_t = sum('retenue');
+  const h_t   = sum('total_h');
+  const pct_t = tf_t>0 ? (mb_t/tf_t)*100 : 0;
+
+  const rowsHTML = withRes.map((r,i)=>{
+    const res = r.result;
+    const nom = document.getElementById('eq-nom-'+r.id)?.value || ('Intérimaire '+(i+1));
+    const cliObj  = getClient(document.getElementById('eq-cli-'+r.id)?.value||'');
+    const cliName = cliObj ? (cliObj.name||'Client '+cliObj.id) : '';
+    const chanId  = document.getElementById('eq-chan-'+r.id)?.value||'';
+    const chanObj = cliObj && cliObj.chantiers ? cliObj.chantiers.find(ch=>ch.id==chanId) : null;
+    const chanName = chanObj ? (chanObj.name||'') : '';
+    const hLabel = (res.hn!=null && typeof eqVentileLabel==='function') ? eqVentileLabel(res.hn,res.hs25,res.hs50) : ((res.total_h||0)+'h');
+    const frais  = (res.veh||0)+(res.carb||0);
+    const mbCol  = res.mb>=0 ? '#16a34a' : '#dc2626';
+    return `<tr>
+      <td class="c">${i+1}</td>
+      <td class="l b">${esc(nom)}</td>
+      <td class="l">${esc(cliName)||'–'}</td>
+      <td class="l">${esc(chanName)||'–'}</td>
+      <td class="c">${hLabel}</td>
+      <td class="r">${res.tx?Number(res.tx).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}):'–'}</td>
+      <td class="r o">${fc(res.tf)}</td>
+      <td class="r">${fc(res.sal_brut)}</td>
+      <td class="r">${fc(res.ina_tot)}</td>
+      <td class="r">${frais?fc(frais):'–'}</td>
+      <td class="r">${res.retenue?fc(res.retenue):'–'}</td>
+      <td class="r b" style="color:${mbCol}">${fc(res.mb)}</td>
+      <td class="r" style="color:${mbCol}">${fp2(res.pct_mb)}</td>
+      <td class="r b" style="color:#1d4ed8">${fc(res.net_verse)}</td>
+    </tr>`;
+  }).join('');
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const n = withRes.length;
+
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">' +
+  '<title>Équipe ' + esc(mainCliName) + ' — ' + dateStr + '</title><style>' +
+  '@page{size:A4 landscape;margin:8mm}' +
+  '*{box-sizing:border-box}' +
+  'body{font-family:Arial,Helvetica,sans-serif;color:#0f172a;margin:0;padding:8px}' +
+  '.head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1d4ed8;padding-bottom:6px;margin-bottom:8px}' +
+  '.head h1{font-size:15px;margin:0;color:#1d4ed8}' +
+  '.head .sub{font-size:11px;color:#475569;margin-top:2px}' +
+  '.head .meta{font-size:10px;color:#64748b;text-align:right;line-height:1.4}' +
+  'table{width:100%;border-collapse:collapse;table-layout:fixed}' +
+  'th,td{border:1px solid #cbd5e1;padding:3px 4px;font-size:9px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
+  'th{background:#1d4ed8;color:#fff;font-size:8.5px;text-transform:uppercase;letter-spacing:.3px}' +
+  'td.l{text-align:left}td.c{text-align:center}td.r{text-align:right;font-variant-numeric:tabular-nums}' +
+  'td.b{font-weight:700}td.o{color:#ea6c00;font-weight:700}' +
+  'tbody tr:nth-child(even){background:#f1f5f9}' +
+  'tfoot td{border:1px solid #94a3b8;background:#fff7ed;font-weight:700;font-size:9px}' +
+  '.fn{margin-top:8px;font-size:9px;color:#94a3b8;text-align:center}' +
+  '.bar{text-align:center;margin:6px 0 12px}' +
+  '.bar button{font-size:13px;padding:7px 18px;margin:0 4px;border:none;border-radius:6px;cursor:pointer}' +
+  '.pbtn{background:#1d4ed8;color:#fff}.cbtn{background:#e2e8f0;color:#334155}' +
+  '@media print{.bar{display:none}}' +
+  '</style></head><body>' +
+  '<div class="bar"><button class="pbtn" onclick="window.print()">🖨 Imprimer</button>' +
+  '<button class="cbtn" onclick="window.close()">Fermer</button></div>' +
+  '<div class="head"><div><h1>Équipe Mission' + (mainCliName?' — '+esc(mainCliName):'') + '</h1>' +
+  '<div class="sub">' + n + ' intérimaire' + (n>1?'s':'') + ' · ' + h_t + 'h au total</div></div>' +
+  '<div class="meta">Calculateur de Marge — Forma Interim<br>Édité le ' + dateStr + '</div></div>' +
+  '<table><colgroup>' +
+  '<col style="width:3%"><col style="width:14%"><col style="width:10%"><col style="width:10%">' +
+  '<col style="width:6%"><col style="width:6%"><col style="width:8%"><col style="width:8%">' +
+  '<col style="width:7%"><col style="width:6%"><col style="width:6%"><col style="width:8%">' +
+  '<col style="width:5%"><col style="width:8%"></colgroup>' +
+  '<thead><tr><th>#</th><th style="text-align:left">Nom / Prénom</th><th style="text-align:left">Client</th>' +
+  '<th style="text-align:left">Chantier</th><th>Heures</th><th>TX €/h</th><th>TF</th><th>Sal. Brut</th>' +
+  '<th>INA</th><th>Frais</th><th>Retenue</th><th>MB</th><th>%MB</th><th>Net versé</th></tr></thead>' +
+  '<tbody>' + rowsHTML + '</tbody>' +
+  '<tfoot><tr><td colspan="4" style="text-align:left">TOTAL — ' + n + ' intérimaire' + (n>1?'s':'') + '</td>' +
+  '<td class="c">' + h_t + 'h</td><td></td>' +
+  '<td class="r" style="color:#ea6c00">' + fc(tf_t) + '</td>' +
+  '<td class="r">' + fc(sal_t) + '</td><td class="r">' + fc(ina_t) + '</td>' +
+  '<td class="r">' + fc(frais_t) + '</td><td class="r">' + fc(ret_t) + '</td>' +
+  '<td class="r" style="color:' + (mb_t>=0?'#16a34a':'#dc2626') + '">' + fc(mb_t) + '</td>' +
+  '<td class="r" style="color:' + (mb_t>=0?'#16a34a':'#dc2626') + '">' + fp2(pct_t) + '</td>' +
+  '<td class="r" style="color:#1d4ed8">' + fc(net_t) + '</td></tr></tfoot></table>' +
+  '<div class="fn">Document indicatif — calcul de marge intérim BTP. Net versé estimé.</div>' +
+  '</body></html>';
+}
+
+function eqPrint() {
+  const withRes = eqRows.filter(r => r.result);
+  if (!withRes.length) { alert("Aucune équipe à imprimer — ajoutez au moins un intérimaire avec un taux horaire."); return; }
+  // Recalcul de toutes les lignes pour des résultats à jour.
+  eqRows.forEach(r => { try { eqCalcRow(r.id); } catch(e){} });
+  const html = _eqBuildPrintHTML();
+  const w = window.open('', '_blank');
+  if (!w) { alert("Impossible d'ouvrir la fenêtre d'impression. Autorisez les pop-ups pour ce site, puis réessayez."); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  // Laisser le rendu se faire avant d'ouvrir la boîte d'impression.
+  setTimeout(() => { try { w.print(); } catch(e){} }, 400);
 }
 
 function eqExport() {
