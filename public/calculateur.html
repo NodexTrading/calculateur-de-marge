@@ -3810,9 +3810,17 @@ function eqToFacturation() {
     const chanObj = cliObj && cliObj.chantiers ? cliObj.chantiers.find(ch => ch.id == chanId) : null;
     const chanName = chanObj ? (chanObj.name || '') : '';
 
+    // Net hebdo transmis = net TOTAL touché par l'intérimaire :
+    // salaire net (brut × 0,806) + primes/indemnités versées (panier,
+    // trajet, transport). Ainsi net hebdo ÷ 5 = ce qu'il gagne par jour,
+    // primes comprises. (La retenue n'est pas déduite ici : c'est une
+    // déduction ponctuelle, pas le salaire de base.)
+    const netTotal = (res.net_ina != null)
+      ? res.net_ina
+      : (res.sal_brut * 0.806 + (res.ina_tot || 0));
     const emp = {
       nom,
-      salNetHebdo: Number((res.sal_brut * 0.806).toFixed(2)),
+      salNetHebdo: Number(netTotal.toFixed(2)),
       factureHebdo: Number((res.tf).toFixed(2))
     };
     emps.push(emp);
