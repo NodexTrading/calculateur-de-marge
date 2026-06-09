@@ -1933,6 +1933,7 @@ if ('serviceWorker' in navigator) {
     <div><h2>Gestion des clients</h2><p>Coef <strong>Ind. Transport</strong> et coefs <strong>HS 25%/50%</strong> par client.</p></div>
     <button class="btn-add" onclick="addClient()">+ Nouveau client</button>
   </div>
+  <div id="cloud-sync-bar" style="margin:0 0 14px"></div>
   <div class="clients-grid" id="clients-grid">
     <div class="empty-state" id="clients-empty"><div class="icon">🏢</div><p>Aucun client enregistré.</p></div>
   </div>
@@ -2416,6 +2417,174 @@ function resetForm(){['tx_horaire','coef'].forEach(id=>document.getElementById(i
 /* ════ CLIENTS ════ */
 function saveClients() {
   try { localStorage.setItem('forma_clients', JSON.stringify({clients, cIdCtr})); } catch(e){}
+  try { localStorage.setItem('forma_clients_ts', String(Date.now())); } catch(e){}
+  try { clientsPushCloud(); } catch(e){}
+}
+
+/* ── Sauvegarde cloud des clients/chantiers par CODE personnel ────────
+   localStorage = usage instantané/hors-ligne. Supabase (table app_state)
+   = copie permanente, récupérable partout via le code. Tout dégrade
+   proprement : si le cloud est indisponible, l'app marche en local. */
+const SYNC_CODE_KEY = 'forma_sync_code';
+let _clientsPushTimer = null, _syncCloudNewer = null;
+function syncGetCode(){ try { return (localStorage.getItem(SYNC_CODE_KEY)||'').trim(); } catch(e){ return ''; } }
+function syncSetCode(code){ try { if(code) localStorage.setItem(SYNC_CODE_KEY, code); else localStorage.removeItem(SYNC_CODE_KEY); } catch(e){} }
+function _syncId(code){ return 'clients:' + String(code||'').toLowerCase().trim().replace(/[^a-z0-9_-]/g,'-'); }
+function syncSuggestCode(){
+  let s = '';
+  try { const b = new Uint32Array(1); crypto.getRandomValues(b); s = String(1000 + (b[0] % 9000)); }
+  catch(e){ s = String(new Date().getFullYear()); }
+  return 'forma-' + s;
+}
+
+/* Pousse l'état clients vers le cloud (anti-rebond 800 ms). */
+function clientsPushCloud(){
+  const code = syncGetCode();
+  if(!code || !_supaReady) return;
+  if(_clientsPushTimer) clearTimeout(_clientsPushTimer);
+  _clientsPushTimer = window.setTimeout(async () => {
+    try {
+      const body = {
+        id: _syncId(code),
+        payload: { clients, cIdCtr, chIdCtr, updated_at: Date.now() },
+        updated_at: new Date().toISOString()
+      };
+      const res = await fetch(_supaBase + '/rest/v1/app_state', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON,
+          'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify(body)
+      });
+      _syncSetStatus(res.ok ? 'ok' : 'err');
+    } catch(e){ console.warn('Sauvegarde cloud clients échouée :', e); _syncSetStatus('err'); }
+  }, 800);
+}
+
+/* Récupère l'état clients depuis le cloud pour un code donné. */
+async function clientsPullCloud(code){
+  if(!_supaReady) throw new Error('cloud indisponible');
+  const res = await fetch(_supaBase + '/rest/v1/app_state?id=eq.' + encodeURIComponent(_syncId(code)) + '&select=payload', {
+    headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+  });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const arr = await res.json();
+  return (arr && arr.length) ? arr[0].payload : null;
+}
+
+/* Adopte un payload cloud comme état clients courant. */
+function _syncAdopt(cloud){
+  clients = Array.isArray(cloud.clients) ? cloud.clients : [];
+  clients.forEach(c => { if(!c.chantiers) c.chantiers = []; });
+  cIdCtr = cloud.cIdCtr || clients.length + 1;
+  let mx = 0; clients.forEach(c => c.chantiers.forEach(ch => { if(ch.id > mx) mx = ch.id; }));
+  chIdCtr = Math.max(cloud.chIdCtr || 0, mx + 1);
+  try { localStorage.setItem('forma_clients', JSON.stringify({clients, cIdCtr})); } catch(e){}
+  try { localStorage.setItem('forma_clients_ts', String(cloud.updated_at || Date.now())); } catch(e){}
+  renderClients(); updateClientSelects();
+  const ec = document.getElementById('count-clients'); if(ec) ec.textContent = clients.length;
+}
+
+/* Réconciliation au démarrage — SÛRE : ne laisse jamais un cloud vide
+   écraser des clients locaux, et n'écrase jamais une version cloud plus
+   récente (autre appareil) sans le consentement de l'utilisateur. */
+async function clientsCloudInit(){
+  try { if(navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch(e){}
+  const code = syncGetCode();
+  if(code && _supaReady){
+    try {
+      const cloud = await clientsPullCloud(code);
+      const cloudClients = (cloud && Array.isArray(cloud.clients)) ? cloud.clients : [];
+      const localTs = parseInt(localStorage.getItem('forma_clients_ts') || '0', 10) || 0;
+      const cloudTs = (cloud && cloud.updated_at) || 0;
+      if(cloudClients.length && clients.length === 0){
+        _syncAdopt(cloud);                      // local vide → récupération
+      } else if(cloudClients.length && clients.length && cloudTs > localTs){
+        _syncCloudNewer = { code, count: cloudClients.length };  // autre appareil + récent → on propose
+      } else if(clients.length){
+        clientsPushCloud();                     // local = référence → sauvegarde
+      }
+    } catch(e){ console.warn('Init sync clients :', e); }
+  }
+  syncRenderPanel();
+}
+
+/* ── UI du bandeau « Sauvegarde cloud » (onglet Clients) ── */
+function _syncSetStatus(s){
+  const el = document.getElementById('sync-status'); if(!el) return;
+  if(s === 'ok')  { el.textContent = '✓ sauvegardé'; el.style.color = 'var(--green)'; }
+  else if(s === 'err') { el.textContent = '⚠ hors-ligne (gardé en local)'; el.style.color = 'var(--orange)'; }
+  else { el.textContent = '…'; el.style.color = 'var(--text3)'; }
+}
+function syncRenderPanel(){
+  const bar = document.getElementById('cloud-sync-bar'); if(!bar) return;
+  const code = syncGetCode();
+  if(!code){
+    bar.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:rgba(29,78,216,.06);border:1px solid rgba(29,78,216,.2);border-radius:10px">' +
+        '<span style="font-size:16px">☁️</span>' +
+        '<div style="flex:1;min-width:200px"><div style="font-size:12px;font-weight:700;color:var(--text)">Sauvegarde cloud — protège tes clients</div>' +
+        '<div style="font-size:11px;color:var(--text3)">Active un code pour retrouver tes clients partout, même après un vidage de cache ou sur un autre téléphone.</div></div>' +
+        '<button class="btn-add" style="padding:7px 14px;font-size:12px;background:var(--blue);border-color:var(--blue);color:#fff" onclick="syncActivate()">Activer la sauvegarde</button>' +
+        '<button class="btn-add" style="padding:7px 12px;font-size:12px" onclick="syncRestore()">📥 Restaurer un code</button>' +
+      '</div>';
+    return;
+  }
+  const warn = _syncCloudNewer
+    ? '<div style="margin-top:8px;padding:8px 12px;background:rgba(234,108,0,.08);border:1px solid rgba(234,108,0,.3);border-radius:8px;font-size:11px;color:var(--text2)">⚠️ Une version plus récente existe sur un autre appareil (' + _syncCloudNewer.count + ' client' + (_syncCloudNewer.count>1?'s':'') + '). <button class="btn-add" style="padding:3px 10px;font-size:11px;margin-left:6px" onclick="syncLoadNewer()">Charger cette version</button></div>'
+    : '';
+  bar.innerHTML =
+    '<div style="padding:10px 14px;background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.25);border-radius:10px">' +
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+        '<span style="font-size:16px">☁️</span>' +
+        '<div style="flex:1;min-width:200px"><div style="font-size:12px;font-weight:700;color:var(--text)">Sauvegarde cloud active · <span id="sync-status" style="font-weight:600;color:var(--green)">✓ sauvegardé</span></div>' +
+        '<div style="font-size:11px;color:var(--text3)">Ton code : <strong style="font-family:\'DM Mono\',monospace;color:var(--blue)">' + code.replace(/</g,'&lt;') + '</strong> — note-le pour récupérer tes clients ailleurs.</div></div>' +
+        '<button class="btn-add" style="padding:6px 12px;font-size:11px" onclick="syncChangeCode()">Changer le code</button>' +
+        '<button class="btn-add" style="padding:6px 12px;font-size:11px" onclick="syncRestore()">📥 Restaurer</button>' +
+      '</div>' + warn +
+    '</div>';
+}
+function syncActivate(){
+  const code = (prompt('Choisis un CODE de sauvegarde (ex : ton prénom + 4 chiffres).\n\n⚠️ Note-le bien : c\'est lui qui te permet de retrouver tes clients sur un autre appareil ou après un vidage de cache.', syncSuggestCode()) || '').trim();
+  if(!code) return;
+  syncSetCode(code);
+  clientsPushCloud();
+  syncRenderPanel();
+  if(typeof showToast === 'function') showToast('☁️ Sauvegarde cloud activée — code : ' + code);
+}
+function syncChangeCode(){
+  const cur = syncGetCode();
+  const code = (prompt('Nouveau code de sauvegarde :', cur) || '').trim();
+  if(!code || code === cur) return;
+  syncSetCode(code);
+  clientsPushCloud();
+  syncRenderPanel();
+  if(typeof showToast === 'function') showToast('Code mis à jour : ' + code);
+}
+async function syncRestore(){
+  const code = (prompt('Entre le CODE de sauvegarde pour récupérer tes clients :') || '').trim();
+  if(!code) return;
+  try {
+    const cloud = await clientsPullCloud(code);
+    if(!cloud || !Array.isArray(cloud.clients) || !cloud.clients.length){ alert('Aucune sauvegarde trouvée pour le code « ' + code + ' ».'); return; }
+    if(clients.length && !confirm('Remplacer tes ' + clients.length + ' client' + (clients.length>1?'s':'') + ' actuel' + (clients.length>1?'s':'') + ' par les ' + cloud.clients.length + ' du code « ' + code + ' » ?')) return;
+    _syncAdopt(cloud);
+    syncSetCode(code);
+    _syncCloudNewer = null;
+    syncRenderPanel();
+    if(typeof showToast === 'function') showToast('✅ ' + clients.length + ' client' + (clients.length>1?'s':'') + ' restauré' + (clients.length>1?'s':'') + ' depuis « ' + code + ' »');
+  } catch(e){ alert('Restauration impossible : ' + (e && e.message ? e.message : e)); }
+}
+async function syncLoadNewer(){
+  if(!_syncCloudNewer) return;
+  const code = _syncCloudNewer.code;
+  try {
+    const cloud = await clientsPullCloud(code);
+    if(cloud && Array.isArray(cloud.clients)){ _syncAdopt(cloud); }
+    _syncCloudNewer = null; syncRenderPanel();
+    if(typeof showToast === 'function') showToast('✅ Version la plus récente chargée');
+  } catch(e){ alert('Chargement impossible : ' + (e && e.message ? e.message : e)); }
 }
 function loadClients() {
   try {
@@ -4972,9 +5141,11 @@ buildZoneBtns('zone-btns-pt',ZONES_PT,activeZonePt,selectZonePt);
 buildZoneBtns('zone-btns-it',ZONES_IT,activeZoneIt,selectZoneIt);
 document.getElementById('mt_pt').value=ZONES_PT[0].price.toFixed(2);
 document.getElementById('mt_it').value=ZONES_IT[0].price.toFixed(2);
-// Chargement clients persistants
+// Chargement clients persistants (localStorage immédiat)
 loadClients();
 if(clients.length){ renderClients(); updateClientSelects(); document.getElementById('count-clients').textContent=clients.length; }
+// Persistance renforcée + réconciliation cloud (si un code de sauvegarde existe)
+clientsCloudInit().catch(e => console.error(e));
 // Chargement sauvegarde automatique
 loadAutoSave();
 // Si l'URL contient un lien partagé, on propose de charger l'équipe
