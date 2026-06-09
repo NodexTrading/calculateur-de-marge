@@ -3625,27 +3625,52 @@ function eqToFacturation() {
   }
   eqRows.forEach(r => { try { eqCalcRow(r.id); } catch(e){} });
 
-  const emps = [];
+  // On classe les intérimaires par CLIENT puis par CHANTIER : chaque couple
+  // (client, chantier) devient un tableau distinct dans la Facturation
+  // (règle métier : un chantier appartient à un seul client).
+  const emps = [];               // liste à plat (compat. ancienne Facturation)
+  const groupMap = new Map();    // clé "client␟chantier" → groupe
   for (const row of eqRows) {
-    const nom = (document.getElementById('eq-nom-' + row.id)?.value || '').trim() || ('Intérimaire #' + row.id);
     const res = row.result;
     if (!res) continue;
-    emps.push({
+    const nom = (document.getElementById('eq-nom-' + row.id)?.value || '').trim() || ('Intérimaire #' + row.id);
+    // Résolution des noms client + chantier propres à la ligne
+    const cliObj  = getClient(document.getElementById('eq-cli-' + row.id)?.value || '');
+    const cliName = cliObj ? (cliObj.name || 'Client ' + cliObj.id) : '';
+    const chanId  = document.getElementById('eq-chan-' + row.id)?.value || '';
+    const chanObj = cliObj && cliObj.chantiers ? cliObj.chantiers.find(ch => ch.id == chanId) : null;
+    const chanName = chanObj ? (chanObj.name || '') : '';
+
+    const emp = {
       nom,
       salNetHebdo: Number((res.sal_brut * 0.806).toFixed(2)),
       factureHebdo: Number((res.tf).toFixed(2))
-    });
+    };
+    emps.push(emp);
+
+    const key = cliName + '␟' + chanName;
+    if (!groupMap.has(key)) groupMap.set(key, { entreprise: cliName, chantier: chanName, emps: [] });
+    groupMap.get(key).emps.push(emp);
   }
   if (!emps.length) {
     alert("Aucun intérimaire calculable. Vérifie qu'au moins une ligne a un TX horaire et que le coef du formulaire principal est rempli.");
     return;
   }
 
+  // Tri : par client (alphabétique, « sans client » en dernier), puis chantier.
+  const groups = [...groupMap.values()].sort((a, b) => {
+    const ca = a.entreprise || '￿', cb = b.entreprise || '￿';
+    if (ca !== cb) return ca.localeCompare(cb, 'fr');
+    const ha = a.chantier || '￿', hb = b.chantier || '￿';
+    return ha.localeCompare(hb, 'fr');
+  });
+
   const payload = {
     chantier: '',
     year: new Date().getFullYear(),
     month: new Date().getMonth(),
-    emps
+    groups,   // nouveau format : 1 tableau par (client, chantier)
+    emps      // fallback à plat pour les anciennes versions de la Facturation
   };
   let b64;
   try {
