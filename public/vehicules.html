@@ -1,0 +1,2902 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suivi véhicules — Forma Intérim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="brand/forma-mark.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<style>
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f4f5f7;
+  --surface-glass: rgba(255,255,255,0.72);
+  --surface-glass-strong: rgba(255,255,255,0.92);
+  --ink: #0a0a0a;
+  --ink-2: #1f2024;
+  --ink-3: #555a63;
+  --muted: #8a8e96;
+  --line: #e8e9ec;
+  --line-strong: #d2d4d9;
+
+  --forma-blue: #3DA5E0;
+  --forma-blue-dark: #2987c0;
+  --forma-blue-light: #6dbceb;
+  --forma-blue-bg: #e8f4fc;
+
+  --forma-orange: #F39627;
+  --forma-orange-dark: #d97e10;
+  --forma-orange-light: #f8b765;
+  --forma-orange-bg: #fef3e3;
+
+  --success: #16a34a;
+  --warn: #d97706;
+  --danger: #dc2626;
+
+  --grad-hero: linear-gradient(135deg, #3DA5E0 0%, #2987c0 60%, #1a6ea3 100%);
+  --grad-coral: linear-gradient(135deg, #F39627 0%, #f8b765 100%);
+  --grad-forma: linear-gradient(135deg, #3DA5E0 0%, #F39627 100%);
+
+  --shadow-sm: 0 1px 2px rgba(10,10,10,0.04);
+  --shadow: 0 1px 1px rgba(10,10,10,0.04), 0 2px 4px rgba(10,10,10,0.04), 0 4px 8px rgba(10,10,10,0.04);
+  --shadow-md: 0 1px 1px rgba(10,10,10,0.05), 0 2px 4px rgba(10,10,10,0.05), 0 8px 16px rgba(10,10,10,0.06), 0 16px 32px rgba(10,10,10,0.04);
+
+  --r-sm: 8px;
+  --r: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --r-2xl: 32px;
+
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration: 250ms;
+
+  --font-display: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  --bg-1: rgba(61,165,224,0.18);
+  --bg-2: rgba(243,150,39,0.10);
+  --bg-3: rgba(243,150,39,0.20);
+  --bg-base: #f8f5f0;
+  --bg-radial-1: rgba(61,165,224,0.18);
+  --bg-radial-2: rgba(243,150,39,0.16);
+
+  --bandeau-frais: #fff3b0;
+  --bandeau-frais-strong: #ffe066;
+  --bandeau-prev: var(--forma-blue-bg);
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --surface: #16171a;
+  --surface-2: #1c1d21;
+  --surface-glass: rgba(28,28,30,0.72);
+  --surface-glass-strong: rgba(38,38,42,0.92);
+  --ink: #fafafa;
+  --ink-2: #e5e6ea;
+  --ink-3: #a0a4ab;
+  --muted: #6b6f78;
+  --line: rgba(255,255,255,0.10);
+  --line-strong: rgba(255,255,255,0.18);
+
+  --shadow: 0 1px 1px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.25);
+  --shadow-md: 0 1px 1px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.4), 0 8px 16px rgba(0,0,0,0.3), 0 16px 32px rgba(0,0,0,0.25);
+
+  --bg-1: rgba(61,165,224,0.10);
+  --bg-2: rgba(243,150,39,0.06);
+  --bg-3: rgba(243,150,39,0.10);
+  --bg-base: #050505;
+  --bg-radial-1: rgba(61,165,224,0.10);
+  --bg-radial-2: rgba(243,150,39,0.08);
+
+  --bandeau-frais: rgba(243,150,39,0.18);
+  --bandeau-frais-strong: rgba(243,150,39,0.30);
+  --bandeau-prev: rgba(61,165,224,0.18);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+  background:
+    linear-gradient(165deg, var(--bg-1) 0%, rgba(61,165,224,0.08) 25%, rgba(255,253,250,1) 55%, var(--bg-2) 85%, var(--bg-3) 100%),
+    radial-gradient(ellipse 900px 700px at 85% 15%, var(--bg-radial-1) 0%, transparent 55%),
+    radial-gradient(ellipse 700px 600px at 15% 90%, var(--bg-radial-2) 0%, transparent 55%),
+    var(--bg-base);
+  background-attachment: fixed;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.011em;
+  transition: color .25s ease;
+}
+
+[data-theme="dark"] body {
+  background:
+    linear-gradient(165deg, rgba(61,165,224,0.10) 0%, rgba(61,165,224,0.04) 25%, rgba(10,10,10,1) 55%, rgba(243,150,39,0.04) 85%, rgba(243,150,39,0.08) 100%),
+    radial-gradient(ellipse 900px 700px at 85% 15%, rgba(61,165,224,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 700px 600px at 15% 90%, rgba(243,150,39,0.10) 0%, transparent 55%),
+    #050505;
+}
+
+.app {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+/* ===== Header ===== */
+.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.brand-logo {
+  display: inline-flex; align-items: center; gap: 14px;
+  font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: -0.01em;
+  margin-bottom: 14px;
+}
+.brand-logo .mark {
+  width: 56px; height: 56px; background: #000; border-radius: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.brand-logo .mark img { width: 44px; height: 44px; }
+.brand-logo .forma { color: var(--forma-blue); }
+.brand-logo .interim { color: var(--forma-orange); }
+.brand h1 {
+  font-family: var(--font-display);
+  font-size: 44px; font-weight: 700; line-height: 1.02; letter-spacing: -0.035em;
+  margin: 0;
+}
+.brand h1 em { font-style: italic; color: var(--forma-blue); font-weight: 600; }
+.brand-tag { font-size: 13px; color: var(--ink-3); margin: 10px 0 0; }
+
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ===== Buttons ===== */
+.btn {
+  font-family: var(--font-body);
+  font-size: 14px; font-weight: 600;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  position: relative; overflow: hidden; isolation: isolate;
+  transition: transform 0.18s var(--ease-spring), box-shadow 0.25s ease, background 0.2s ease;
+  color: var(--ink);
+}
+.btn::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.12) 35%, rgba(255,255,255,0) 60%, rgba(0,0,0,0.08) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none; z-index: 2;
+}
+.btn span, .btn .icon { position: relative; z-index: 3; }
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: linear-gradient(180deg, rgba(20,20,22,0.92) 0%, rgba(10,10,10,0.95) 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(10,10,10,0.25);
+}
+.btn-primary:hover { box-shadow: 0 6px 20px rgba(10,10,10,0.30); transform: translateY(-1px); }
+
+.btn-accent {
+  background: var(--grad-coral);
+  color: white;
+  box-shadow: 0 4px 14px rgba(243,150,39,0.30);
+}
+.btn-accent:hover { box-shadow: 0 6px 20px rgba(243,150,39,0.40); transform: translateY(-1px); }
+
+.btn-ghost {
+  background: var(--surface-glass);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+.btn-ghost:hover { background: var(--surface-glass-strong); border-color: var(--line-strong); }
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(220,38,38,0.30);
+}
+.btn-danger:hover:not(:disabled) { box-shadow: 0 6px 20px rgba(220,38,38,0.40); transform: translateY(-1px); }
+.btn-danger:disabled {
+  opacity: 0.4; cursor: not-allowed;
+  background: var(--surface-glass);
+  color: var(--ink-3);
+  box-shadow: none;
+  border: 1px solid var(--line);
+}
+.btn-danger:disabled::before { display: none; }
+
+.btn-icon { padding: 10px 12px; font-size: 16px; }
+
+/* ===== Cards ===== */
+.card {
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 0.5px solid rgba(255,255,255,0.8);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 0 0.5px rgba(10,10,10,0.04), 0 1px 2px rgba(10,10,10,0.04), 0 4px 12px rgba(10,10,10,0.04), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="dark"] .card { border: 0.5px solid rgba(255,255,255,0.06); }
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 600; letter-spacing: -0.015em;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+  color: var(--ink);
+}
+.card-title .num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--grad-hero); color: white;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+}
+
+.card-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 18px;
+}
+.card-head .card-title { margin-bottom: 0; }
+
+/* ===== Grille tarifaire ===== */
+.tarifs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+.tarif-card {
+  background: linear-gradient(135deg, var(--surface-glass-strong) 0%, var(--forma-blue-bg) 100%);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  position: relative; overflow: hidden;
+}
+.tarif-card::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%; background: var(--forma-blue);
+}
+.tarif-card.tarif-orange::before { background: var(--forma-orange); }
+.tarif-card.tarif-forfait { background: linear-gradient(135deg, var(--surface-glass-strong) 0%, var(--forma-orange-bg) 100%); }
+.tarif-label { font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.tarif-value { font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1.1; margin-top: 4px; color: var(--ink); }
+.tarif-unit { font-family: var(--font-body); font-size: 12px; color: var(--ink-3); margin-left: 2px; }
+
+[data-theme="dark"] .tarif-card {
+  background: linear-gradient(135deg, rgba(38,38,42,0.92) 0%, rgba(61,165,224,0.10) 100%);
+}
+[data-theme="dark"] .tarif-card.tarif-forfait {
+  background: linear-gradient(135deg, rgba(38,38,42,0.92) 0%, rgba(243,150,39,0.10) 100%);
+}
+
+/* ===== Grille tarifaire Olympic Location (01/04/2026) ===== */
+.tarifs-summary{cursor:pointer; list-style:none; user-select:none; display:flex; align-items:center; gap:10px;}
+.tarifs-summary::-webkit-details-marker{display:none;}
+.tarifs-summary .tarif-maj{font-size:11px;font-weight:600;color:var(--ink-3);background:var(--surface-2);border:1px solid var(--line);padding:3px 10px;border-radius:99px;}
+.tarifs-summary .tarif-chevron{margin-left:auto;color:var(--muted);transition:transform .2s ease;font-size:13px;}
+details[open] > .tarifs-summary .tarif-chevron{transform:rotate(180deg);}
+.tarifs-details > .tarifs-summary{margin-bottom:0;}
+.tarifs-details[open] > .tarifs-summary{margin-bottom:16px;}
+.tarif-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-glass-strong);}
+.tarif-table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:auto;}
+.tarif-table th{background:linear-gradient(180deg,var(--surface-glass-strong) 0%,var(--surface-2) 100%);font-family:var(--font-display);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);padding:9px 12px;text-align:right;border-bottom:1px solid var(--line-strong);white-space:nowrap;position:static;}
+.tarif-table th.cat{text-align:left;}
+.tarif-table td{padding:7px 12px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--font-mono);font-size:12px;color:var(--ink-2);white-space:nowrap;background:transparent;}
+.tarif-table td.cat{font-family:var(--font-body);color:var(--ink);text-align:left;}
+.tarif-table td.cat b{color:var(--forma-blue-dark);font-family:var(--font-mono);}
+[data-theme="dark"] .tarif-table td.cat b{color:#6dbceb;}
+.tarif-table tbody tr:last-child td{border-bottom:0;}
+.tarif-table tbody tr:hover td{background:var(--forma-blue-bg);}
+[data-theme="dark"] .tarif-table tbody tr:hover td{background:rgba(61,165,224,0.10);}
+.tarif-table .neg{background:rgba(22,163,74,0.14);color:var(--success);font-weight:700;border-radius:7px;padding:2px 8px;display:inline-block;}
+[data-theme="dark"] .tarif-table .neg{background:rgba(22,163,74,0.20);color:#4ade80;}
+.tarif-extras{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.tarif-chip{font-size:12px;color:var(--ink-2);background:var(--surface-glass-strong);border:1px solid var(--line);border-radius:99px;padding:6px 13px;}
+.tarif-chip b{color:var(--forma-orange-dark);font-family:var(--font-mono);}
+.tarif-chip.neg-chip{border-color:rgba(22,163,74,0.35);color:var(--success);background:rgba(22,163,74,0.07);}
+
+/* ===== Table ===== */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--r);
+  border: 1px solid var(--line);
+  background: var(--surface-glass-strong);
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+  font-family: var(--font-body);
+  table-layout: fixed;
+}
+thead th {
+  background: linear-gradient(180deg, var(--surface-glass-strong) 0%, var(--surface-2) 100%);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 8px 4px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  white-space: normal;
+  vertical-align: middle;
+  position: sticky; top: 0;
+  z-index: 2;
+  word-break: break-word;
+}
+thead th.th-prev { background: var(--bandeau-prev); color: var(--forma-blue-dark); }
+thead th.th-frais { background: var(--bandeau-frais); color: var(--warn); }
+thead th.th-total { background: var(--bandeau-frais-strong); color: var(--warn); }
+thead th.th-fact { background: var(--success-bg, #dcfce7); color: var(--success); }
+[data-theme="dark"] thead th.th-fact { background: rgba(22,163,74,0.15); color: #4ade80; }
+thead th.th-grand { background: linear-gradient(135deg, var(--forma-blue) 0%, var(--forma-blue-dark) 100%); color: white; }
+thead tr.head-2 th { font-size: 9.5px; padding: 5px 4px; top: 34px; }
+
+tbody td {
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  background: var(--surface-glass-strong);
+  color: var(--ink);
+  vertical-align: middle;
+}
+tbody tr:hover td { background: var(--forma-blue-bg); }
+[data-theme="dark"] tbody tr:hover td { background: rgba(61,165,224,0.10); }
+tbody td.col-prev { background: rgba(61,165,224,0.04); }
+tbody td.col-frais { background: rgba(243,150,39,0.04); }
+tbody td.col-total { background: rgba(243,150,39,0.08); }
+tbody td.col-fact { background: rgba(22,163,74,0.04); text-align: center; padding: 4px; }
+tbody td.col-grand { background: rgba(61,165,224,0.10); font-weight: 700; }
+tbody tr:hover td.col-prev { background: rgba(61,165,224,0.10); }
+tbody tr:hover td.col-frais { background: rgba(243,150,39,0.10); }
+tbody tr:hover td.col-total { background: rgba(243,150,39,0.14); }
+tbody tr:hover td.col-fact { background: rgba(22,163,74,0.10); }
+tbody tr:hover td.col-grand { background: rgba(61,165,224,0.16); }
+
+[data-theme="dark"] tbody td.col-prev { background: rgba(61,165,224,0.06); }
+[data-theme="dark"] tbody td.col-frais { background: rgba(243,150,39,0.06); }
+[data-theme="dark"] tbody td.col-total { background: rgba(243,150,39,0.10); }
+[data-theme="dark"] tbody td.col-fact { background: rgba(22,163,74,0.08); }
+[data-theme="dark"] tbody td.col-grand { background: rgba(61,165,224,0.18); }
+
+td.readonly.col-grand { color: var(--forma-blue-dark); font-size: 13px; }
+[data-theme="dark"] td.readonly.col-grand { color: #6dbceb; }
+
+.fact-check {
+  width: 20px; height: 20px;
+  cursor: pointer;
+  accent-color: var(--success);
+}
+
+td input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  padding: 7px 5px;
+  outline: none;
+  text-align: left;
+  min-width: 0;
+}
+td input[type="number"], td input.is-number { font-family: var(--font-mono); text-align: right; }
+td input[type="date"] { font-family: var(--font-mono); }
+td input:focus { background: var(--forma-blue-bg); box-shadow: inset 0 0 0 2px var(--forma-blue); }
+[data-theme="dark"] td input:focus { background: rgba(61,165,224,0.15); }
+
+td.readonly {
+  font-family: var(--font-mono); font-weight: 600; text-align: right;
+  padding: 7px 6px; color: var(--ink-2); font-size: 12px;
+}
+td.col-total.readonly { color: var(--forma-orange-dark); font-weight: 700; }
+
+td.actions { text-align: center; padding: 4px; }
+
+th.th-check, td.td-check { text-align: center; padding: 4px; }
+.row-checkbox {
+  width: 16px; height: 16px;
+  cursor: pointer;
+  accent-color: var(--forma-blue);
+  margin: 0;
+}
+tbody tr.is-selected td {
+  background: rgba(243,150,39,0.10) !important;
+}
+tbody tr.is-selected td.col-prev { background: rgba(243,150,39,0.14) !important; }
+tbody tr.is-selected td.col-frais { background: rgba(243,150,39,0.16) !important; }
+tbody tr.is-selected td.col-total { background: rgba(243,150,39,0.22) !important; }
+[data-theme="dark"] tbody tr.is-selected td { background: rgba(243,150,39,0.14) !important; }
+.btn-del {
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--muted); font-size: 16px; padding: 6px 10px;
+  border-radius: 8px; transition: all .15s ease;
+}
+.btn-del:hover { background: rgba(220,38,38,0.10); color: var(--danger); }
+
+/* ===== Footer note ===== */
+.foot-note {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 14px;
+  padding-left: 4px;
+  font-style: italic;
+}
+
+/* ===== Toggle theme ===== */
+.theme-toggle {
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+
+/* ===== Empty state ===== */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+.empty-state strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+}
+
+/* ===== Tabs (multi-tableaux) ===== */
+.tabs-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 6px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  border-radius: 14px;
+  border: 0.5px solid rgba(255,255,255,0.8);
+}
+[data-theme="dark"] .tabs-bar { border-color: rgba(255,255,255,0.06); }
+.tab-item {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--ink-2);
+  transition: all .18s var(--ease-out);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.tab-item:hover { background: var(--surface-glass-strong); color: var(--ink); }
+.tab-item.active {
+  background: var(--grad-hero);
+  color: white;
+  box-shadow: 0 4px 14px rgba(61,165,224,0.30);
+}
+.tab-item .tab-count {
+  background: rgba(255,255,255,0.25);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 99px;
+  min-width: 18px;
+  text-align: center;
+}
+.tab-item:not(.active) .tab-count {
+  background: var(--line);
+  color: var(--ink-3);
+}
+.tab-actions {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 2px;
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.tab-item:hover .tab-actions,
+.tab-item.active .tab-actions { opacity: 1; }
+.tab-action-btn {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+  opacity: 0.75;
+  line-height: 1;
+}
+.tab-action-btn:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.25);
+}
+.tab-add {
+  background: transparent;
+  border: 1px dashed var(--line-strong);
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.tab-add:hover {
+  border-style: solid;
+  border-color: var(--forma-blue);
+  color: var(--forma-blue);
+  background: var(--forma-blue-bg);
+}
+
+/* ===== Card title row (nom tableau + total) ===== */
+.tableau-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  border: 0;
+  background: transparent;
+  outline: none;
+  padding: 4px 8px;
+  border-radius: 8px;
+  min-width: 200px;
+  max-width: 360px;
+}
+.tableau-name:hover { background: var(--surface-glass-strong); }
+.tableau-name:focus { background: var(--forma-blue-bg); box-shadow: inset 0 0 0 2px var(--forma-blue); }
+[data-theme="dark"] .tableau-name:focus { background: rgba(61,165,224,0.15); }
+
+.tableau-total {
+  font-family: var(--font-display);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 16px;
+  background: linear-gradient(135deg, var(--forma-blue) 0%, var(--forma-blue-dark) 100%);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(61,165,224,0.30);
+}
+.tableau-total .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85; }
+.tableau-total .value { font-size: 20px; font-family: var(--font-mono); letter-spacing: -0.01em; }
+
+/* ===== Footer sums row ===== */
+tfoot tr {
+  background: linear-gradient(180deg, var(--bandeau-frais-strong) 0%, var(--bandeau-frais) 100%);
+  font-weight: 700;
+  position: sticky; bottom: 0; z-index: 1;
+}
+tfoot td {
+  padding: 10px 6px;
+  border-top: 2px solid var(--warn);
+  border-right: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--warn);
+  text-align: right;
+}
+tfoot td.foot-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: left;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+tfoot td.col-grand-sum {
+  background: var(--forma-blue);
+  color: white;
+  font-size: 14px;
+}
+[data-theme="dark"] tfoot tr { background: linear-gradient(180deg, rgba(243,150,39,0.30) 0%, rgba(243,150,39,0.18) 100%); }
+
+/* ===== Group headers (vue groupée) ===== */
+tbody tr.group-header td {
+  background: linear-gradient(180deg, var(--forma-blue-bg) 0%, var(--surface-glass-strong) 100%) !important;
+  color: var(--forma-blue-dark) !important;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 12px;
+  letter-spacing: 0.02em;
+  border-top: 2px solid var(--forma-blue);
+  border-bottom: 1px solid var(--line);
+}
+tbody tr.group-header-l2 td {
+  background: linear-gradient(180deg, var(--forma-orange-bg) 0%, var(--surface-glass-strong) 100%) !important;
+  color: var(--forma-orange-dark) !important;
+  font-size: 12px;
+  padding: 8px 12px 8px 32px;
+  border-top: 1px dashed var(--forma-orange);
+}
+[data-theme="dark"] tbody tr.group-header td {
+  background: linear-gradient(180deg, rgba(61,165,224,0.20) 0%, rgba(28,29,33,1) 100%) !important;
+  color: #6dbceb !important;
+}
+[data-theme="dark"] tbody tr.group-header-l2 td {
+  background: linear-gradient(180deg, rgba(243,150,39,0.20) 0%, rgba(28,29,33,1) 100%) !important;
+  color: var(--forma-orange-light) !important;
+}
+
+tbody tr.group-subtotal td {
+  background: linear-gradient(180deg, var(--bandeau-frais) 0%, var(--bandeau-frais-strong) 100%) !important;
+  color: var(--warn);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 6px;
+  text-align: right;
+  border-top: 1px solid var(--warn);
+  border-bottom: 1px solid var(--warn);
+}
+tbody tr.group-subtotal td.subtot-label {
+  font-family: var(--font-display);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+tbody tr.group-subtotal td.col-grand-sum-sub {
+  background: var(--forma-blue) !important;
+  color: white;
+  font-size: 13px;
+}
+
+thead th.th-rapporteur { background: linear-gradient(180deg, var(--forma-orange-bg) 0%, var(--surface-2) 100%); color: var(--forma-orange-dark); }
+tbody td.col-rapporteur { background: rgba(243,150,39,0.04); font-weight: 600; }
+[data-theme="dark"] tbody td.col-rapporteur { background: rgba(243,150,39,0.06); }
+
+/* ===== Import Status ===== */
+.import-status {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: var(--r);
+  background: var(--surface-glass-strong);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  white-space: pre-line;
+}
+.import-status.success {
+  background: var(--success-bg, #dcfce7);
+  border-color: rgba(22,163,74,0.30);
+  color: var(--success);
+}
+.import-status.error {
+  background: var(--danger-bg, #fee2e2);
+  border-color: rgba(220,38,38,0.30);
+  color: var(--danger);
+}
+.import-status.warn {
+  background: var(--warn-bg, #fef3c7);
+  border-color: rgba(217,119,6,0.30);
+  color: var(--warn);
+}
+
+/* Highlight des lignes fraîchement importées */
+tbody tr.row-imported td {
+  box-shadow: inset 3px 0 0 var(--forma-blue);
+}
+
+/* ===== Archives (snapshots historiques) ===== */
+.archives-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  padding: 18px 4px 4px;
+}
+.archive-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.archive-card:hover {
+  border-color: var(--forma-orange);
+  box-shadow: 0 6px 20px rgba(243,150,39,0.10);
+  transform: translateY(-2px);
+}
+.archive-card .archive-name {
+  font-family: var(--font-display, var(--font-body));
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.archive-card .archive-source {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-style: italic;
+}
+.archive-card .archive-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--ink-2, var(--ink-3));
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+.archive-card .archive-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.archive-card .archive-meta-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-3);
+}
+.archive-card .archive-meta-value {
+  font-weight: 700;
+  color: var(--ink);
+}
+.archive-card .archive-total-ht {
+  color: var(--forma-orange-dark);
+  font-size: 13px;
+}
+.archive-card .archive-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.archive-card .archive-actions .btn {
+  padding: 7px 12px;
+  font-size: 11px;
+  flex: 1;
+  min-width: 60px;
+  justify-content: center;
+}
+
+/* ===== Scrollbar ===== */
+.table-wrap::-webkit-scrollbar { height: 10px; width: 10px; }
+.table-wrap::-webkit-scrollbar-track { background: var(--surface-2); border-radius: 10px; }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 10px; }
+.table-wrap::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ===== Responsive ===== */
+@media (max-width: 720px) {
+  .app { padding: 20px 12px 64px; }
+  .brand h1 { font-size: 32px; }
+  .brand-logo { font-size: 20px; }
+  .brand-logo .mark { width: 44px; height: 44px; }
+  .brand-logo .mark img { width: 34px; height: 34px; }
+  .card { padding: 18px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="mark"><img src="brand/forma-mark.png" alt="Forma"></span>
+        <span><span class="forma">FORMA</span> <span class="interim">INTERIM</span></span>
+      </div>
+      <h1>Suivi <em>véhicules</em></h1>
+      <p class="brand-tag">Locations chez les loueurs partenaires — Olympic Location, 6D AuPrestige…</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost theme-toggle" id="themeToggle" title="Mode sombre / clair">🌙</button>
+    </div>
+  </header>
+
+  <!-- Grille tarifaire Olympic Location (mail du loueur, tarifs au 01/04/2026) -->
+  <section class="card">
+    <details class="tarifs-details" open>
+      <summary class="card-title tarifs-summary"><span class="num">1</span>Grille tarifaire — Olympic Location <span class="tarif-maj">en vigueur au 01/04/2026</span><span class="tarif-chevron">▾</span></summary>
+      <div class="tarif-table-wrap">
+        <table class="tarif-table">
+          <thead>
+            <tr><th class="cat">Catégorie</th><th>Forfait 6 000 km</th><th>Forfait 4 500 km</th><th>Km sup</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="cat"><b>B</b> · Type Clio ou similaire</td><td><span class="neg">705 € HT</span></td><td><span class="neg">610 € HT</span></td><td>0,15 € HT</td></tr>
+            <tr><td class="cat"><b>C</b> · Type Captur ou similaire</td><td>760 € HT</td><td>700 € HT</td><td>0,19 € HT</td></tr>
+            <tr><td class="cat"><b>M</b> · Minibus 9 places (Trafic)</td><td>1 300 € HT</td><td><span class="neg">1 100 € HT</span></td><td>0,32 € HT</td></tr>
+            <tr><td class="cat"><b>01</b> · Véhicule société 2 places (Clio)</td><td>700 € HT</td><td>630 € HT</td><td>0,13 € HT</td></tr>
+            <tr><td class="cat"><b>03</b> · Utilitaire 3 m³ · 2 ou 3 places</td><td>700 € HT</td><td>630 € HT</td><td>0,14 € HT</td></tr>
+            <tr><td class="cat"><b>06</b> · Utilitaire 6 m³ · 3 places</td><td>960 € HT</td><td>880 € HT</td><td>0,15 € HT</td></tr>
+            <tr><td class="cat"><b>03D</b> · 3 m³ double cabine 5 places</td><td><span class="neg">760 € HT</span></td><td><span class="neg">650 € HT</span></td><td>0,14 € HT</td></tr>
+            <tr><td class="cat"><b>06D</b> · 6 m³ double cabine 6 places</td><td><span class="neg">950 € HT</span></td><td><span class="neg">890 € HT</span></td><td>0,17 € HT</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tarif-extras">
+        <span class="tarif-chip">♻️ Éco-contribution : <b>2,50 € HT</b> / contrat</span>
+        <span class="tarif-chip">🛡️ Assistance PLUS (option) : <b>37,50 € HT</b> / mois</span>
+        <span class="tarif-chip">🚚 Livraison gratuite sur chantier (location mensuelle) — dépts <b>13 · 83 · 06 · 84 · 30 · 34</b></span>
+        <span class="tarif-chip neg-chip">🟢 vert = tarif négocié à la baisse (validé direction Olympic)</span>
+      </div>
+    </details>
+  </section>
+
+  <!-- Tabs : multi-tableaux -->
+  <div class="tabs-bar" id="tabsBar"></div>
+
+  <!-- Tableau -->
+  <section class="card">
+    <div class="card-head" style="flex-wrap:wrap; gap:14px;">
+      <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:280px;">
+        <span class="num" style="width:24px; height:24px; border-radius:50%; background:var(--grad-hero); color:white; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; font-family:var(--font-display);">2</span>
+        <input class="tableau-name" id="tableauNameInput" placeholder="Nom du tableau" />
+        <div class="tableau-total">
+          <span class="label">Total</span>
+          <span class="value" id="tableauTotalValue">0,00 €</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <label style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-3); padding:6px 10px; background:var(--surface-glass); border:1px solid var(--line); border-radius:12px;">
+          <span>Grouper par</span>
+          <select id="groupBy" style="border:0; background:transparent; font-family:var(--font-body); font-size:13px; color:var(--ink); font-weight:600; cursor:pointer; outline:none;">
+            <option value="">Aucun</option>
+            <option value="rapporteur">Rapporteur</option>
+            <option value="rapporteur_client">Rapporteur &gt; Client</option>
+            <option value="client">Client</option>
+            <option value="chantier">Chantier</option>
+            <option value="loueur">Loueur</option>
+          </select>
+        </label>
+        <button class="btn btn-danger" id="bulkDelete" disabled><span>🗑 Supprimer sélection <span id="selCount"></span></span></button>
+        <button class="btn btn-ghost" id="exportBtn"><span>⬇ Exporter CSV</span></button>
+        <button class="btn btn-primary" id="importCsvBtn"><span>📂 Importer CSV</span></button>
+        <button class="btn btn-ghost" id="importPdfBtn"><span>📥 PDF (beta)</span></button>
+        <button class="btn btn-accent" id="addRow"><span>+ Nouvelle ligne</span></button>
+        <input type="file" id="pdfImportInput" accept=".pdf" multiple style="display:none">
+        <input type="file" id="csvImportInput" accept=".csv,.txt" style="display:none">
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="tbl">
+        <colgroup>
+          <col style="width:2.5%">  <!-- Checkbox -->
+          <col style="width:5%">    <!-- Rapporteur (NEW) -->
+          <col style="width:4%">    <!-- Client -->
+          <col style="width:5%">    <!-- Chantier -->
+          <col style="width:5%">    <!-- Loueur -->
+          <col style="width:3%">    <!-- Facture reçue -->
+          <col style="width:5%">    <!-- Modèle -->
+          <col style="width:4.5%">  <!-- Immat -->
+          <col style="width:6%">    <!-- Conducteur -->
+          <col style="width:4.5%">  <!-- Matricule -->
+          <col style="width:3.5%">  <!-- Nb jours -->
+          <col style="width:5.5%">  <!-- Date début -->
+          <col style="width:5.5%">  <!-- Date fin -->
+          <col style="width:4.5%">  <!-- Mt HT -->
+          <col style="width:4.5%">  <!-- Mt TTC -->
+          <col style="width:4%">    <!-- Essence -->
+          <col style="width:5%">    <!-- Éco/Nett -->
+          <col style="width:3.5%">  <!-- Km sup -->
+          <col style="width:3.5%">  <!-- Répar -->
+          <col style="width:3.5%">  <!-- PV -->
+          <col style="width:4.5%">  <!-- Total frais -->
+          <col style="width:5%">    <!-- TOTAL -->
+          <col style="width:2.5%">  <!-- Actions -->
+        </colgroup>
+        <thead>
+          <tr class="head-1">
+            <th rowspan="2" class="th-check"><input type="checkbox" id="checkAll" class="row-checkbox" title="Tout sélectionner"></th>
+            <th rowspan="2" class="th-rapporteur">Rapporteur</th>
+            <th rowspan="2">Client</th>
+            <th rowspan="2">Chantier</th>
+            <th rowspan="2">Loueur</th>
+            <th rowspan="2" class="th-fact">Facture reçue</th>
+            <th rowspan="2">Modèle véhicule</th>
+            <th rowspan="2">Immat</th>
+            <th rowspan="2">Conducteur</th>
+            <th rowspan="2">Matricule intérimaire</th>
+            <th rowspan="2">Nb jours loués</th>
+            <th rowspan="2">Date début</th>
+            <th rowspan="2">Date fin</th>
+            <th colspan="2" class="th-prev">Prévisionnel</th>
+            <th colspan="6" class="th-frais">Frais réels</th>
+            <th rowspan="2" class="th-grand">TOTAL</th>
+            <th rowspan="2">Actions</th>
+          </tr>
+          <tr class="head-2">
+            <th class="th-prev">Montant HT</th>
+            <th class="th-prev">Montant TTC</th>
+            <th class="th-frais">Essence</th>
+            <th class="th-frais">Éco contrib / Nettoyage</th>
+            <th class="th-frais">Km sup</th>
+            <th class="th-frais">Répar</th>
+            <th class="th-frais">PV</th>
+            <th class="th-total">Total frais</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <strong>Aucune ligne pour le moment</strong>
+      Clique sur « + Nouvelle ligne » pour commencer le suivi.
+    </div>
+
+    <div id="importStatus" class="import-status" style="display:none;"></div>
+
+    <div class="foot-note">
+      Indiquer une ligne par véhicule loué. Si plusieurs codes commerciaux dans une même agence, faire un suivi par commercial.
+    </div>
+  </section>
+
+  <!-- ===== ARCHIVES (Historique des tableaux) ===== -->
+  <section class="card" id="archivesCard" style="margin-top:24px;">
+    <div class="card-head" style="flex-wrap:wrap; gap:14px;">
+      <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:280px;">
+        <span class="num" style="width:24px; height:24px; border-radius:50%; background:var(--grad-hero); color:white; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; font-family:var(--font-display);">📦</span>
+        <div>
+          <h2 style="margin:0; font-size:18px; font-weight:700; font-family:var(--font-display);">Tableaux archivés</h2>
+          <div style="font-size:12px; color:var(--ink-3); margin-top:2px;">Snapshots des mois précédents — restaurables à tout moment.</div>
+        </div>
+        <div class="tableau-total" style="margin-left:8px;">
+          <span class="label">Archives</span>
+          <span class="value" id="archiveCountValue">0</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-primary" id="archiveCurrentBtn"><span>📦 Archiver le tableau actuel</span></button>
+      </div>
+    </div>
+    <div id="archivesList" class="archives-list"></div>
+    <div id="archivesEmpty" class="empty-state" style="display:none;">
+      <strong>Aucun tableau archivé</strong>
+      Clique sur « 📦 Archiver le tableau actuel » pour sauvegarder un snapshot. Tu pourras le restaurer ou le télécharger plus tard.
+    </div>
+  </section>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'suivi-vehicules-v1';        // legacy (rows seuls)
+const STORAGE_KEY_V2 = 'suivi-vehicules-v2';     // { tableaux: [...], currentId }
+const THEME_KEY = 'suivi-vehicules-theme';
+
+const FIELDS = [
+  { key: 'client',     type: 'text' },
+  { key: 'chantier',   type: 'text' },
+  { key: 'loueur',     type: 'text' },
+  { key: 'modele',     type: 'text' },
+  { key: 'immat',      type: 'text' },
+  { key: 'conducteur', type: 'text' },
+  { key: 'matricule',  type: 'text' },
+  { key: 'jours',      type: 'computed' },
+  { key: 'dateDebut',  type: 'date' },
+  { key: 'dateFin',    type: 'date' },
+  { key: 'mtHT',       type: 'number', cls: 'col-prev' },
+  { key: 'mtTTC',      type: 'computed', cls: 'col-prev' },
+  { key: 'essence',    type: 'number', cls: 'col-frais' },
+  { key: 'ecoNett',    type: 'number', cls: 'col-frais' },
+  { key: 'kmSup',      type: 'number', cls: 'col-frais' },
+  { key: 'repar',      type: 'number', cls: 'col-frais' },
+  { key: 'pv',         type: 'number', cls: 'col-frais' },
+  { key: 'total',      type: 'computed', cls: 'col-total' },
+];
+
+// ===== Multi-tableaux state =====
+function loadState() {
+  // V2 prioritaire
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_V2);
+    if (raw) {
+      const v2 = JSON.parse(raw);
+      if (v2 && Array.isArray(v2.tableaux) && v2.tableaux.length) return v2;
+    }
+  } catch {}
+  // Migration depuis V1 (rows seuls)
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const v1Rows = JSON.parse(raw);
+      if (Array.isArray(v1Rows)) {
+        return {
+          tableaux: [{ id: 't-default', name: 'Suivi général', rows: v1Rows }],
+          currentId: 't-default',
+        };
+      }
+    }
+  } catch {}
+  // Défaut
+  return {
+    tableaux: [{ id: 't-default', name: 'Suivi général', rows: [] }],
+    currentId: 't-default',
+  };
+}
+function saveState() { localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state)); }
+function saveRows() { saveState(); } // compat avec l'ancien code
+function currentTableau() {
+  return state.tableaux.find(t => t.id === state.currentId) || state.tableaux[0];
+}
+let state = loadState();
+let rows = currentTableau().rows;
+
+function switchTableau(id) {
+  if (!state.tableaux.find(t => t.id === id)) return;
+  state.currentId = id;
+  rows = currentTableau().rows;
+  saveState();
+  renderTabs();
+  render();
+}
+function createTableau(name) {
+  const id = 't-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+  state.tableaux.push({ id, name: (name || 'Sans nom').trim(), rows: [] });
+  state.currentId = id;
+  rows = currentTableau().rows;
+  saveState();
+  renderTabs();
+  render();
+}
+function deleteTableau(id) {
+  if (state.tableaux.length <= 1) { alert('Tu ne peux pas supprimer le dernier tableau.'); return; }
+  const t = state.tableaux.find(x => x.id === id);
+  if (!t) return;
+  if (!confirm(`Supprimer le tableau "${t.name}" et ses ${t.rows.length} ligne(s) ?`)) return;
+  state.tableaux = state.tableaux.filter(x => x.id !== id);
+  if (state.currentId === id) state.currentId = state.tableaux[0].id;
+  rows = currentTableau().rows;
+  saveState();
+  renderTabs();
+  render();
+}
+function renameTableauPrompt(id) {
+  const t = state.tableaux.find(x => x.id === id);
+  if (!t) return;
+  const newName = prompt('Nouveau nom du tableau :', t.name);
+  if (newName && newName.trim()) {
+    t.name = newName.trim();
+    saveState();
+    renderTabs();
+    document.getElementById('tableauNameInput').value = t.name;
+  }
+}
+function duplicateTableau(id) {
+  const t = state.tableaux.find(x => x.id === id);
+  if (!t) return;
+  const newId = 't-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+  state.tableaux.push({
+    id: newId,
+    name: t.name + ' (copie)',
+    rows: JSON.parse(JSON.stringify(t.rows)).map(r => ({ ...r, id: 'dup-' + Date.now() + '-' + Math.random().toString(36).slice(2,5), _imported: false, _selected: false })),
+  });
+  state.currentId = newId;
+  rows = currentTableau().rows;
+  saveState();
+  renderTabs();
+  render();
+}
+
+function makeRow() {
+  return {
+    id: Date.now() + '-' + Math.random().toString(36).slice(2,7),
+    rapporteur: '', client: '', chantier: '', loueur: '', factReceived: false,
+    modele: '', immat: '',
+    conducteur: '', matricule: '',
+    dateDebut: '', dateFin: '',
+    mtHT: '',
+    essence: '', ecoNett: '', kmSup: '', repar: '', pv: '',
+  };
+}
+
+// Mapping Client → Rapporteur d'affaire (auto-fill)
+const CLIENT_TO_RAPPORTEUR = {
+  // --- ARISTIDE ---
+  'MGB': 'ARISTIDE',
+  'JDS': 'ARISTIDE',
+  'ACTIBAT': 'ARISTIDE',
+  // --- RUI ---
+  'HD': 'RUI',
+  'HD CONSTRUCTION': 'RUI',
+  'VILAPLANO': 'RUI',
+  'LOBO': 'RUI',
+  // --- BRUNO ---
+  'FEREIRA': 'BRUNO',
+  'FERREIRA': 'BRUNO',
+  'GROW': 'BRUNO',
+  'ACOBAT': 'BRUNO',
+  // --- PEDRO ---
+  'CONSTRUCTION PATRIMOINE': 'PEDRO',
+  'PATRIMOINE': 'PEDRO',
+};
+// Match exact d'abord, puis match partiel (le client contient une clé du mapping)
+// → "VILAPLANO CONSTRUCTION" match "VILAPLANO", "RUI LOBO CONSTRUCTION" match "LOBO", etc.
+function lookupRapporteur(client) {
+  if (!client) return '';
+  const k = client.toUpperCase().trim();
+  if (CLIENT_TO_RAPPORTEUR[k]) return CLIENT_TO_RAPPORTEUR[k];
+  // Match partiel : longest key first (évite faux positifs)
+  const keys = Object.keys(CLIENT_TO_RAPPORTEUR).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    if (k.includes(key)) return CLIENT_TO_RAPPORTEUR[key];
+  }
+  return '';
+}
+
+function diffJours(d1, d2) {
+  if (!d1 || !d2) return '';
+  const a = new Date(d1), b = new Date(d2);
+  if (isNaN(a) || isNaN(b)) return '';
+  const j = Math.round((b - a) / 86400000);
+  return j > 0 ? j : '';
+}
+
+function num(v) {
+  if (v === '' || v === null || v === undefined) return 0;
+  const n = parseFloat(String(v).replace(',', '.'));
+  return isNaN(n) ? 0 : n;
+}
+
+function fmtMoney(n) {
+  if (n === '' || n === 0) return '';
+  return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n) + ' €';
+}
+
+function computeTotals(r) {
+  const jours = diffJours(r.dateDebut, r.dateFin);
+  const ht = num(r.mtHT);
+  const ttc = ht * 1.20;
+  const totalFrais = num(r.essence) + num(r.ecoNett) + num(r.kmSup) + num(r.repar) + num(r.pv);
+  const total = ttc + totalFrais;
+  return { jours, ttc, totalFrais, total };
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tabsBar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  state.tableaux.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'tab-item' + (t.id === state.currentId ? ' active' : '');
+    el.dataset.id = t.id;
+    el.innerHTML = `
+      <span class="tab-name"></span>
+      <span class="tab-count">${t.rows.length}</span>
+      <span class="tab-actions">
+        <button class="tab-action-btn" data-act="rename" title="Renommer">✎</button>
+        <button class="tab-action-btn" data-act="duplicate" title="Dupliquer">⎘</button>
+        <button class="tab-action-btn" data-act="delete" title="Supprimer">✕</button>
+      </span>`;
+    el.querySelector('.tab-name').textContent = t.name;
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.tab-action-btn')) return;
+      switchTableau(t.id);
+    });
+    el.querySelectorAll('.tab-action-btn').forEach(b => {
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const act = b.dataset.act;
+        if (act === 'rename') renameTableauPrompt(t.id);
+        else if (act === 'duplicate') duplicateTableau(t.id);
+        else if (act === 'delete') deleteTableau(t.id);
+      });
+    });
+    bar.appendChild(el);
+  });
+  // Bouton "+ Nouveau"
+  const addBtn = document.createElement('div');
+  addBtn.className = 'tab-item tab-add';
+  addBtn.innerHTML = '<span>＋ Nouveau tableau</span>';
+  addBtn.addEventListener('click', () => {
+    const name = prompt('Nom du nouveau tableau :', '');
+    if (name && name.trim()) createTableau(name);
+  });
+  bar.appendChild(addBtn);
+}
+
+// Construit une ligne <tr> complète pour une row donnée
+function renderRow(r) {
+  const tr = document.createElement('tr');
+  if (r._selected) tr.classList.add('is-selected');
+  if (r._imported) tr.classList.add('row-imported');
+  const c = computeTotals(r);
+  const cells = [
+    cellCheckbox(r),
+    cellInput(r, 'rapporteur', 'text', 'col-rapporteur'),
+    cellInput(r, 'client', 'text'),
+    cellInput(r, 'chantier', 'text'),
+    cellInput(r, 'loueur', 'text'),
+    cellFactReceived(r),
+    cellInput(r, 'modele', 'text'),
+    cellInput(r, 'immat', 'text'),
+    cellInput(r, 'conducteur', 'text'),
+    cellInput(r, 'matricule', 'text'),
+    cellReadonly(c.jours, ''),
+    cellInput(r, 'dateDebut', 'date'),
+    cellInput(r, 'dateFin', 'date'),
+    cellInput(r, 'mtHT', 'number', 'col-prev'),
+    cellReadonly(c.ttc ? fmtMoney(c.ttc) : '', 'col-prev'),
+    cellInput(r, 'essence', 'number', 'col-frais'),
+    cellInput(r, 'ecoNett', 'number', 'col-frais'),
+    cellInput(r, 'kmSup', 'number', 'col-frais'),
+    cellInput(r, 'repar', 'number', 'col-frais'),
+    cellInput(r, 'pv', 'number', 'col-frais'),
+    cellReadonly(c.totalFrais ? fmtMoney(c.totalFrais) : '', 'col-total'),
+    cellReadonly(c.total ? fmtMoney(c.total) : '', 'col-grand'),
+    cellAction(r.id),
+  ];
+  cells.forEach(td => tr.appendChild(td));
+  return tr;
+}
+
+// Helper : construit une ligne de sous-total à insérer dans le tableau
+function makeSubtotalRow(label, totals, isGrand) {
+  const tr = document.createElement('tr');
+  tr.className = 'group-subtotal';
+  const fmt = (n) => n ? fmtMoney(n) : '–';
+  tr.innerHTML = `
+    <td colspan="13" class="subtot-label">${label}</td>
+    <td>${fmt(totals.sumHT)}</td>
+    <td>${fmt(totals.sumTTC)}</td>
+    <td>${fmt(totals.sumEssence)}</td>
+    <td>${fmt(totals.sumEco)}</td>
+    <td>${fmt(totals.sumKmSup)}</td>
+    <td>${fmt(totals.sumRepar)}</td>
+    <td>${fmt(totals.sumPv)}</td>
+    <td>${fmt(totals.sumFrais)}</td>
+    <td class="col-grand-sum-sub">${fmt(totals.sumTotal)}</td>
+    <td></td>
+  `;
+  return tr;
+}
+
+function makeGroupHeader(label, isLevel2) {
+  const tr = document.createElement('tr');
+  tr.className = isLevel2 ? 'group-header-l2' : 'group-header';
+  const td = document.createElement('td');
+  td.colSpan = 23;
+  td.textContent = label;
+  tr.appendChild(td);
+  return tr;
+}
+
+function getGroupValue(r, key) {
+  if (key === 'rapporteur') return (r.rapporteur || '— sans rapporteur —').toUpperCase().trim();
+  if (key === 'client') return (r.client || '— sans client —').toUpperCase().trim();
+  if (key === 'chantier') return (r.chantier || '— sans chantier —').toUpperCase().trim();
+  if (key === 'loueur') return (r.loueur || '— sans loueur —').toUpperCase().trim();
+  return '';
+}
+
+function render() {
+  // Mettre à jour le nom et le total du tableau courant
+  const nameInput = document.getElementById('tableauNameInput');
+  if (nameInput) nameInput.value = currentTableau().name || '';
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  // Supprimer le tfoot précédent s'il existe
+  const tbl = document.getElementById('tbl');
+  const oldFoot = tbl.querySelector('tfoot');
+  if (oldFoot) oldFoot.remove();
+
+  document.getElementById('emptyState').style.display = rows.length ? 'none' : 'block';
+
+  // Lire le groupBy actif
+  const groupBy = document.getElementById('groupBy') ? document.getElementById('groupBy').value : '';
+
+  // Accumulateurs pour les sommes du footer (TOUS les rows)
+  let sumHT = 0, sumTTC = 0, sumEssence = 0, sumEco = 0, sumKmSup = 0, sumRepar = 0, sumPv = 0, sumFrais = 0, sumTotal = 0;
+
+  // === MODE GROUPÉ ===
+  if (groupBy) {
+    // Build groups (1 ou 2 niveaux)
+    const isTwoLevel = groupBy === 'rapporteur_client';
+    const key1 = isTwoLevel ? 'rapporteur' : groupBy;
+    const key2 = isTwoLevel ? 'client' : null;
+
+    // Group rows
+    const groupsL1 = {};
+    rows.forEach(r => {
+      const g1 = getGroupValue(r, key1);
+      if (!groupsL1[g1]) groupsL1[g1] = [];
+      groupsL1[g1].push(r);
+    });
+
+    const sortedKeys1 = Object.keys(groupsL1).sort();
+    sortedKeys1.forEach(g1key => {
+      const groupRows = groupsL1[g1key];
+      // Header niveau 1
+      tbody.appendChild(makeGroupHeader(`▶ ${key1.toUpperCase()} : ${g1key}  (${groupRows.length} ligne${groupRows.length>1?'s':''})`, false));
+
+      // Si 2 niveaux : sous-groupes
+      if (isTwoLevel) {
+        const groupsL2 = {};
+        groupRows.forEach(r => {
+          const g2 = getGroupValue(r, key2);
+          if (!groupsL2[g2]) groupsL2[g2] = [];
+          groupsL2[g2].push(r);
+        });
+        const sortedKeys2 = Object.keys(groupsL2).sort();
+        let l1Totals = { sumHT:0, sumTTC:0, sumEssence:0, sumEco:0, sumKmSup:0, sumRepar:0, sumPv:0, sumFrais:0, sumTotal:0 };
+        sortedKeys2.forEach(g2key => {
+          const subRows = groupsL2[g2key];
+          tbody.appendChild(makeGroupHeader(`    ↳ ${key2.toUpperCase()} : ${g2key}  (${subRows.length})`, true));
+          let l2Totals = { sumHT:0, sumTTC:0, sumEssence:0, sumEco:0, sumKmSup:0, sumRepar:0, sumPv:0, sumFrais:0, sumTotal:0 };
+          subRows.forEach(r => {
+            const tr = renderRow(r);
+            tbody.appendChild(tr);
+            const c = computeTotals(r);
+            l2Totals.sumHT += num(r.mtHT);
+            l2Totals.sumTTC += c.ttc || 0;
+            l2Totals.sumEssence += num(r.essence);
+            l2Totals.sumEco += num(r.ecoNett);
+            l2Totals.sumKmSup += num(r.kmSup);
+            l2Totals.sumRepar += num(r.repar);
+            l2Totals.sumPv += num(r.pv);
+            l2Totals.sumFrais += c.totalFrais || 0;
+            l2Totals.sumTotal += c.total || 0;
+          });
+          tbody.appendChild(makeSubtotalRow(`Sous-total ${g2key}`, l2Totals));
+          // Cumuler dans l1
+          for (const k in l2Totals) l1Totals[k] += l2Totals[k];
+        });
+        tbody.appendChild(makeSubtotalRow(`TOTAL RAPPORTEUR ${g1key}`, l1Totals));
+        // Cumuler dans global
+        sumHT += l1Totals.sumHT; sumTTC += l1Totals.sumTTC;
+        sumEssence += l1Totals.sumEssence; sumEco += l1Totals.sumEco;
+        sumKmSup += l1Totals.sumKmSup; sumRepar += l1Totals.sumRepar;
+        sumPv += l1Totals.sumPv; sumFrais += l1Totals.sumFrais;
+        sumTotal += l1Totals.sumTotal;
+      } else {
+        // 1 seul niveau
+        let l1Totals = { sumHT:0, sumTTC:0, sumEssence:0, sumEco:0, sumKmSup:0, sumRepar:0, sumPv:0, sumFrais:0, sumTotal:0 };
+        groupRows.forEach(r => {
+          const tr = renderRow(r);
+          tbody.appendChild(tr);
+          const c = computeTotals(r);
+          l1Totals.sumHT += num(r.mtHT);
+          l1Totals.sumTTC += c.ttc || 0;
+          l1Totals.sumEssence += num(r.essence);
+          l1Totals.sumEco += num(r.ecoNett);
+          l1Totals.sumKmSup += num(r.kmSup);
+          l1Totals.sumRepar += num(r.repar);
+          l1Totals.sumPv += num(r.pv);
+          l1Totals.sumFrais += c.totalFrais || 0;
+          l1Totals.sumTotal += c.total || 0;
+        });
+        tbody.appendChild(makeSubtotalRow(`Sous-total ${g1key}`, l1Totals));
+        sumHT += l1Totals.sumHT; sumTTC += l1Totals.sumTTC;
+        sumEssence += l1Totals.sumEssence; sumEco += l1Totals.sumEco;
+        sumKmSup += l1Totals.sumKmSup; sumRepar += l1Totals.sumRepar;
+        sumPv += l1Totals.sumPv; sumFrais += l1Totals.sumFrais;
+        sumTotal += l1Totals.sumTotal;
+      }
+    });
+
+    // Footer global après les groupes
+    if (rows.length > 0) {
+      const tfoot = document.createElement('tfoot');
+      const ftr = document.createElement('tr');
+      const fmt = (n) => n ? fmtMoney(n) : '–';
+      ftr.innerHTML = `
+        <td colspan="13" class="foot-label">TOTAUX (${rows.length} ligne${rows.length>1?'s':''})</td>
+        <td>${fmt(sumHT)}</td>
+        <td>${fmt(sumTTC)}</td>
+        <td>${fmt(sumEssence)}</td>
+        <td>${fmt(sumEco)}</td>
+        <td>${fmt(sumKmSup)}</td>
+        <td>${fmt(sumRepar)}</td>
+        <td>${fmt(sumPv)}</td>
+        <td>${fmt(sumFrais)}</td>
+        <td class="col-grand-sum">${fmt(sumTotal)}</td>
+        <td></td>
+      `;
+      tfoot.appendChild(ftr);
+      tbl.appendChild(tfoot);
+    }
+    const totalEl = document.getElementById('tableauTotalValue');
+    if (totalEl) totalEl.textContent = sumTotal ? fmtMoney(sumTotal) : '0,00 €';
+    updateSelectionUI();
+    return;
+  }
+
+  // === MODE NORMAL (sans groupement) ===
+  rows.forEach((r, idx) => {
+    const tr = renderRow(r);
+    tbody.appendChild(tr);
+
+    const c = computeTotals(r);
+    // Accumulation pour le footer
+    sumHT += num(r.mtHT);
+    sumTTC += c.ttc || 0;
+    sumEssence += num(r.essence);
+    sumEco += num(r.ecoNett);
+    sumKmSup += num(r.kmSup);
+    sumRepar += num(r.repar);
+    sumPv += num(r.pv);
+    sumFrais += c.totalFrais || 0;
+    sumTotal += c.total || 0;
+  });
+
+  // === FOOTER de sommes ===
+  if (rows.length > 0) {
+    const tfoot = document.createElement('tfoot');
+    const ftr = document.createElement('tr');
+    const fmt = (n) => n ? fmtMoney(n) : '–';
+    // 13 colonnes avant Mt HT (checkbox..date fin) → on les fusionne pour le label
+    ftr.innerHTML = `
+      <td colspan="13" class="foot-label">TOTAUX (${rows.length} ligne${rows.length>1?'s':''})</td>
+      <td>${fmt(sumHT)}</td>
+      <td>${fmt(sumTTC)}</td>
+      <td>${fmt(sumEssence)}</td>
+      <td>${fmt(sumEco)}</td>
+      <td>${fmt(sumKmSup)}</td>
+      <td>${fmt(sumRepar)}</td>
+      <td>${fmt(sumPv)}</td>
+      <td>${fmt(sumFrais)}</td>
+      <td class="col-grand-sum">${fmt(sumTotal)}</td>
+      <td></td>
+    `;
+    tfoot.appendChild(ftr);
+    tbl.appendChild(tfoot);
+  }
+
+  // Mise à jour du badge "Total tableau"
+  const totalEl = document.getElementById('tableauTotalValue');
+  if (totalEl) totalEl.textContent = sumTotal ? fmtMoney(sumTotal) : '0,00 €';
+
+  updateSelectionUI();
+}
+
+function cellInput(r, key, type, cls) {
+  const td = document.createElement('td');
+  if (cls) td.className = cls;
+  const input = document.createElement('input');
+  input.type = type === 'number' ? 'text' : type;
+  if (type === 'number') { input.inputMode = 'decimal'; input.className = 'is-number'; }
+  input.value = r[key] ?? '';
+  input.addEventListener('input', (e) => {
+    r[key] = e.target.value;
+    // Auto-fill rapporteur quand on saisit un client connu
+    if (key === 'client' && !r.rapporteur) {
+      const rap = lookupRapporteur(e.target.value);
+      if (rap) {
+        r.rapporteur = rap;
+        saveRows();
+        render();
+        const nextInput = document.querySelector(`tr:nth-child(${rows.indexOf(r)+1}) input[data-k="client"]`);
+        if (nextInput) { nextInput.focus(); nextInput.setSelectionRange(nextInput.value.length, nextInput.value.length); }
+        return;
+      }
+    }
+    if (['dateDebut','dateFin','mtHT','essence','ecoNett','kmSup','repar','pv'].includes(key)) {
+      saveRows();
+      render();
+      const nextInput = document.querySelector(`tr:nth-child(${rows.indexOf(r)+1}) input[data-k="${key}"]`);
+      if (nextInput) nextInput.focus();
+    }
+  });
+  input.addEventListener('change', saveRows);
+  input.addEventListener('blur', saveRows);
+  input.dataset.k = key;
+  td.appendChild(input);
+  return td;
+}
+
+function cellReadonly(val, cls) {
+  const td = document.createElement('td');
+  td.className = 'readonly' + (cls ? ' ' + cls : '');
+  td.textContent = val || '';
+  return td;
+}
+
+function cellFactReceived(r) {
+  const td = document.createElement('td');
+  td.className = 'col-fact';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.className = 'fact-check';
+  cb.checked = !!r.factReceived;
+  cb.title = r.factReceived ? 'Facture reçue' : 'Facture non reçue';
+  cb.addEventListener('change', (e) => {
+    r.factReceived = e.target.checked;
+    saveRows(); render();
+  });
+  td.appendChild(cb);
+  return td;
+}
+
+function cellCheckbox(r) {
+  const td = document.createElement('td');
+  td.className = 'td-check';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.className = 'row-checkbox';
+  cb.checked = !!r._selected;
+  cb.addEventListener('change', (e) => {
+    r._selected = e.target.checked;
+    saveRows();
+    render();
+    updateSelectionUI();
+  });
+  td.appendChild(cb);
+  return td;
+}
+
+function cellAction(id) {
+  const td = document.createElement('td');
+  td.className = 'actions';
+  const btn = document.createElement('button');
+  btn.className = 'btn-del';
+  btn.title = 'Supprimer la ligne';
+  btn.innerHTML = '🗑';
+  btn.addEventListener('click', () => {
+    if (confirm('Supprimer cette ligne ?')) {
+      const idx = rows.findIndex(r => r.id === id);
+      if (idx >= 0) rows.splice(idx, 1);
+      saveRows(); render();
+    }
+  });
+  td.appendChild(btn);
+  return td;
+}
+
+function updateSelectionUI() {
+  const n = rows.filter(r => r._selected).length;
+  const btn = document.getElementById('bulkDelete');
+  const countEl = document.getElementById('selCount');
+  btn.disabled = n === 0;
+  countEl.textContent = n > 0 ? `(${n})` : '';
+  const checkAll = document.getElementById('checkAll');
+  if (checkAll) {
+    if (n === 0) { checkAll.checked = false; checkAll.indeterminate = false; }
+    else if (n === rows.length) { checkAll.checked = true; checkAll.indeterminate = false; }
+    else { checkAll.checked = false; checkAll.indeterminate = true; }
+  }
+}
+
+document.getElementById('checkAll').addEventListener('change', (e) => {
+  const v = e.target.checked;
+  rows.forEach(r => r._selected = v);
+  saveRows(); render(); updateSelectionUI();
+});
+
+document.getElementById('bulkDelete').addEventListener('click', () => {
+  const n = rows.filter(r => r._selected).length;
+  if (n === 0) return;
+  if (!confirm(`Supprimer ${n} ligne${n > 1 ? 's' : ''} ?`)) return;
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (rows[i]._selected) rows.splice(i, 1);
+  }
+  saveRows(); render(); updateSelectionUI();
+});
+
+document.getElementById('addRow').addEventListener('click', () => {
+  rows.push(makeRow());
+  saveRows(); render();
+  const tbody = document.getElementById('tbody');
+  const last = tbody.querySelector('tr:last-child input');
+  if (last) last.focus();
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const headers = [
+    'Rapporteur','Client','Chantier','Loueur','Facture reçue','Modèle','Immat','Conducteur','Matricule',
+    'Nb jours','Date début','Date fin',
+    'Montant HT','Montant TTC',
+    'Essence','Éco/Nettoyage','Km sup','Répar','PV','Total frais','TOTAL'
+  ];
+  const lines = [headers.join(';')];
+  rows.forEach(r => {
+    const c = computeTotals(r);
+    const line = [
+      r.rapporteur || '',
+      r.client, r.chantier, r.loueur, r.factReceived ? 'X' : '',
+      r.modele, r.immat, r.conducteur, r.matricule,
+      c.jours, r.dateDebut, r.dateFin,
+      r.mtHT, c.ttc ? c.ttc.toFixed(2) : '',
+      r.essence, r.ecoNett, r.kmSup, r.repar, r.pv,
+      c.totalFrais ? c.totalFrais.toFixed(2) : '',
+      c.total ? c.total.toFixed(2) : ''
+    ].map(v => `"${String(v ?? '').replace(/"/g,'""')}"`);
+    lines.push(line.join(';'));
+  });
+  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `suivi-vehicules-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ===== CSV IMPORT MODULE =====
+// Parser CSV tolérant (gère les virgules dans les "guillemets", point-virgule ou virgule comme séparateur)
+function detectCsvSeparator(line) {
+  const semi = (line.match(/;/g) || []).length;
+  const comma = (line.match(/,/g) || []).length;
+  return semi > comma ? ';' : ',';
+}
+function parseCsvLine(line, sep) {
+  const result = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQuotes && line[i+1] === '"') { cur += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (c === sep && !inQuotes) {
+      result.push(cur); cur = '';
+    } else {
+      cur += c;
+    }
+  }
+  result.push(cur);
+  return result.map(s => s.trim());
+}
+function normalizeHeader(s) {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+// Mapping flexible : nom de colonne CSV (normalisé) → champ row
+const CSV_HEADER_MAP = {
+  'rapporteur': 'rapporteur',
+  'rapporteurdaffaire': 'rapporteur',
+  'rapporteuraffaire': 'rapporteur',
+  'commercial': 'rapporteur',
+  'client': 'client',
+  'chantier': 'chantier',
+  'loueur': 'loueur',
+  'facturerecue': 'factReceived',
+  'facture': 'factReceived',
+  'recue': 'factReceived',
+  'modele': 'modele',
+  'modeleveh': 'modele',
+  'modelevehicule': 'modele',
+  'vehicule': 'modele',
+  'immat': 'immat',
+  'immatriculation': 'immat',
+  'plaque': 'immat',
+  'conducteur': 'conducteur',
+  'chauffeur': 'conducteur',
+  'matricule': 'matricule',
+  'matriculeinterimaire': 'matricule',
+  'matricule_interimaire': 'matricule',
+  'datedebut': 'dateDebut',
+  'debut': 'dateDebut',
+  'datedebutlocation': 'dateDebut',
+  'datefin': 'dateFin',
+  'fin': 'dateFin',
+  'datefinlocation': 'dateFin',
+  'montantht': 'mtHT',
+  'mtht': 'mtHT',
+  'ht': 'mtHT',
+  'montantestimeht': 'mtHT',
+  'essence': 'essence',
+  'carburant': 'essence',
+  'diesel': 'essence',
+  'econettoyage': 'ecoNett',
+  'eco': 'ecoNett',
+  'econtrib': 'ecoNett',
+  'ecocontrib': 'ecoNett',          // ← AJOUTÉ : "Éco contrib"
+  'econtribution': 'ecoNett',
+  'ecocontribution': 'ecoNett',     // ← AJOUTÉ
+  'ecocontribnettoyage': 'ecoNett',
+  'ecocontribution_nettoyage': 'ecoNett',
+  'nettoyage': 'ecoNett',
+  'kmsup': 'kmSup',
+  'kmsupplementaire': 'kmSup',
+  'kmsupp': 'kmSup',
+  'kmsupplementaires': 'kmSup',
+  'repar': 'repar',
+  'reparation': 'repar',
+  'casse': 'repar',
+  'pv': 'pv',
+  'amende': 'pv',
+  'amendes': 'pv',
+};
+
+// Recherche flexible : match exact, sinon substring
+function findFieldForHeader(normalizedHeader) {
+  if (CSV_HEADER_MAP[normalizedHeader]) return CSV_HEADER_MAP[normalizedHeader];
+  // Substring fallback : trouve le mapping dont la clé est contenue dans le header
+  for (const [key, field] of Object.entries(CSV_HEADER_MAP)) {
+    if (key.length >= 4 && normalizedHeader.includes(key)) return field;
+  }
+  return null;
+}
+
+function parseFactReceived(v) {
+  if (!v) return false;
+  const s = String(v).trim().toLowerCase();
+  return /^(x|oui|yes|true|1|recu|reçu|✓|✔)$/i.test(s);
+}
+
+async function importCsvFile(file) {
+  const text = await file.text();
+  // Détecte BOM utf-8 et le strip
+  const cleaned = text.replace(/^﻿/, '');
+  const lines = cleaned.split(/\r?\n/).filter(l => l.length > 0);
+  if (lines.length < 2) {
+    return { added: 0, errors: ['CSV vide ou ne contient que les en-têtes'] };
+  }
+  const sep = detectCsvSeparator(lines[0]);
+  const headers = parseCsvLine(lines[0], sep).map(normalizeHeader);
+
+  // Map index → field name (avec substring fallback)
+  const idxToField = {};
+  headers.forEach((h, i) => {
+    const f = findFieldForHeader(h);
+    if (f) idxToField[i] = f;
+  });
+  console.log('[CSV IMPORT] Headers:', headers, 'Mapping:', idxToField);
+
+  if (Object.keys(idxToField).length === 0) {
+    return { added: 0, errors: [`Aucune colonne reconnue dans l'en-tête. Colonnes attendues : Client, Chantier, Loueur, Facture reçue, Modèle, Immat, Conducteur, Matricule, Date début, Date fin, Montant HT, Essence, Éco contrib, Km sup, Répar, PV.`] };
+  }
+
+  let added = 0;
+  const errors = [];
+  const skipped = [];
+  for (let li = 1; li < lines.length; li++) {
+    const cells = parseCsvLine(lines[li], sep);
+    // Skip empty
+    if (cells.every(c => !c)) { skipped.push(li); continue; }
+
+    const row = {
+      id: 'csv-' + Date.now() + '-' + li + '-' + Math.random().toString(36).slice(2, 5),
+      rapporteur: '', client: '', chantier: '', loueur: '', factReceived: false,
+      modele: '', immat: '', conducteur: '', matricule: '',
+      dateDebut: '', dateFin: '', mtHT: '',
+      essence: '', ecoNett: '', kmSup: '', repar: '', pv: '',
+      _imported: true,
+    };
+
+    for (const [idx, field] of Object.entries(idxToField)) {
+      const val = cells[idx] || '';
+      if (field === 'factReceived') row[field] = parseFactReceived(val);
+      else row[field] = val;
+    }
+
+    // Normaliser dates (accepte DD/MM/YYYY et YYYY-MM-DD)
+    row.dateDebut = normalizeDate(row.dateDebut);
+    row.dateFin = normalizeDate(row.dateFin);
+
+    // Auto-fill rapporteur depuis client si rapporteur n'est pas déjà rempli
+    if (!row.rapporteur && row.client) {
+      row.rapporteur = lookupRapporteur(row.client);
+    }
+
+    console.log(`[CSV IMPORT] Ligne ${li+1} ajoutée:`, row);
+    rows.push(row);
+    added++;
+  }
+
+  console.log(`[CSV IMPORT] Total : ${added} lignes ajoutées, ${skipped.length} sautées, rows.length=${rows.length} après push`);
+  saveRows();
+  render();
+  console.log(`[CSV IMPORT] Après render, rows.length=${rows.length}, currentTableau().rows.length=${currentTableau().rows.length}`);
+  return { added, errors };
+}
+
+function normalizeDate(s) {
+  if (!s) return '';
+  const t = String(s).trim();
+  // ISO already
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  // DD/MM/YYYY
+  const m = t.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  // DD/MM/YY
+  const m2 = t.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2})$/);
+  if (m2) return `20${m2[3]}-${m2[2].padStart(2,'0')}-${m2[1].padStart(2,'0')}`;
+  return t;
+}
+
+// ===== PDF IMPORT MODULE =====
+
+const PDFJS_VERSION = '3.11.174';
+const PDFJS_WORKER_URL = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.js`;
+
+function ensurePdfJsReady() {
+  if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js non chargée');
+  if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
+  }
+}
+
+// ===== OCR (Tesseract) — config robuste : rotation auto + preprocessing =====
+let tesseractWorker = null;
+let lastProgressFn = null;
+async function getTesseractWorker(onProgress) {
+  lastProgressFn = onProgress;
+  if (tesseractWorker) return tesseractWorker;
+  if (typeof Tesseract === 'undefined') throw new Error('Tesseract.js non chargé');
+  if (onProgress) onProgress('Chargement du moteur OCR (français) — premier import : ~30s pour télécharger le pack de langue…');
+  tesseractWorker = await Tesseract.createWorker('fra', 1, {
+    logger: m => {
+      if (m.status && lastProgressFn) {
+        const pct = m.progress != null ? Math.round(m.progress * 100) : 0;
+        if (m.status === 'recognizing text') lastProgressFn(`📷 OCR : ${pct}%`);
+        else if (m.status === 'loading language traineddata' || m.status === 'loaded language traineddata') lastProgressFn(`📦 Téléchargement pack français : ${pct}%`);
+        else if (pct > 0) lastProgressFn(`📷 ${m.status} : ${pct}%`);
+      }
+    },
+  });
+  // PSM 1 = automatic page segmentation + OSD (orientation / rotation detection)
+  // → gère les pages tournées 90/180/270°, multi-colonnes, qualité variable
+  await tesseractWorker.setParameters({
+    tessedit_pageseg_mode: '1',
+    preserve_interword_spaces: '1',
+  });
+  return tesseractWorker;
+}
+
+async function ocrPdfPage(page, onProgress, attempt) {
+  attempt = attempt || 1;
+  const scale = attempt === 1 ? 3.0 : 2.5;
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext('2d');
+
+  // Fond blanc (sécurité PDFs transparents)
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  await page.render({ canvasContext: ctx, viewport }).promise;
+
+  // Tentative 1 : preprocessing agressif (grayscale + threshold pour booster contraste)
+  // Tentative 2 : image brute (pour cas où threshold détruit le texte)
+  if (attempt === 1) {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = imageData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+      const v = gray < 170 ? 0 : 255;
+      d[i] = d[i+1] = d[i+2] = v;
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  const worker = await getTesseractWorker(onProgress);
+  const { data: { text } } = await worker.recognize(canvas);
+  let result = (text || '').replace(/\s+/g, ' ').trim();
+
+  // Fallback : 2e passe sans preprocessing si la 1re donne trop peu
+  if (result.length < 100 && attempt < 2) {
+    if (onProgress) onProgress(`📷 Nouvelle passe OCR sans preprocessing…`);
+    return await ocrPdfPage(page, onProgress, 2);
+  }
+  return result;
+}
+
+async function extractPdfPages(file, onProgress) {
+  ensurePdfJsReady();
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf, useSystemFonts: true }).promise;
+  const pages = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    let text = content.items.map(it => it.str).join(' ').replace(/\s+/g, ' ').trim();
+    let ocrUsed = false;
+
+    // Fallback OCR si peu/pas de texte numérique
+    if (text.length < 50) {
+      if (onProgress) onProgress(`📷 ${file.name} page ${i}/${pdf.numPages} : OCR (scan détecté)…`);
+      try {
+        text = await ocrPdfPage(page, onProgress);
+        ocrUsed = true;
+      } catch (err) {
+        console.error('OCR error:', err);
+        text = '';
+      }
+    } else {
+      if (onProgress) onProgress(`📄 ${file.name} page ${i}/${pdf.numPages} : texte numérique extrait`);
+    }
+    pages.push({ text, ocrUsed });
+  }
+  return pages;
+}
+
+// ----- Détection loueur + type (robuste : normalise espaces, accents, casse) -----
+function normalizeText(text) {
+  return text
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')           // enlève accents
+    .replace(/[^A-Za-z0-9]+/g, ' ')            // collapse non-alphanumerics
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim();
+}
+
+function detectLoueur(text) {
+  const t = normalizeText(text);
+  if (/olympic\s*location|olympiclocation/.test(t)) return 'OLYMPIC';
+  if (/cargo\s*sophia|car\s*go|cargo\s*fr|quick\s*rental|jean\s*lain/.test(t)) return 'CARGO';
+  if (/sd\s*autoprestige|autoprestige/.test(t)) return 'SD_AUTOPRESTIGE';
+  return null;
+}
+
+function detectDocType(text, loueur) {
+  const t = normalizeText(text);
+  if (loueur === 'OLYMPIC') {
+    // Réparation : factures avec "Détail des Prestations" ou pneus/carrosserie
+    if (/detail\s+des\s+prestations|frais\s+de\s+carrosserie|pneu\s+\d|reference\s+commande/.test(t)) return 'OLYMPIC_REPARATION';
+    // Location : forfait FORMA83 OU lignes typiques
+    if (/forma83.*?1m|prix\s+de\s+location|journees?\s+supplementaires|retour\s+reel|departagence/.test(t)) return 'OLYMPIC_LOCATION';
+  }
+  if (loueur === 'CARGO') {
+    if (/refacturation\s+pv|frais\s+de\s+gestion\s+pv/.test(t)) return 'CARGO_PV';
+    if (/periode\s+facturee|vehicule\s+et\s+kilometrage|location\s+\d+\s+mois|kilometres\s+inclus/.test(t)) return 'CARGO_LOCATION';
+  }
+  if (loueur === 'SD_AUTOPRESTIGE') {
+    if (/location\s+vehicule\s+vl\s*vu|location\s+vehicule\s+vl|location\s+vehicule\s+vu/.test(t)) return 'SD_LOCATION';
+  }
+  return null;
+}
+
+// ----- Utils -----
+function toIsoDate(ddmmyyyy) {
+  const m = ddmmyyyy.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+}
+function frNum(n) { return (Math.round(n * 100) / 100).toFixed(2).replace('.', ','); }
+function parseFrNum(s) {
+  if (s === undefined || s === null) return 0;
+  const n = parseFloat(String(s).replace(/\s/g, '').replace(',', '.'));
+  return isNaN(n) ? 0 : n;
+}
+// Parseur de nombre TOLÉRANT aux erreurs OCR (I→1, l→1, O→0…)
+function parseOCRNum(s) {
+  if (s === undefined || s === null) return 0;
+  let str = String(s)
+    .replace(/\s+/g, '')
+    .replace(/[Il|]/g, '1')        // I, l, | → 1
+    .replace(/O(?=[\d.,])|(?<=[\d.,])O/g, '0')   // O en contexte numérique → 0
+    .replace(/[,]/g, '.');
+  const n = parseFloat(str);
+  return isNaN(n) ? 0 : n;
+}
+// Normalisation pour parsing : minuscule + sans accents, mais GARDE chiffres/virgules/points/tirets
+function semiNormalize(text) {
+  return text
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[«»""„''`´]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// ----- Parseur Olympic location (TOLÉRANT OCR) -----
+function parseOlympicLocation(text) {
+  const t = semiNormalize(text);
+  // Une "valeur" = chiffres avec virgule/point/espace : ex "165,36" ou "I65, 36" ou "165.36"
+  const VAL = '([0-9IlO][\\d\\sIlO,.]*[0-9IlO])';
+
+  // === Prix de location (F) : Qté(jours forfait) Prix(forfait_total) Montant ===
+  const prixLocMatch = t.match(new RegExp(`prix\\s*(?:de)?\\s*location\\s*\\(?f?\\)?\\s+(\\d+)\\s+${VAL}`));
+  const joursForfait = prixLocMatch ? parseInt(prixLocMatch[1]) : 30;
+
+  // === Journées supplémentaires : Qté(-X) Prix Montant ===
+  // OCR peut produire : "Journees", "Joumees" (rn→m), "Journées", "Jourriees", etc.
+  // Stratégie : essayer plusieurs patterns du plus précis au plus loose
+  let joursSupMatch = t.match(new RegExp(`jo\\w{2,8}\\s+suppl\\w{0,15}aires?\\s+([\\-‐−–—]?\\d+)\\s+${VAL}`))
+    || t.match(new RegExp(`j\\w{3,8}\\s+suppl\\w{0,15}aires?\\s+([\\-‐−–—]?\\d+)\\s+${VAL}`))
+    || t.match(new RegExp(`(?<!km\\s)suppl\\w{0,15}aires?\\s+([\\-‐−–—]\\d+)\\s+${VAL}`));
+  // Dernier recours : N'IMPORTE quel mot finissant en "aires?" suivi d'un nombre négatif (clé = négatif)
+  if (!joursSupMatch) {
+    joursSupMatch = t.match(/\b\w*aires?\s+([\-‐−–—]\d{1,3})\s+([\d,.\s]{3,10})/);
+  }
+  const joursNonUtil = joursSupMatch ? parseInt(joursSupMatch[1].replace(/[‐−–—]/g, '-')) : 0;
+  const tarifJour = joursSupMatch ? parseOCRNum(joursSupMatch[2]) : null;
+
+  const joursEffectifs = joursForfait + joursNonUtil;
+  let mtHT = (joursEffectifs > 0 && tarifJour) ? joursEffectifs * tarifJour : null;
+
+  // === Eco contribution HT ===
+  const ecoMatch = t.match(new RegExp(`eco\\s+\\w*contrib\\w*\\s+${VAL}\\s+${VAL}`));
+  let ecoHT = ecoMatch ? parseOCRNum(ecoMatch[2]) : null;
+  if (!ecoHT) {
+    const ecoSingle = t.match(new RegExp(`eco\\s+\\w*contrib\\w*\\s+${VAL}`));
+    if (ecoSingle) ecoHT = parseOCRNum(ecoSingle[1]);
+  }
+  const ecoTTC = ecoHT ? ecoHT * 1.20 : null;
+
+  // === Carburant (Diesel/Essence) — TTC ===
+  // OCR-tolerant : "Diesel" → "Diesei", "Disel", "Dieset" possibles
+  let carbTTC = null;
+  // Pattern 1 : "diesel" (variations OCR) suivi (avec bruit) de "ttc" puis nombre
+  let carbMatch = t.match(/(?:d[i1l][eo]s[eo][li1tr]?|ess[eo]nce?|gas[oa][i1l]l?|carbur\w*)[\s\(\.,\-]{0,8}ttc[\s\(\.,\-]{0,5}([0-9IlO][\d\sIlO,.]{0,25})/);
+  if (carbMatch) {
+    const v = parseOCRNum(carbMatch[1]);
+    if (v > 0.01) carbTTC = v;
+  }
+  // Pattern 2 : ligne facture "Diesel ... TVA X,XX <nombre>" — dernier nombre = HT
+  // On essaie de récupérer le TTC dans la parenthèse en cherchant "ttc" + nombre court
+  if (!carbTTC) {
+    const carb2 = t.match(/ttc\s+([0-9IlO][\d,.\s]{1,15})\s*(?:dont|don\b)/);
+    if (carb2) {
+      const v = parseOCRNum(carb2[1]);
+      if (v > 0.01) carbTTC = v;
+    }
+  }
+  // Pattern 3 : "facturation du carburant"
+  if (!carbTTC) {
+    const carb3 = t.match(/facturation\s+du\s+carburant[\s\S]{0,100}?([0-9IlO][\d,.\s]{2,15})\s*(?:eur|€|$)/);
+    if (carb3) {
+      const v = parseOCRNum(carb3[1]);
+      if (v > 0.01) carbTTC = v;
+    }
+  }
+  // Pattern 4 (loose) : trouve le 1er nombre décimal > 0,5 dans les 80 chars après "diesel"/"essence"
+  if (!carbTTC) {
+    const fuelIdx = t.search(/d[ie]es[ei]l?|essence?|gas[oa][i1l]l|carbur/);
+    if (fuelIdx >= 0) {
+      const window = t.substring(fuelIdx, fuelIdx + 120);
+      // Cherche tous les nombres décimaux et garde le premier > 0,5
+      const nums = [...window.matchAll(/(\d+[,.]\d{1,3})/g)];
+      for (const m of nums) {
+        const v = parseOCRNum(m[1]);
+        if (v > 0.5 && v < 10000) {
+          carbTTC = v;
+          break;
+        }
+      }
+    }
+  }
+
+  // === Km supplémentaire (HT → TTC) ===
+  // Pattern principal : "km supplementaire QTE PRIX MONTANT"
+  const kmSupMatch = t.match(new RegExp(`km\\s+suppl\\w*\\s+(\\d+)\\s+${VAL}\\s+${VAL}`));
+  let kmSupHT = null;
+  if (kmSupMatch) {
+    const qty = parseInt(kmSupMatch[1]);
+    if (qty > 0) kmSupHT = parseOCRNum(kmSupMatch[3]);
+  }
+  // Fallback : "km parcourus X km inclus Y" → si parcourus > inclus, calculer
+  if (!kmSupHT) {
+    const kmParcMatch = t.match(/km\s+parcourus\s*[:\s]+([0-9I]+)/);
+    const kmInclusMatch = t.match(/km\s+inclus\s*[:\s]+([0-9I]+)/);
+    if (kmParcMatch && kmInclusMatch) {
+      const parcourus = parseInt(kmParcMatch[1].replace(/[IlO]/g, '0'));
+      const inclus = parseInt(kmInclusMatch[1].replace(/[IlO]/g, '0'));
+      if (parcourus > inclus) {
+        // Tarif km sup typique Olympic : 0,165 €/km. À défaut on cherche le tarif dans le texte
+        const tarifKmMatch = t.match(/0[.,]1\d{2}/);
+        const tarifKm = tarifKmMatch ? parseOCRNum(tarifKmMatch[0]) : 0.165;
+        kmSupHT = (parcourus - inclus) * tarifKm;
+      }
+    }
+  }
+  const kmSupTTC = kmSupHT ? kmSupHT * 1.20 : null;
+
+  // === Fallback Mt HT : si formule (jours × tarif) a échoué ===
+  // TOTAL LOCATION = location + km sup. Si on a déjà km sup, on le soustrait.
+  if (!mtHT) {
+    const totLoc = t.match(/total\s+location\s+([0-9IlO][\d\sIlO,.]{2,15})/);
+    if (totLoc) {
+      let v = parseOCRNum(totLoc[1]);
+      if (kmSupHT) v -= kmSupHT;
+      if (v > 0) mtHT = v;
+    }
+  }
+  // Dernier fallback : TOTAL HT - eco HT - diesel HT - km sup HT
+  if (!mtHT) {
+    const totHt = t.match(/total\s+ht\s*€?\s+([0-9IlO][\d\sIlO,.]{2,15})/);
+    if (totHt) {
+      let v = parseOCRNum(totHt[1]);
+      if (ecoHT) v -= ecoHT;
+      if (carbTTC) v -= (carbTTC / 1.20);
+      if (kmSupHT) v -= kmSupHT;
+      if (v > 0) mtHT = v;
+    }
+  }
+
+  // === DEBUG : log les valeurs parsées pour faciliter le diagnostic ===
+  console.log('[Olympic Loc parse]', {
+    joursForfait, joursNonUtil, tarifJour, mtHT,
+    ecoHT, carbTTC, kmSupHT
+  });
+
+  // === Dates ===
+  // "DEPART Le 07/04/2026" ou "depart le 07/04/2026"
+  const dDepMatch = t.match(/depart\s+(?:le\s+)?(\d{2}\/\d{2}\/\d{4})/);
+  const dRetMatch = t.match(/retour\s+reel\s+(?:le\s+)?(\d{2}\/\d{2}\/\d{4})/);
+
+  // === Immats — robuste : XX-NNN-XX, XXNNNXX, XX NNN XX ===
+  const immatsRaw = [...text.matchAll(/\b([A-Z]{2})\s*-?\s*(\d{3})\s*-?\s*([A-Z]{2})\b/g)];
+  const immats = [...new Set(immatsRaw.map(m => `${m[1]}-${m[2]}-${m[3]}`))];
+
+  // === Conducteur — approche par bloc : tout entre "Conducteur 1 :" et "Ad :" ===
+  // Olympic factures : le nom est en 2 colonnes (NOM en col1, PRENOMS en col2)
+  // Après OCR row-by-row, les mots sont mélangés avec "Né(e) le X à VILLE", "N° Permis", téléphone, etc.
+  // Stratégie : extraire le bloc, retirer le bruit, garder les mots ALL-CAPS qui ne sont ni géo ni statut.
+  let conducteur = '';
+  const condStart = text.search(/[Cc]onducteur\s*1?\s*:?/i);
+  if (condStart >= 0) {
+    const restAfterCond = text.substring(condStart);
+    const adMatch = restAfterCond.match(/\bAd\s*:|\bAdresse\s*:|\bR[ée]servation\b|\bIBAN\b/i);
+    const blockEnd = adMatch ? adMatch.index : 500;
+    let body = restAfterCond.substring(0, blockEnd).replace(/[Cc]onducteur\s*1?\s*:?\s*/i, '');
+
+    // Strip bruit : téléphones, dates, n° permis, mots-clés de structure
+    body = body
+      .replace(/\d{2}[\s.\/-]?\d{2}[\s.\/-]?\d{2}[\s.\/-]?\d{2}[\s.\/-]?\d{2}/g, ' ')  // phone
+      .replace(/\d{2}[\.\/-]\d{2}[\.\/-]\d{2,4}/g, ' ')                                  // date
+      .replace(/\bP[-\s]?\d{5,}\b/gi, ' ')                                                // n° permis P-XXXXX
+      .replace(/\b\d{6,}\b/g, ' ')                                                        // n° permis nu
+      .replace(/N[°o]\s*[Pp]ermis/g, ' ')
+      .replace(/D[ée]livr[ée]\s+le/gi, ' ')
+      .replace(/Pr[ée]fecture/gi, ' ')
+      .replace(/N[ée]\(?e?\)?\s+le/gi, ' ')
+      .replace(/\bà\b/gi, ' ');
+
+    // Mots-clés à ignorer (lieux + statuts courants Olympic)
+    const STOPS = new Set([
+      'VIANA','PORTUGAL','BRAGA','CAP','VERTY','CABO','VERDE','ILHA','SANTIAGO',
+      'NICE','MARSEILLE','CANNES','CANNET','CASTRA','GARDE','TOULON','PARIS','LYON',
+      'BORDEAUX','NANTES','LILLE','RENNES','STRASBOURG','MONTPELLIER','GIACOBI','MARIGNANE',
+      'PR','PRE','PREFECTURE','PERMIS','DELIVRE','LE','NE','AD','AGENCE','PLOMBIERES',
+      'BUGEAUD','PARC','BOUCHER','GABRIEL','AUDISIO','FRANKLIN','ROOSEVELT','RUE',
+      'AVENUE','PL','PLACE','BD','BOULEVARD','SOLIVRE','HC','VL','VU','VP'
+    ]);
+
+    const upperWords = body.match(/\b[A-ZÉÈÀÂÊÎÔÛÇ][A-ZÉÈÀÂÊÎÔÛÇa-zéèàâêîôûç]{1,}\b/g) || [];
+    const nameWords = upperWords.filter(w => !STOPS.has(w.toUpperCase()));
+    // Garder jusqu'à 5 mots de nom (NOM + PRENOMS)
+    conducteur = nameWords.slice(0, 5).join(' ').toUpperCase();
+  }
+
+  // === Modèle (court) ===
+  let modele = '';
+  const modeleMatch = text.match(/\b(RENAULT|OPEL|PEUGEOT|CITROEN|CITROËN|FORD|FIAT|TOYOTA|DACIA|VOLKSWAGEN|MERCEDES|BMW|AUDI|NISSAN|KIA|HYUNDAI)\s+([A-Z][A-Z0-9]*)/i);
+  if (modeleMatch) modele = (modeleMatch[1] + ' ' + modeleMatch[2]).toUpperCase();
+
+  // === N° contrat ===
+  const contratMatch = t.match(/contrat\s+(?:n[°o]?|origine)?\s*[:°]?\s*(\d{8,})/);
+  const contratNum = contratMatch ? contratMatch[1] : null;
+
+  return {
+    _type: 'LOCATION',
+    loueur: 'OLYMPIC LOCATION',
+    immat: immats.join(' / '),
+    immats,
+    modele,
+    conducteur,
+    dateDebut: dDepMatch ? toIsoDate(dDepMatch[1]) : '',
+    dateFin: dRetMatch ? toIsoDate(dRetMatch[1]) : '',
+    mtHT: mtHT ? frNum(mtHT) : '',
+    essence: carbTTC ? frNum(carbTTC) : '',
+    ecoNett: ecoTTC ? frNum(ecoTTC) : '',
+    kmSup: kmSupTTC ? frNum(kmSupTTC) : '',
+    repar: '',
+    pv: '',
+    factReceived: true,
+    _contratNum: contratNum,
+  };
+}
+
+// ----- Parseur Olympic réparation -----
+function parseOlympicReparation(text) {
+  const immatMatch = text.match(/\b([A-Z]{2}-\d{3}-[A-Z]{2})\b/);
+  // Montant TTC = chercher "Montant TTC" ou "TTC" final
+  let totalTTC = null;
+  const ttcMatch = text.match(/(?:Net\s+D[ûu]|Montant\s+TTC|Total\s+TTC)[^\d]*([\d\s,]+)\s*€?/i);
+  if (ttcMatch) totalTTC = parseFrNum(ttcMatch[1]);
+  const contratMatch = text.match(/[Cc]ontrat\s+origine\s*[:°]?\s*(\d{8,})/);
+  return {
+    _type: 'REPARATION',
+    loueur: 'OLYMPIC LOCATION',
+    immat: immatMatch ? immatMatch[1] : '',
+    montantTTC: totalTTC || 0,
+    _contratNum: contratMatch ? contratMatch[1] : null,
+  };
+}
+
+// ----- Parseur Car Go location -----
+function parseCargoLocation(text) {
+  const immatMatch = text.match(/Immatriculation\s*:?\s*([A-Z0-9]{5,8})/i);
+  // Modèle
+  let modele = '';
+  const modeleMatch = text.match(/Mod[èe]le\s*:?\s*([A-Z][A-Z0-9\s]+?)(?:\s+Cat|\s+Date|\s+\d)/i);
+  if (modeleMatch) {
+    const parts = modeleMatch[1].trim().split(/\s+/);
+    const brandMatch = text.match(/Marque\s*:?\s*([A-Z][a-z]+)/i);
+    const brand = brandMatch ? brandMatch[1].toUpperCase() : '';
+    modele = (brand + ' ' + (parts[0] || '')).trim();
+  }
+  // Conducteur
+  let conducteur = '';
+  const condMatch = text.match(/Nom\s*:\s*([A-Z][A-Z\s]+?)\s+Pr[ée]nom\s*:\s*([A-Z]+)/i);
+  if (condMatch) conducteur = (condMatch[1].trim() + ' ' + condMatch[2].trim()).replace(/\s+/g, ' ');
+
+  // Période facturée
+  const dDebMatch = text.match(/P[EÉ]RIODE\s+FACTUR[EÉ]E[\s\S]*?Du\s+(\d{2}\/\d{2}\/\d{4})/i);
+  const dFinMatch = text.match(/Au\s+(\d{2}\/\d{2}\/\d{4})\s+Heure/i);
+
+  // Qté + tarif + Mt HT depuis ligne tarification
+  const tarifMatch = text.match(/LOCATION\s+\d+\s+Mois\s+\d+\s+Kilom[èe]tres\s+inclus\s+\d+\s+([\d,]+)\s+([\d,]+)\s+([\d,]+)/i);
+  let mtHT = null;
+  if (tarifMatch) {
+    mtHT = parseFrNum(tarifMatch[3]);
+  }
+
+  return {
+    _type: 'LOCATION',
+    loueur: 'CAR GO',
+    immat: immatMatch ? immatMatch[1] : '',
+    immats: immatMatch ? [immatMatch[1]] : [],
+    modele: modele.toUpperCase(),
+    conducteur,
+    dateDebut: dDebMatch ? toIsoDate(dDebMatch[1]) : '',
+    dateFin: dFinMatch ? toIsoDate(dFinMatch[1]) : '',
+    mtHT: mtHT ? frNum(mtHT) : '',
+    essence: '',
+    ecoNett: '',
+    kmSup: '',
+    repar: '',
+    pv: '',
+    factReceived: true,
+  };
+}
+
+// ----- Parseur Car Go PV -----
+function parseCargoPV(text) {
+  const immatMatch = text.match(/Immatriculation\s*:?\s*([A-Z0-9]{5,8})/i);
+  let totalTTC = null;
+  const ttcMatch = text.match(/Montant\s+(?:TTC\s*€?\s*\(EUR\)|en\s+Euro)[^\d]*([\d\s,]+)\s*€?/i);
+  if (ttcMatch) totalTTC = parseFrNum(ttcMatch[1]);
+  return {
+    _type: 'PV',
+    loueur: 'CAR GO',
+    immat: immatMatch ? immatMatch[1] : '',
+    montantTTC: totalTTC || 0,
+  };
+}
+
+// ----- Parseur SD AutoPrestige -----
+function parseSdAutoprestige(text) {
+  // Année par défaut : prendre l'année de la facture (Date de facturation)
+  const dateFactMatch = text.match(/(?:Date\s+de\s+facturation|FACTURE[^0-9]+)(\d{2})\/(\d{2})\/(\d{4})/i);
+  const defaultYear = dateFactMatch ? dateFactMatch[3] : String(new Date().getFullYear());
+
+  // Lignes véhicules
+  // Format: LOCATION VEHICULE VL/VU [IMMAT] DU x/y au z/w  [date facturation]  [Qté]  -  [Prix] € [TVA]% [Montant] €
+  const lineRegex = /\/?\/?LOCATION\s+VEHICULE\s+(?:VL\/VU\s+)?([A-Z0-9]{5,8})\s+DU\s+(\d{1,2})\/(\d{1,2})\s+(?:au|AU)\s+(\d{1,2})\/(\d{1,2})[\s\S]*?(\d{1,2}\/\d{1,2}\/\d{4})\s+([\d,]+)\s+-\s+([\d,]+)\s+€\s+([\d,]+)\s+%\s+([\d,]+)\s+€/gi;
+  const lines = [];
+  let m;
+  while ((m = lineRegex.exec(text)) !== null) {
+    const immat = m[1];
+    const d1 = `${defaultYear}-${m[3].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+    const d2 = `${defaultYear}-${m[5].padStart(2,'0')}-${m[4].padStart(2,'0')}`;
+    const qte = parseFrNum(m[7]);
+    const tarif = parseFrNum(m[8]);
+    const mtHT = qte * tarif;
+    lines.push({
+      _type: 'LOCATION',
+      loueur: 'SD AUTOPRESTIGE',
+      immat,
+      immats: [immat],
+      modele: '',
+      conducteur: '',
+      dateDebut: d1,
+      dateFin: d2,
+      mtHT: frNum(mtHT),
+      essence: '',
+      ecoNett: '',
+      kmSup: '',
+      repar: '',
+      pv: '',
+      factReceived: true,
+    });
+  }
+  return lines;
+}
+
+// ----- Agrégation et insertion -----
+function applyImports(parsedDocs) {
+  let added = 0;
+  const warnings = [];
+  const importedIds = [];
+
+  const locations = parsedDocs.filter(d => d._type === 'LOCATION');
+  const reparations = parsedDocs.filter(d => d._type === 'REPARATION');
+  const pvs = parsedDocs.filter(d => d._type === 'PV');
+
+  // Créer les lignes de location
+  for (const loc of locations) {
+    const row = {
+      id: 'imp-' + Date.now() + '-' + Math.random().toString(36).slice(2,7),
+      client: '', chantier: '', matricule: '',
+      loueur: loc.loueur || '',
+      factReceived: !!loc.factReceived,
+      modele: loc.modele || '',
+      immat: loc.immat || '',
+      conducteur: loc.conducteur || '',
+      dateDebut: loc.dateDebut || '',
+      dateFin: loc.dateFin || '',
+      mtHT: loc.mtHT || '',
+      essence: loc.essence || '',
+      ecoNett: loc.ecoNett || '',
+      kmSup: loc.kmSup || '',
+      repar: loc.repar || '',
+      pv: loc.pv || '',
+      _imported: true,
+      _contratNum: loc._contratNum,
+    };
+    rows.push(row);
+    importedIds.push(row.id);
+    added++;
+  }
+
+  // Matcher réparations
+  for (const rep of reparations) {
+    const target = rows.find(r => {
+      if (!r.immat || !rep.immat) return false;
+      if (!r.immat.includes(rep.immat)) return false;
+      if (rep._contratNum && r._contratNum && r._contratNum !== rep._contratNum) return false;
+      return true;
+    });
+    if (target) {
+      const existing = parseFrNum(target.repar);
+      target.repar = frNum(existing + rep.montantTTC);
+    } else {
+      warnings.push(`Réparation ${rep.montantTTC.toFixed(2)} € (immat ${rep.immat}) : aucune location correspondante`);
+    }
+  }
+
+  // Matcher PVs (cumul possible)
+  for (const pv of pvs) {
+    const target = rows.find(r => r.immat && pv.immat && r.immat.includes(pv.immat));
+    if (target) {
+      const existing = parseFrNum(target.pv);
+      target.pv = frNum(existing + pv.montantTTC);
+    } else {
+      warnings.push(`PV ${pv.montantTTC.toFixed(2)} € (immat ${pv.immat}) : aucune location correspondante`);
+    }
+  }
+
+  saveRows();
+  render();
+  return { added, warnings, importedIds, totalDocs: parsedDocs.length };
+}
+
+// ----- Pipeline principal -----
+async function importPdfFiles(files, onProgress) {
+  const allParsed = [];
+  const fileReports = [];
+
+  for (const file of files) {
+    const report = { name: file.name, pages: 0, found: [], ocrUsed: false };
+    try {
+      if (onProgress) onProgress(`Lecture de ${file.name}…`);
+      const pages = await extractPdfPages(file, onProgress);
+      report.pages = pages.length;
+
+      for (let pi = 0; pi < pages.length; pi++) {
+        const { text: pageText, ocrUsed } = pages[pi];
+        if (ocrUsed) report.ocrUsed = true;
+        const loueur = detectLoueur(pageText);
+        const docType = detectDocType(pageText, loueur);
+
+        // === DIAGNOSTIC ===
+        console.log(`[IMPORT] ${file.name} page ${pi+1} : loueur=${loueur||'?'} type=${docType||'?'} ocr=${ocrUsed} length=${pageText.length}`);
+        console.log(`[IMPORT] Texte extrait COMPLET :`, pageText);
+        window.__lastImportText = pageText; // accessible via la console : tape "__lastImportText"
+
+        if (!docType) {
+          const preview = pageText.length > 200 ? pageText.substring(0, 200) + '…' : pageText;
+          if (pageText.length < 50) {
+            report.found.push(`Page ${pi+1} : aucun texte (PDF illisible)`);
+          } else {
+            report.found.push(`Page ${pi+1} : non reconnue (loueur=${loueur || 'inconnu'}) — début : "${preview}"`);
+          }
+          continue;
+        }
+
+        let parsed = null;
+        if (docType === 'OLYMPIC_LOCATION') parsed = parseOlympicLocation(pageText);
+        else if (docType === 'OLYMPIC_REPARATION') parsed = parseOlympicReparation(pageText);
+        else if (docType === 'CARGO_LOCATION') parsed = parseCargoLocation(pageText);
+        else if (docType === 'CARGO_PV') parsed = parseCargoPV(pageText);
+        else if (docType === 'SD_LOCATION') {
+          const sdLines = parseSdAutoprestige(pageText);
+          sdLines.forEach(p => allParsed.push(p));
+          report.found.push(`Page ${pi+1} : SD AutoPrestige (${sdLines.length} véhicule${sdLines.length>1?'s':''})${ocrUsed?' [OCR]':''}`);
+          continue;
+        }
+
+        if (parsed) {
+          allParsed.push(parsed);
+          report.found.push(`Page ${pi+1} : ${docType.replace('_',' ')}${ocrUsed?' [OCR]':''}`);
+        }
+      }
+    } catch (err) {
+      report.found.push(`ERREUR : ${err.message}`);
+    }
+    fileReports.push(report);
+  }
+
+  const result = applyImports(allParsed);
+  return { ...result, fileReports };
+}
+
+// ----- UI Wiring -----
+const importBtn = document.getElementById('importPdfBtn');
+const importInput = document.getElementById('pdfImportInput');
+const statusEl = document.getElementById('importStatus');
+
+function showStatus(msg, kind, ocrText) {
+  statusEl.className = 'import-status' + (kind ? ' ' + kind : '');
+  let html = String(msg).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>');
+  if (ocrText) {
+    const safe = String(ocrText).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    html += `
+      <details style="margin-top:12px;">
+        <summary style="cursor:pointer; font-weight:600; padding:6px 0;">📋 Voir le texte OCR brut (clic pour ouvrir/fermer)</summary>
+        <textarea readonly style="width:100%; height:280px; margin-top:8px; font-family:monospace; font-size:11px; padding:10px; border-radius:8px; border:1px solid var(--line); background:white; color:#111; line-height:1.4;" onclick="this.select();">${safe}</textarea>
+        <div style="font-size:11px; color:var(--ink-3); margin-top:4px;">Clique dans la zone pour tout sélectionner, Ctrl+C pour copier, puis colle-le moi ici.</div>
+      </details>`;
+  }
+  statusEl.innerHTML = html;
+  statusEl.style.display = 'block';
+}
+
+importBtn.addEventListener('click', () => {
+  importInput.click();
+});
+
+// CSV import wiring
+const csvBtn = document.getElementById('importCsvBtn');
+const csvInput = document.getElementById('csvImportInput');
+csvBtn.addEventListener('click', () => csvInput.click());
+csvInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  showStatus(`⏳ Lecture du CSV "${file.name}"…`, '');
+  try {
+    const res = await importCsvFile(file);
+    let msg = `✅ ${res.added} ligne${res.added>1?'s':''} ajoutée${res.added>1?'s':''} depuis ${file.name}.`;
+    if (res.errors && res.errors.length) {
+      msg += `\n⚠️ ${res.errors.join('\n')}`;
+      showStatus(msg, 'warn');
+    } else {
+      showStatus(msg, 'success');
+    }
+  } catch (err) {
+    showStatus(`❌ Erreur d'import CSV : ${err.message}`, 'error');
+    console.error(err);
+  } finally {
+    e.target.value = '';
+  }
+});
+
+importInput.addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  showStatus(`⏳ Lecture de ${files.length} PDF${files.length>1?'s':''}…`, '');
+  importBtn.disabled = true;
+  try {
+    const res = await importPdfFiles(files, (msg) => {
+      showStatus(`⏳ ${msg}`, '');
+    });
+    let msg = `✅ ${res.added} ligne${res.added>1?'s':''} ajoutée${res.added>1?'s':''} sur ${res.totalDocs} document${res.totalDocs>1?'s':''} détecté${res.totalDocs>1?'s':''}.`;
+    const ocrFiles = res.fileReports.filter(r => r.ocrUsed).map(r => r.name);
+    if (ocrFiles.length) {
+      msg += `\n📷 OCR utilisé pour ${ocrFiles.length} fichier${ocrFiles.length>1?'s':''} (PDF scannés)`;
+    }
+    if (res.warnings.length) {
+      msg += `\n⚠️ ${res.warnings.length} avertissement${res.warnings.length>1?'s':''} :\n  • ` + res.warnings.join('\n  • ');
+    }
+    msg += `\n\nDétail par fichier :\n  • ` + res.fileReports.map(r => `${r.name} (${r.pages}p) → ${r.found.join(' ; ') || 'rien'}`).join('\n  • ');
+    showStatus(msg, res.warnings.length ? 'warn' : 'success', window.__lastImportText);
+  } catch (err) {
+    showStatus(`❌ Erreur d'import : ${err.message}`, 'error');
+    console.error(err);
+  } finally {
+    importBtn.disabled = false;
+    e.target.value = '';
+  }
+});
+
+// Theme toggle
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  themeToggle.textContent = t === 'dark' ? '☀' : '🌙';
+}
+applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+themeToggle.addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+});
+
+// One-shot seed : import auto de la 1re ligne extraite des PDFs du dossier TEST 1
+const SEED_KEY = 'seed-test1-jds-sanary-v3';
+if (!localStorage.getItem(SEED_KEY)) {
+  // Nettoie les anciens seeds + lignes vides + anciennes lignes du seed
+  ['seed-test1-jds-sanary-v1','seed-test1-jds-sanary-v2'].forEach(k => localStorage.removeItem(k));
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const r = rows[i];
+    const isEmpty = !(r.client || r.chantier || r.immat || r.conducteur || r.dateDebut || r.mtHT);
+    const isOldSeed = String(r.id || '').startsWith('seed-jds-sanary-');
+    if (isEmpty || isOldSeed) rows.splice(i, 1);
+  }
+  rows.push({
+    id: 'seed-jds-sanary-' + Date.now(),
+    client: 'JDS',
+    chantier: 'SANARY',
+    loueur: 'OLYMPIC LOCATION',
+    factReceived: true,
+    modele: 'CLIO',
+    immat: 'HD-185-FL',
+    conducteur: 'MORENO DE PINA EDNILSON',
+    matricule: '332',
+    dateDebut: '2026-04-22',
+    dateFin: '2026-04-30',
+    mtHT: '165,36',
+    essence: '',
+    ecoNett: '3',
+    kmSup: '',
+    repar: '',
+    pv: '',
+  });
+  saveRows();
+  localStorage.setItem(SEED_KEY, '1');
+}
+
+// Seed v4 : ajout des 8 lignes extraites du PDF TEST 2 (DOC150526)
+const SEED_V4 = 'seed-test2-v4';
+if (!localStorage.getItem(SEED_V4)) {
+  const now = Date.now();
+  // Olympic MGB Harmonia (CARDOSO)
+  rows.push({
+    id: 'olympic-mgb-harmonia-' + now,
+    client: '', chantier: '', loueur: 'OLYMPIC LOCATION', factReceived: true,
+    modele: 'OPEL COMBO', immat: 'GQ-986-JD',
+    conducteur: 'CARDOSO CORREIA ALEX', matricule: '',
+    dateDebut: '2026-04-01', dateFin: '2026-04-25',
+    mtHT: '633,35',
+    essence: '38,87', ecoNett: '3', kmSup: '', repar: '', pv: ''
+  });
+  // Olympic SENEC/Guibaude (SILVA multi-immat + réparation pneu)
+  rows.push({
+    id: 'olympic-silva-senec-' + now,
+    client: '', chantier: '', loueur: 'OLYMPIC LOCATION', factReceived: true,
+    modele: 'OPEL COMBO', immat: 'GZ-497-AF / GQ-915-JD',
+    conducteur: 'SILVA VIRGILIO', matricule: '',
+    dateDebut: '2026-03-01', dateFin: '2026-03-31',
+    mtHT: '825,00',
+    essence: '', ecoNett: '3', kmSup: '', repar: '132,36', pv: ''
+  });
+  // SD AUTOPRESTIGE — 6 lignes (facture 2026-79, tarif 18,67 €/j HT)
+  const sdLines = [
+    { immat: 'DT903PS', mtHT: '560,10', d1: '2026-04-01', d2: '2026-04-30' },
+    { immat: 'GD137HW', mtHT: '560,10', d1: '2026-04-01', d2: '2026-04-30' },
+    { immat: 'CP582CQ', mtHT: '560,10', d1: '2026-04-01', d2: '2026-04-30' },
+    { immat: 'EH607GC', mtHT: '560,10', d1: '2026-04-01', d2: '2026-04-30' },
+    { immat: 'DW627TX', mtHT: '560,10', d1: '2026-04-01', d2: '2026-04-30' },
+    { immat: 'DF962XG', mtHT: '261,38', d1: '2026-04-17', d2: '2026-04-30' },
+  ];
+  sdLines.forEach((l, i) => {
+    rows.push({
+      id: 'sd-autoprestige-' + l.immat + '-' + (now + i),
+      client: '', chantier: '', loueur: 'SD AUTOPRESTIGE', factReceived: true,
+      modele: '', immat: l.immat,
+      conducteur: '', matricule: '',
+      dateDebut: l.d1, dateFin: l.d2,
+      mtHT: l.mtHT,
+      essence: '', ecoNett: '', kmSup: '', repar: '', pv: ''
+    });
+  });
+  saveRows();
+  localStorage.setItem(SEED_V4, '1');
+}
+
+// Seed v5 : ajout de 2 lignes (Car Go GK364HS + Olympic TAVARES Renault Trafic) — TEST 2 complément
+const SEED_V5 = 'seed-test2-v5';
+if (!localStorage.getItem(SEED_V5)) {
+  const now5 = Date.now();
+  // Car Go GK364HS (DE BARROS MENDES) + 2 factures PV refacturés
+  rows.push({
+    id: 'cargo-gk364hs-' + now5,
+    client: '', chantier: '', loueur: 'CAR GO', factReceived: true,
+    modele: 'OPEL CORSA', immat: 'GK364HS',
+    conducteur: 'DE BARROS MENDES EDMILSON', matricule: '',
+    dateDebut: '2026-04-09', dateFin: '2026-04-27',
+    mtHT: '354,67',
+    essence: '', ecoNett: '', kmSup: '', repar: '', pv: '110'
+  });
+  // Olympic TAVARES Renault Trafic HC-114-PV — km sup + diesel
+  rows.push({
+    id: 'olympic-tavares-hc114pv-' + now5,
+    client: '', chantier: '', loueur: 'OLYMPIC LOCATION', factReceived: true,
+    modele: 'RENAULT TRAFIC', immat: 'HC-114-PV',
+    conducteur: 'TAVARES NELSON SANCHES', matricule: '',
+    dateDebut: '2026-04-07', dateFin: '2026-04-17',
+    mtHT: '316,70',
+    essence: '23,92', ecoNett: '3', kmSup: '90,68', repar: '', pv: ''
+  });
+  saveRows();
+  localStorage.setItem(SEED_V5, '1');
+}
+
+// Dropdown "Grouper par" — re-render à chaque changement
+const groupBySel = document.getElementById('groupBy');
+if (groupBySel) groupBySel.addEventListener('change', () => render());
+
+// Édition inline du nom du tableau via l'input dans la card head
+const tableauNameInput = document.getElementById('tableauNameInput');
+if (tableauNameInput) {
+  tableauNameInput.addEventListener('change', (e) => {
+    const t = currentTableau();
+    const newName = e.target.value.trim();
+    if (newName && t) { t.name = newName; saveState(); renderTabs(); }
+    else if (t) e.target.value = t.name;
+  });
+  tableauNameInput.addEventListener('blur', (e) => {
+    const t = currentTableau();
+    if (t && !e.target.value.trim()) e.target.value = t.name;
+  });
+  tableauNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+  });
+}
+
+if (rows.length === 0) rows.push(makeRow());
+saveState();
+renderTabs();
+render();
+
+// ===========================================================
+// ===== ARCHIVES (Historique des tableaux / Snapshots) =====
+// ===========================================================
+const STORAGE_KEY_ARCHIVES = 'suivi-vehicules-archives';
+
+function loadArchives() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_ARCHIVES);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return arr;
+    }
+  } catch {}
+  return [];
+}
+let archives = loadArchives();
+function saveArchives() {
+  localStorage.setItem(STORAGE_KEY_ARCHIVES, JSON.stringify(archives));
+}
+
+function archiveCurrentTableau() {
+  const t = currentTableau();
+  if (!t || !t.rows || t.rows.length === 0) {
+    alert('Le tableau actuel est vide — rien à archiver.');
+    return;
+  }
+  // Nom par défaut : nom du tableau + date
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const defaultName = (t.name || 'Tableau') + ' — ' + dateStr;
+  const name = prompt('📦 Nom de l\'archive :', defaultName);
+  if (!name || !name.trim()) return;
+  const archive = {
+    id: 'arch-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+    name: name.trim(),
+    sourceName: t.name || 'Tableau',
+    archivedAt: today.toISOString(),
+    rowCount: t.rows.length,
+    rows: JSON.parse(JSON.stringify(t.rows)),
+  };
+  archives.unshift(archive);
+  saveArchives();
+  renderArchives();
+  // Petit feedback visuel
+  const card = document.querySelector('#archivesList .archive-card');
+  if (card) {
+    card.style.transition = 'background-color 0.6s';
+    card.style.backgroundColor = 'rgba(243,150,39,0.15)';
+    setTimeout(() => { card.style.backgroundColor = ''; }, 800);
+  }
+}
+
+function restoreArchive(id) {
+  const a = archives.find(x => x.id === id);
+  if (!a) return;
+  if (!confirm('Restaurer "' + a.name + '" dans un nouveau tableau ?\n\n(' + a.rowCount + ' ligne' + (a.rowCount > 1 ? 's' : '') + ' — l\'archive reste conservée)')) return;
+  const newId = 't-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+  state.tableaux.push({
+    id: newId,
+    name: a.name + ' (restauré)',
+    rows: JSON.parse(JSON.stringify(a.rows)).map(r => ({
+      ...r,
+      id: 'res-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+      _imported: false,
+      _selected: false,
+    })),
+  });
+  state.currentId = newId;
+  rows = currentTableau().rows;
+  saveState();
+  renderTabs();
+  render();
+  // Scroll vers le haut pour voir le tableau restauré
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteArchive(id) {
+  const a = archives.find(x => x.id === id);
+  if (!a) return;
+  if (!confirm('Supprimer définitivement l\'archive "' + a.name + '" ?\n\nCette action est irréversible.')) return;
+  archives = archives.filter(x => x.id !== id);
+  saveArchives();
+  renderArchives();
+}
+
+function renameArchive(id) {
+  const a = archives.find(x => x.id === id);
+  if (!a) return;
+  const newName = prompt('Renommer l\'archive :', a.name);
+  if (!newName || !newName.trim()) return;
+  a.name = newName.trim();
+  saveArchives();
+  renderArchives();
+}
+
+function downloadArchiveCSV(id) {
+  const a = archives.find(x => x.id === id);
+  if (!a) return;
+  const headers = ['Rapporteur', 'Client', 'Chantier', 'Loueur', 'Facture reçue', 'Modèle', 'Immat', 'Conducteur', 'Matricule', 'Date début', 'Date fin', 'Montant HT', 'Essence', 'Éco contrib', 'Km sup', 'Répar', 'PV'];
+  const lines = [headers.join(';')];
+  a.rows.forEach(r => {
+    lines.push([
+      r.rapporteur || '',
+      r.client || '',
+      r.chantier || '',
+      r.loueur || '',
+      r.factReceived ? 'X' : '',
+      r.modele || '',
+      r.immat || '',
+      r.conducteur || '',
+      r.matricule || '',
+      r.dateDebut || '',
+      r.dateFin || '',
+      (r.mtHT || '').toString().replace('.', ','),
+      (r.essence || '').toString().replace('.', ','),
+      (r.ecoNett || '').toString().replace('.', ','),
+      (r.kmSup || '').toString().replace('.', ','),
+      (r.repar || '').toString().replace('.', ','),
+      (r.pv || '').toString().replace('.', ','),
+    ].join(';'));
+  });
+  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = a.name.replace(/[^a-z0-9\-_\séàèùçâêîôû]/gi, '_').replace(/\s+/g, '_') + '.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function renderArchives() {
+  const list = document.getElementById('archivesList');
+  const empty = document.getElementById('archivesEmpty');
+  const countEl = document.getElementById('archiveCountValue');
+  if (!list) return;
+  if (countEl) countEl.textContent = archives.length;
+  list.innerHTML = '';
+  if (archives.length === 0) {
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  archives.forEach(a => {
+    const totalHT = a.rows.reduce((s, r) => s + (parseFloat((r.mtHT || '0').toString().replace(',', '.')) || 0), 0);
+    const totalFrais = a.rows.reduce((s, r) => {
+      const f = (parseFloat((r.essence || '0').toString().replace(',', '.')) || 0)
+              + (parseFloat((r.ecoNett || '0').toString().replace(',', '.')) || 0)
+              + (parseFloat((r.kmSup || '0').toString().replace(',', '.')) || 0)
+              + (parseFloat((r.repar || '0').toString().replace(',', '.')) || 0)
+              + (parseFloat((r.pv || '0').toString().replace(',', '.')) || 0);
+      return s + f;
+    }, 0);
+    const d = new Date(a.archivedAt);
+    const date = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const card = document.createElement('div');
+    card.className = 'archive-card';
+    card.innerHTML = `
+      <div>
+        <div class="archive-name"></div>
+        <div class="archive-source">depuis : <span class="archive-source-name"></span></div>
+      </div>
+      <div class="archive-meta">
+        <div class="archive-meta-row">
+          <span class="archive-meta-label">📅 Archivé le</span>
+          <span class="archive-meta-value">${date} ${time}</span>
+        </div>
+        <div class="archive-meta-row">
+          <span class="archive-meta-label">📋 Lignes</span>
+          <span class="archive-meta-value">${a.rowCount}</span>
+        </div>
+        <div class="archive-meta-row">
+          <span class="archive-meta-label">💰 Montant HT</span>
+          <span class="archive-meta-value archive-total-ht">${totalHT.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
+        </div>
+        <div class="archive-meta-row">
+          <span class="archive-meta-label">🧾 Frais</span>
+          <span class="archive-meta-value">${totalFrais.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
+        </div>
+      </div>
+      <div class="archive-actions">
+        <button class="btn btn-primary" data-act="restore" title="Restaurer dans un nouveau tableau">↻ Restaurer</button>
+        <button class="btn btn-ghost" data-act="csv" title="Télécharger en CSV">⬇ CSV</button>
+        <button class="btn btn-ghost" data-act="rename" title="Renommer">✎</button>
+        <button class="btn btn-danger" data-act="delete" title="Supprimer">🗑</button>
+      </div>`;
+    card.querySelector('.archive-name').textContent = a.name;
+    card.querySelector('.archive-source-name').textContent = a.sourceName || '—';
+    card.querySelectorAll('.archive-actions .btn').forEach(b => {
+      b.addEventListener('click', () => {
+        const act = b.dataset.act;
+        if (act === 'restore') restoreArchive(a.id);
+        else if (act === 'csv') downloadArchiveCSV(a.id);
+        else if (act === 'rename') renameArchive(a.id);
+        else if (act === 'delete') deleteArchive(a.id);
+      });
+    });
+    list.appendChild(card);
+  });
+}
+
+// Init archives
+const archiveBtn = document.getElementById('archiveCurrentBtn');
+if (archiveBtn) archiveBtn.addEventListener('click', archiveCurrentTableau);
+renderArchives();
+</script>
+</body>
+</html>

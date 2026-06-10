@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forma Interim — Suite d'outils</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="brand/forma-mark.png">
+<style>
+:root{
+  --bg:#fafafa; --surface:#ffffff; --surface-2:#f4f5f7;
+  --surface-glass:rgba(255,255,255,0.72); --surface-glass-strong:rgba(255,255,255,0.92);
+  --ink:#0a0a0a; --ink-2:#1f2024; --ink-3:#555a63; --muted:#8a8e96;
+  --line:#e8e9ec; --line-strong:#d2d4d9;
+  --forma-blue:#3DA5E0; --forma-blue-dark:#1a6ea3; --forma-blue-light:#6dbceb; --forma-blue-bg:#e8f4fc;
+  --forma-orange:#F39627; --forma-orange-dark:#a8610a; --forma-orange-light:#f8b765; --forma-orange-bg:#fef3e3;
+  --success:#15803d; --success-bg:#dcfce7; --warn:#d97706; --danger:#dc2626;
+  --grad-hero:linear-gradient(135deg,#3DA5E0 0%,#2987c0 60%,#1a6ea3 100%);
+  --grad-coral:linear-gradient(135deg,#F39627 0%,#f8b765 100%);
+  --grad-forma:linear-gradient(135deg,#3DA5E0 0%,#F39627 100%);
+  --r:12px; --r-lg:18px; --r-xl:24px;
+  --ease-spring:cubic-bezier(0.34,1.56,0.64,1); --ease-out:cubic-bezier(0.16,1,0.3,1);
+  --font-display:'Bricolage Grotesque',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-body:'Instrument Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;
+  --bg-base:#f8f5f0;
+}
+[data-theme="dark"]{
+  --bg:#0a0a0a; --surface:#16171a; --surface-2:#1c1d21;
+  --surface-glass:rgba(28,28,30,0.72); --surface-glass-strong:rgba(38,38,42,0.92);
+  --ink:#fafafa; --ink-2:#e5e6ea; --ink-3:#a0a4ab; --muted:#6b6f78;
+  --line:rgba(255,255,255,0.10); --line-strong:rgba(255,255,255,0.18);
+  --forma-blue-bg:rgba(61,165,224,0.12); --forma-orange-bg:rgba(243,150,39,0.10); --success-bg:rgba(22,163,74,0.15);
+  --forma-blue-dark:#6dbceb; --forma-orange-dark:#f8b765; --success:#4ade80;
+  --bg-base:#050505;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+html,body{margin:0;padding:0;}
+::selection{background:var(--forma-blue);color:#fff;}
+body{
+  font-family:var(--font-body); font-size:15px; line-height:1.6; color:var(--ink);
+  background:var(--bg-base); min-height:100vh; -webkit-font-smoothing:antialiased; letter-spacing:-0.011em;
+}
+/* Fond fixe compatible iOS (pas de background-attachment:fixed) */
+body::before{
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    linear-gradient(165deg,rgba(61,165,224,0.18) 0%,rgba(61,165,224,0.08) 25%,rgba(255,253,250,1) 55%,rgba(243,150,39,0.10) 85%,rgba(243,150,39,0.20) 100%),
+    radial-gradient(ellipse 900px 700px at 85% 15%,rgba(61,165,224,0.18) 0%,transparent 55%),
+    radial-gradient(ellipse 700px 600px at 15% 90%,rgba(243,150,39,0.16) 0%,transparent 55%),
+    var(--bg-base);
+}
+[data-theme="dark"] body::before{
+  background:
+    linear-gradient(165deg,rgba(61,165,224,0.10) 0%,rgba(61,165,224,0.04) 25%,rgba(10,10,10,1) 55%,rgba(243,150,39,0.04) 85%,rgba(243,150,39,0.08) 100%),
+    radial-gradient(ellipse 900px 700px at 85% 15%,rgba(61,165,224,0.12) 0%,transparent 55%),
+    radial-gradient(ellipse 700px 600px at 15% 90%,rgba(243,150,39,0.10) 0%,transparent 55%),
+    var(--bg-base);
+}
+/* Ajustements thème sombre */
+[data-theme="dark"] .brand-logo .mark{border:1px solid var(--line-strong);}
+[data-theme="dark"] .proc-hero .ph-ico{box-shadow:inset 0 1px 0 rgba(255,255,255,0.06),0 6px 18px rgba(0,0,0,0.4);}
+[data-theme="dark"] .ctx{border-color:rgba(61,165,224,0.35);}
+[data-theme="dark"] .ctx.or{border-color:rgba(243,150,39,0.35);}
+[data-theme="dark"] .tip{border-color:rgba(61,165,224,0.35);}
+[data-theme="dark"] .llama-card{border-color:rgba(243,150,39,0.35);}
+button:focus-visible,a:focus-visible{outline:2.5px solid var(--forma-blue);outline-offset:2px;border-radius:10px;}
+
+/* ===== Brand ===== */
+.brand-logo{display:inline-flex;align-items:center;gap:12px;font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:-0.01em;}
+.brand-logo .mark{width:44px;height:44px;background:#000;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-display);font-weight:800;font-size:19px;box-shadow:0 1px 2px rgba(0,0,0,0.1),0 4px 12px rgba(0,0,0,0.15);}
+.brand-logo .mark img{width:34px;height:34px;}
+.brand-logo .forma{color:var(--forma-blue);} .brand-logo .interim{color:var(--forma-orange);}
+
+/* ===== Buttons ===== */
+.btn{font-family:var(--font-body);font-size:14px;font-weight:600;padding:11px 20px;border:1px solid transparent;border-radius:14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);transition:transform .18s var(--ease-spring),box-shadow .25s ease,background .2s ease;}
+.btn:active{transform:scale(0.98);}
+.btn-accent{background:var(--grad-coral);color:#fff;box-shadow:0 4px 14px rgba(243,150,39,0.30);}
+.btn-accent:hover{box-shadow:0 6px 20px rgba(243,150,39,0.40);transform:translateY(-1px);}
+.btn-blue{background:var(--grad-hero);color:#fff;box-shadow:0 4px 14px rgba(61,165,224,0.30);}
+.btn-blue:hover{box-shadow:0 6px 20px rgba(61,165,224,0.40);transform:translateY(-1px);}
+.btn-ghost{background:var(--surface-glass);color:var(--ink);border:1px solid var(--line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+.btn-ghost:hover{background:var(--surface-glass-strong);border-color:var(--line-strong);}
+.btn-lg{padding:14px 26px;font-size:15.5px;border-radius:15px;}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:11px;}
+
+/* ===== Nav ===== */
+.nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;padding:13px 26px;background:var(--surface-glass);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border-bottom:0.5px solid var(--line);flex-wrap:wrap;}
+.nav .spacer{flex:1;}
+.nav-link{background:transparent;border:1px solid transparent;padding:9px 15px;border-radius:11px;cursor:pointer;font-size:13.5px;font-family:var(--font-body);font-weight:600;color:var(--ink-2);display:inline-flex;align-items:center;gap:7px;transition:all .18s var(--ease-out);}
+.nav-link:hover{background:var(--surface-glass-strong);color:var(--ink);}
+.nav-link.active{background:var(--grad-hero);color:#fff;box-shadow:0 4px 14px rgba(61,165,224,0.30);}
+.theme-toggle{width:42px;height:42px;border-radius:13px;padding:0;justify-content:center;font-size:17px;}
+
+.wrap{max-width:1200px;margin:0 auto;padding:42px 26px 60px;}
+.view{display:none;animation:fadeUp .45s var(--ease-out);}
+.view.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+
+/* ===== Hero accueil ===== */
+.hero{text-align:center;margin-bottom:44px;}
+.hero .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--forma-blue-dark);background:var(--forma-blue-bg);padding:7px 16px;border-radius:99px;margin-bottom:18px;}
+.hero h1{font-family:var(--font-display);font-size:52px;font-weight:700;line-height:1.03;letter-spacing:-0.038em;margin:0 0 14px;}
+.hero h1 em{font-style:italic;font-weight:600;background:var(--grad-forma);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero p{font-size:17.5px;color:var(--ink-3);max-width:660px;margin:0 auto;line-height:1.55;}
+
+/* ===== « Le métier en 1 minute » ===== */
+.biz{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px;counter-reset:biz;}
+.biz-item{position:relative;background:var(--surface-glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:0.5px solid rgba(255,255,255,0.8);border-radius:var(--r-lg);padding:22px 22px 20px;box-shadow:0 1px 2px rgba(10,10,10,0.04),0 4px 12px rgba(10,10,10,0.04);}
+[data-theme="dark"] .biz-item{border-color:rgba(255,255,255,0.06);}
+.biz-item::before{counter-increment:biz;content:counter(biz);position:absolute;top:-13px;left:20px;width:27px;height:27px;border-radius:50%;background:var(--grad-hero);color:#fff;font-family:var(--font-display);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(61,165,224,0.35);}
+.biz-item .bi{font-size:26px;margin-bottom:8px;}
+.biz-item h4{font-family:var(--font-display);font-size:15.5px;font-weight:700;margin:0 0 6px;}
+.biz-item p{margin:0;font-size:13.5px;color:var(--ink-3);line-height:1.55;}
+.biz-item p b{color:var(--ink-2);}
+.biz-title{display:flex;align-items:center;gap:14px;margin:0 0 26px;}
+.biz-title h2{font-family:var(--font-display);font-size:21px;font-weight:700;margin:0;letter-spacing:-0.02em;white-space:nowrap;}
+.biz-title .rule{flex:1;height:1.5px;background:linear-gradient(90deg,var(--line-strong),transparent);}
+
+/* ===== App cards ===== */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.app-card{position:relative;background:var(--surface-glass);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:0.5px solid rgba(255,255,255,0.8);border-radius:var(--r-xl);padding:32px 28px 28px;cursor:pointer;overflow:hidden;transition:transform .25s var(--ease-spring),box-shadow .25s ease,border-color .2s;box-shadow:0 1px 2px rgba(10,10,10,0.04),0 4px 16px rgba(10,10,10,0.05);}
+[data-theme="dark"] .app-card{border:0.5px solid rgba(255,255,255,0.06);}
+.app-card:hover{transform:translateY(-5px);box-shadow:0 18px 48px rgba(10,10,10,0.14);border-color:var(--forma-blue);}
+.app-card .ac-top{height:5px;position:absolute;top:0;left:0;right:0;}
+.app-card.c-calc .ac-top{background:var(--grad-hero);}
+.app-card.c-fact .ac-top{background:var(--grad-coral);}
+.app-card.c-veh .ac-top{background:var(--grad-forma);}
+.app-card .ac-ico{width:66px;height:66px;border-radius:19px;display:flex;align-items:center;justify-content:center;font-size:33px;margin-bottom:18px;transition:transform .25s var(--ease-spring);}
+.app-card:hover .ac-ico{transform:scale(1.08) rotate(-3deg);}
+.app-card.c-calc .ac-ico{background:var(--forma-blue-bg);}
+.app-card.c-fact .ac-ico{background:var(--forma-orange-bg);}
+.app-card.c-veh .ac-ico{background:linear-gradient(135deg,var(--forma-blue-bg),var(--forma-orange-bg));}
+.app-card .ac-tag{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-3);margin-bottom:6px;}
+.app-card h3{font-family:var(--font-display);font-size:22px;font-weight:700;margin:0 0 9px;letter-spacing:-0.02em;}
+.app-card p{font-size:14px;color:var(--ink-3);margin:0 0 20px;min-height:84px;line-height:1.55;}
+.app-card .ac-go{font-weight:700;color:var(--forma-blue-dark);font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:gap .2s var(--ease-out);}
+.app-card:hover .ac-go{gap:11px;}
+
+/* ===== Cards génériques ===== */
+.card{background:var(--surface-glass);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:0.5px solid rgba(255,255,255,0.8);border-radius:var(--r-lg);padding:30px;margin-bottom:20px;box-shadow:0 1px 2px rgba(10,10,10,0.04),0 4px 12px rgba(10,10,10,0.04);}
+[data-theme="dark"] .card{border:0.5px solid rgba(255,255,255,0.06);}
+
+/* ===== Pages process ===== */
+.back-link{background:none;border:0;color:var(--forma-blue-dark);font-weight:700;cursor:pointer;font-size:14px;padding:6px 0;margin-bottom:14px;display:inline-flex;gap:6px;align-items:center;}
+.proc-hero{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;}
+.proc-hero .ph-ico{width:80px;height:80px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:42px;flex-shrink:0;background:var(--forma-blue-bg);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),0 6px 18px rgba(10,10,10,0.06);}
+.proc-hero .ph-tag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--forma-blue-dark);margin-bottom:6px;}
+.proc-hero h1{font-family:var(--font-display);font-size:42px;font-weight:700;letter-spacing:-0.035em;margin:0;line-height:1.02;}
+.proc-hero p{margin:11px 0 0;color:var(--ink-3);font-size:16.5px;max-width:680px;line-height:1.55;}
+.proc-launch{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0 4px;}
+
+/* Contexte métier */
+.ctx{margin-top:26px;background:linear-gradient(135deg,var(--forma-blue-bg) 0%,var(--surface-glass-strong) 70%);border:1px solid var(--forma-blue-light);border-radius:var(--r-lg);padding:22px 26px;display:flex;gap:18px;align-items:flex-start;}
+.ctx.or{background:linear-gradient(135deg,var(--forma-orange-bg) 0%,var(--surface-glass-strong) 70%);border-color:var(--forma-orange-light);}
+.ctx .cx-ico{font-size:30px;flex-shrink:0;margin-top:2px;}
+.ctx h3{font-family:var(--font-display);font-size:15px;font-weight:800;margin:0 0 7px;text-transform:uppercase;letter-spacing:.08em;color:var(--forma-blue-dark);}
+.ctx.or h3{color:var(--forma-orange-dark);}
+.ctx p{margin:0;font-size:14.5px;color:var(--ink-2);line-height:1.65;}
+.ctx p b{color:var(--ink);}
+
+.proc-layout{display:grid;grid-template-columns:1.12fr 0.88fr;gap:34px;align-items:start;margin-top:30px;}
+@media(max-width:920px){.proc-layout{grid-template-columns:1fr;}.side{position:static;}}
+.bsteps-title{font-family:var(--font-display);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-3);margin:0 0 20px;}
+.bsteps{display:flex;flex-direction:column;gap:0;}
+.bstep{display:flex;gap:18px;position:relative;padding-bottom:26px;}
+.bstep:last-child{padding-bottom:0;}
+.bstep:not(:last-child)::before{content:'';position:absolute;left:21px;top:48px;bottom:6px;width:2px;background:linear-gradient(180deg,var(--line-strong),var(--line));border-radius:2px;}
+.bstep .bn{flex-shrink:0;width:42px;height:42px;border-radius:13px;background:var(--grad-hero);color:#fff;font-family:var(--font-display);font-weight:800;font-size:19px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(61,165,224,0.3);position:relative;z-index:1;}
+.bstep.or .bn{background:var(--grad-coral);box-shadow:0 4px 12px rgba(243,150,39,0.3);}
+.bstep .bc{padding-top:5px;}
+.bstep .bc h4{margin:0 0 6px;font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:-0.01em;}
+.bstep .bc p{margin:0;font-size:14.5px;color:var(--ink-3);line-height:1.62;}
+.bstep .bc p b{color:var(--ink-2);}
+.bstep .why{margin-top:9px;font-size:13px;color:var(--ink-3);background:var(--surface-2);border-left:3px solid var(--forma-blue);border-radius:0 10px 10px 0;padding:9px 14px;line-height:1.55;}
+.bstep.or .why{border-left-color:var(--forma-orange);}
+.bstep .why b{color:var(--forma-blue-dark);font-weight:700;}
+.bstep.or .why b{color:var(--forma-orange-dark);}
+.bstep .mini{margin-top:11px;}
+
+/* Colonne droite */
+.side{position:sticky;top:92px;display:flex;flex-direction:column;gap:18px;}
+.mock{border:1px solid var(--line-strong);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:0 16px 48px rgba(10,10,10,0.15);}
+.mock .mbar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);}
+.mock .mbar i{width:11px;height:11px;border-radius:50%;display:inline-block;}
+.mock .mbar .mt{margin-left:8px;font-size:11px;color:var(--ink-3);font-family:var(--font-mono);}
+.mock .mbody{padding:16px;overflow-x:auto;}
+.mock .mttl{font-family:var(--font-display);font-weight:700;font-size:13px;margin-bottom:10px;}
+.mcap{font-size:12px;color:var(--ink-3);text-align:center;padding:0 16px 14px;font-style:italic;}
+.mtab{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11px;}
+.mtab th{background:var(--surface-2);color:var(--ink-2);font-weight:700;padding:6px 8px;text-align:right;border-bottom:1px solid var(--line-strong);font-size:10px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;}
+.mtab th.l,.mtab td.l{text-align:left;}
+.mtab td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;color:var(--ink-2);white-space:nowrap;}
+.mtab .fac{color:var(--forma-orange-dark);font-weight:700;}
+.mtab tr.tot td{background:var(--forma-blue-bg);font-weight:800;color:var(--forma-blue-dark);border-top:1.5px solid var(--forma-blue);}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.mcard{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
+.mcard .ml{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700;}
+.mcard .mv{font-family:var(--font-mono);font-weight:700;font-size:17px;margin-top:3px;color:var(--ink);}
+.mcard.green{background:var(--success-bg);} .mcard.green .mv{color:var(--success);}
+.mcard.blue{background:var(--forma-blue-bg);} .mcard.blue .mv{color:var(--forma-blue-dark);}
+
+/* Lexique */
+.lex{background:var(--surface-glass-strong);border:1px solid var(--line);border-radius:16px;padding:18px 20px;}
+.lex h3{font-family:var(--font-display);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);margin:0 0 13px;display:flex;align-items:center;gap:8px;}
+.lex dl{margin:0;}
+.lex dt{font-weight:800;font-size:13px;color:var(--forma-blue-dark);font-family:var(--font-display);margin-top:11px;}
+.lex dt:first-child{margin-top:0;}
+.lex dd{margin:2px 0 0;font-size:13px;color:var(--ink-3);line-height:1.55;}
+.lex dd b{color:var(--ink-2);}
+
+.tip{background:var(--forma-blue-bg);border:1px solid var(--forma-blue-light);border-radius:16px;padding:14px 18px;font-size:13.5px;color:var(--ink-2);line-height:1.55;}
+.tip b{color:var(--forma-blue-dark);}
+.llama-card{background:linear-gradient(135deg,var(--forma-orange-bg),var(--surface-glass-strong));border:1px solid var(--forma-orange-light);border-radius:16px;padding:18px 20px;}
+.llama-card .lh{display:flex;align-items:center;gap:12px;}
+.llama-card .lh .li{font-size:28px;}
+.llama-card .lh b{font-family:var(--font-display);font-size:16px;}
+.llama-card p{margin:10px 0 14px;font-size:13.5px;color:var(--ink-3);line-height:1.55;}
+
+/* ===== Footer ===== */
+.foot{text-align:center;padding:34px 20px 26px;color:var(--ink-3);font-size:12.5px;border-top:0.5px solid var(--line);margin-top:30px;}
+.foot b{color:var(--ink-3);font-family:var(--font-display);}
+
+/* ===== Intro ===== */
+#intro{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;background:radial-gradient(ellipse at 70% 20%,#2987c0 0%,#1a6ea3 40%,#0c3a5c 100%);color:#fff;overflow:hidden;}
+#intro.hide{animation:introOut .55s var(--ease-out) forwards;}
+@keyframes introOut{to{opacity:0;transform:scale(1.04);visibility:hidden;}}
+#intro::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(243,150,39,0.35),transparent 70%);top:-180px;right:-160px;filter:blur(20px);}
+#intro::after{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.10),transparent 70%);bottom:-200px;left:-140px;}
+.intro-skip{position:absolute;top:22px;right:26px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:9px 18px;border-radius:12px;cursor:pointer;font-family:var(--font-body);font-weight:600;font-size:14px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:2;}
+.intro-skip:hover{background:rgba(255,255,255,0.24);}
+.intro-inner{position:relative;z-index:1;max-width:700px;}
+.intro-logo{display:inline-flex;align-items:center;gap:14px;font-family:var(--font-display);font-weight:800;font-size:22px;margin-bottom:30px;opacity:0;animation:iIn .7s var(--ease-out) .1s forwards;}
+.intro-logo .mark{width:52px;height:52px;background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;}
+.intro-logo .mark img{width:40px;height:40px;}
+.intro-logo .mark span{color:#1a6ea3;font-weight:800;font-size:24px;}
+#intro h1{font-family:var(--font-display);font-size:52px;font-weight:700;letter-spacing:-0.035em;line-height:1.05;margin:0 0 12px;opacity:0;animation:iIn .8s var(--ease-out) .35s forwards;}
+#intro h1 em{font-style:italic;color:var(--forma-orange-light);}
+#intro .sub{font-size:18px;color:rgba(255,255,255,0.85);margin:0 0 34px;opacity:0;animation:iIn .8s var(--ease-out) .6s forwards;line-height:1.5;}
+.intro-tools{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:38px;}
+.intro-tool{background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.20);border-radius:16px;padding:16px 20px;min-width:160px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:0;transform:translateY(16px);}
+.intro-tool .it-ico{font-size:30px;}
+.intro-tool .it-n{font-family:var(--font-display);font-weight:700;font-size:15px;margin-top:6px;}
+.intro-tool .it-d{font-size:12px;color:rgba(255,255,255,0.72);margin-top:2px;}
+.intro-tool:nth-child(1){animation:iIn .7s var(--ease-spring) .95s forwards;}
+.intro-tool:nth-child(2){animation:iIn .7s var(--ease-spring) 1.15s forwards;}
+.intro-tool:nth-child(3){animation:iIn .7s var(--ease-spring) 1.35s forwards;}
+@keyframes iIn{to{opacity:1;transform:none;}}
+.intro-start{opacity:0;animation:iIn .7s var(--ease-out) 1.7s forwards;}
+.intro-start .btn{background:#fff;color:#1a6ea3;font-weight:700;font-size:16px;padding:14px 30px;box-shadow:0 8px 30px rgba(0,0,0,0.25);}
+.intro-bar{position:absolute;bottom:0;left:0;height:4px;background:var(--forma-orange);animation:introBar 7s linear forwards;}
+@keyframes introBar{from{width:0;}to{width:100%;}}
+.intro-remember{margin-top:20px;font-size:13px;color:rgba(255,255,255,0.7);opacity:0;animation:iIn .7s ease 1.9s forwards;}
+.intro-remember input{vertical-align:middle;margin-right:6px;}
+
+@media(max-width:860px){
+  .cards,.biz{grid-template-columns:1fr;}
+  .hero h1{font-size:36px;} #intro h1{font-size:36px;} .proc-hero h1{font-size:30px;}
+  .nav{padding:12px 14px;} .wrap{padding:28px 16px 48px;}
+  .app-card p{min-height:0;}
+  .card{padding:22px 18px;} .app-card{padding:26px 20px 22px;}
+}
+@media(max-width:560px){
+  .nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .nav-link{flex-shrink:0;padding:8px 11px;font-size:12.5px;}
+  .brand-logo > span:last-child{display:none;}
+  .brand-logo .mark{width:36px;height:36px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ INTRO ANIMÉE ============ -->
+<div id="intro">
+  <button class="intro-skip" onclick="skipIntro()">Passer l'intro →</button>
+  <div class="intro-inner">
+    <div class="intro-logo"><span class="mark"><img src="brand/forma-mark.png" onerror="this.style.display='none';this.parentNode.innerHTML='<span>F</span>'" alt="Forma"></span><span><span style="color:#fff">FORMA</span> <span style="color:var(--forma-orange-light)">INTERIM</span></span></div>
+    <h1>Votre <em>suite d'outils</em></h1>
+    <p class="sub">L'agence place des ouvriers intérimaires sur les chantiers.<br>Ces trois apps calculent la marge, préparent la facturation et suivent les véhicules.</p>
+    <div class="intro-tools">
+      <div class="intro-tool"><div class="it-ico">🧮</div><div class="it-n">Calculateur de marge</div><div class="it-d">Avant la mission : est-ce rentable ?</div></div>
+      <div class="intro-tool"><div class="it-ico">🧾</div><div class="it-n">Facturation mensuelle</div><div class="it-d">Fin du mois : payer &amp; facturer</div></div>
+      <div class="intro-tool"><div class="it-ico">🚐</div><div class="it-n">Suivi véhicules</div><div class="it-d">Locations &amp; frais sous contrôle</div></div>
+    </div>
+    <div class="intro-start"><button class="btn" onclick="skipIntro()">Entrer dans la suite →</button></div>
+    <div class="intro-remember"><label><input type="checkbox" id="introNoShow"> Ne plus afficher l'intro au lancement</label></div>
+  </div>
+  <div class="intro-bar" id="introBar"></div>
+</div>
+
+<!-- ============ NAV ============ -->
+<nav class="nav">
+  <div class="brand-logo" style="cursor:pointer" role="button" tabindex="0" onclick="showView('accueil')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('accueil')}">
+    <span class="mark"><img src="brand/forma-mark.png" onerror="this.style.display='none';this.parentNode.textContent='F'" alt="Forma"></span>
+    <span><span class="forma">FORMA</span> <span class="interim">INTERIM</span></span>
+  </div>
+  <div class="spacer"></div>
+  <button class="nav-link" id="nav-accueil" onclick="showView('accueil')">🏠 Accueil</button>
+  <button class="nav-link" id="nav-calc" onclick="showView('calc')">🧮 Process Calculateur</button>
+  <button class="nav-link" id="nav-fact" onclick="showView('fact')">🧾 Process Facturation</button>
+  <button class="nav-link" id="nav-veh" onclick="showView('veh')">🚐 Process Véhicules</button>
+  <button class="btn btn-ghost theme-toggle" onclick="toggleTheme()" title="Mode sombre / clair" id="themeBtn">🌙</button>
+</nav>
+
+<div class="wrap">
+
+  <!-- ===== ACCUEIL ===== -->
+  <section class="view active" id="view-accueil">
+    <div class="hero">
+      <span class="kicker">⚡ Suite interne · Forma Interim Toulon</span>
+      <h1>Vos 3 outils, <em>réunis</em></h1>
+      <p>Même si tu débarques dans le métier, tout est expliqué : choisis une app, suis son process pas à pas, et lance-la quand tu es prêt.</p>
+    </div>
+
+    <div class="biz-title"><h2>🧱 Le métier en 1 minute</h2><div class="rule"></div></div>
+    <div class="biz">
+      <div class="biz-item"><div class="bi">👷</div><h4>On place des ouvriers</h4><p>Forma Interim est une <b>agence d'intérim BTP</b> : elle met des ouvriers (les <b>intérimaires</b>) à disposition d'entreprises de construction (les <b>clients</b> : MGB, JDS, ACTIBAT, Construction &amp; Patrimoine…) pour travailler sur leurs <b>chantiers</b>.</p></div>
+      <div class="biz-item"><div class="bi">💶</div><h4>On paie, on facture plus</h4><p>L'agence <b>paie le salaire</b> de l'ouvrier (+ les charges sociales), et <b>facture le client plus cher</b> — via un multiplicateur appelé le <b>coef</b>. La différence couvre les charges et dégage la <b>marge</b> de l'agence.</p></div>
+      <div class="biz-item"><div class="bi">🧰</div><h4>3 apps, tout le cycle</h4><p><b>Avant</b> la mission : le Calculateur dit si elle est rentable. <b>À la fin du mois</b> : la Facturation transforme les heures travaillées en paies et en factures. <b>En continu</b> : le Suivi véhicules contrôle les coûts de transport.</p></div>
+    </div>
+
+    <div class="biz-title"><h2>🚀 Choisis ton app</h2><div class="rule"></div></div>
+    <div class="cards">
+      <div class="app-card c-calc" role="button" tabindex="0" onclick="showView('calc')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('calc')}">
+        <div class="ac-top"></div><div class="ac-ico">🧮</div>
+        <div class="ac-tag">Avant la mission</div>
+        <h3>Calculateur de marge</h3>
+        <p>Un client demande un ouvrier ? Avant de dire oui, on vérifie qu'on gagne de l'argent : le calculateur applique toutes les règles de paie 2026 et affiche la marge, par mission ou par équipe entière.</p>
+        <span class="ac-go">Voir le process →</span>
+      </div>
+      <div class="app-card c-fact" role="button" tabindex="0" onclick="showView('fact')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('fact')}">
+        <div class="ac-top"></div><div class="ac-ico">🧾</div>
+        <div class="ac-tag">Fin du mois</div>
+        <h3>Tableau de facturation</h3>
+        <p>Les chantiers renvoient des relevés d'heures papier. Cette app les transforme en deux chiffres par chantier : combien <b>payer</b> chaque ouvrier, et combien <b>facturer</b> au client.</p>
+        <span class="ac-go">Voir le process →</span>
+      </div>
+      <div class="app-card c-veh" role="button" tabindex="0" onclick="showView('veh')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('veh')}">
+        <div class="ac-top"></div><div class="ac-ico">🚐</div>
+        <div class="ac-tag">En continu</div>
+        <h3>Suivi véhicules</h3>
+        <p>L'agence loue des camionnettes pour véhiculer les ouvriers sur les chantiers. Cette app tient le registre : quel véhicule, pour qui, combien de jours, combien ça coûte au total.</p>
+        <span class="ac-go">Voir le process →</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PROCESS CALCULATEUR ===== -->
+  <section class="view" id="view-calc">
+    <button class="back-link" onclick="showView('accueil')">← Accueil</button>
+    <div class="card">
+      <div class="proc-hero">
+        <div class="ph-ico">🧮</div>
+        <div style="flex:1;min-width:260px">
+          <div class="ph-tag">Process · Avant la mission</div>
+          <h1>Calculateur de marge</h1>
+          <p>Réponds à la question la plus importante de l'agence <b>avant</b> d'accepter une mission : <i>« est-ce qu'on gagne de l'argent sur ce placement ? »</i></p>
+          <div class="proc-launch">
+            <a class="btn btn-blue btn-lg" href="https://calculateur-de-marge-ten.vercel.app/" target="_blank" rel="noopener">🚀 Ouvrir le calculateur</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="ctx">
+        <span class="cx-ico">🎓</span>
+        <div>
+          <h3>Le contexte, si tu débutes</h3>
+          <p>Quand on place un ouvrier chez un client, l'agence lui verse un <b>salaire</b> et paie en plus des <b>charges patronales</b> (les cotisations sociales à la charge de l'agence, ~44,56&nbsp;% du brut), des <b>congés payés</b> (10&nbsp;%) et une <b>indemnité de fin de mission</b> (10&nbsp;%). En face, le client paie le <b>taux horaire × le coef</b> (un multiplicateur négocié, ex. ×1,9). La <b>marge</b>, c'est ce qui reste à l'agence une fois tout payé. Ce calcul est trop complexe pour être fait de tête — le calculateur l'applique au centime, règles 2026 incluses (réduction de charges RGDU, SMIC à 12,31&nbsp;€/h).</p>
+        </div>
+      </div>
+
+      <div class="proc-layout">
+        <div>
+          <div class="bsteps-title">Le process, étape par étape</div>
+          <div class="bsteps">
+            <div class="bstep"><div class="bn">1</div><div class="bc">
+              <h4>Renseigne la mission</h4>
+              <p>Onglet <b>Calcul</b> : saisis le <b>coef du client</b>, le <b>taux horaire</b> de l'ouvrier, les <b>heures</b> prévues et les <b>primes</b> éventuelles — <b>panier</b> (indemnité repas de chantier), <b>trajet</b> (temps de route indemnisé), <b>transport</b> (frais de déplacement domicile–chantier).</p>
+              <div class="why"><b>Pourquoi :</b> chaque euro saisi change la marge. Le panier par exemple est payé à l'ouvrier ET refacturé au client — l'app gère ces deux sens automatiquement.</div>
+            </div></div>
+            <div class="bstep"><div class="bn">2</div><div class="bc">
+              <h4>Monte l'équipe (si plusieurs ouvriers)</h4>
+              <p>Section <b>Équipe</b> : une ligne par intérimaire — nom, client, chantier, <b>taux €/h et heures propres à chacun</b>. Les heures se ventilent toutes seules : 35&nbsp;h normales, puis <b>+25&nbsp;%</b> jusqu'à 43&nbsp;h, puis <b>+50&nbsp;%</b> (ex. 45&nbsp;h = 35 + 8 + 2).</p>
+              <div class="why"><b>Pourquoi :</b> les heures supplémentaires coûtent plus cher mais se facturent aussi plus cher — le détail par personne évite les mauvaises surprises sur les gros chantiers.</div>
+            </div></div>
+            <div class="bstep"><div class="bn">3</div><div class="bc">
+              <h4>Lis la marge, ligne par ligne</h4>
+              <p>Pour chaque ouvrier tu vois : <b>TF</b> (total facturé = ce que paiera le client), <b>salaire brut</b>, <b>MB</b> (marge brute en euros) et <b>%MB</b> (marge en pourcentage), plus le <b>net versé</b> à l'ouvrier.</p>
+              <div class="why"><b>Repère :</b> une mission saine tourne autour de 20–25&nbsp;% de marge. En dessous de ~15&nbsp;%, renégocie le coef ou le taux avant d'accepter.</div>
+            </div></div>
+            <div class="bstep"><div class="bn">4</div><div class="bc">
+              <h4>Partage ou exporte</h4>
+              <p><b>🔗 Partager</b> crée un lien court à envoyer par mail / WhatsApp : le collègue ouvre le lien et reçoit toute l'équipe (ses clients et coefs inclus). Aussi : <b>🖨 impression A4</b> et <b>📊 export Excel</b>.</p>
+            </div></div>
+            <div class="bstep"><div class="bn">5</div><div class="bc">
+              <h4>Bascule en facturation</h4>
+              <p>Mission validée, le mois commence ? <b>📤 Facturation mensuelle</b> envoie l'équipe dans l'app de facturation, <b>groupée par client/chantier</b>, avec le net réel de chaque ouvrier : son net de la semaine ÷ 5 jours = son <b>tarif net par jour</b> (primes comprises), le format qu'utilise l'app Facturation.</p>
+              <div class="why"><b>Pourquoi :</b> zéro double-saisie — les mêmes chiffres servent du devis jusqu'à la facture de fin de mois.</div>
+            </div></div>
+          </div>
+        </div>
+        <div class="side">
+          <div class="mock">
+            <div class="mbar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="mt">calculateur-de-marge-ten.vercel.app</span></div>
+            <div class="mbody">
+              <div class="mttl">Mission — MGB · Chantier Le Muy</div>
+              <div class="mgrid">
+                <div class="mcard blue"><div class="ml">Total facturé</div><div class="mv">1 240,00 €</div></div>
+                <div class="mcard"><div class="ml">Salaire brut</div><div class="mv">718,40 €</div></div>
+                <div class="mcard green"><div class="ml">Marge brute</div><div class="mv">312,80 €</div></div>
+                <div class="mcard green"><div class="ml">% marge</div><div class="mv">25,2 %</div></div>
+              </div>
+              <table class="mtab" style="margin-top:12px">
+                <thead><tr><th class="l">Intérimaire</th><th>Taux</th><th>Heures</th><th>MB</th><th>%</th></tr></thead>
+                <tbody>
+                  <tr><td class="l">GAGE Mickael</td><td>13,50</td><td>39</td><td>145,00 €</td><td>24%</td></tr>
+                  <tr><td class="l">DIALLO Abdoul</td><td>12,80</td><td>45</td><td>167,80 €</td><td>26%</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mcap">Exemple d'écran — onglet Calcul + section Équipe</div>
+          </div>
+          <div class="lex">
+            <h3>📖 Lexique express</h3>
+            <dl>
+              <dt>Coef</dt><dd>Multiplicateur de vente. Le client paie <b>taux × coef</b> : taux 13&nbsp;€ et coef 1,9 → il paie 24,70&nbsp;€/h.</dd>
+              <dt>IFM</dt><dd>Indemnité de fin de mission : <b>+10&nbsp;%</b> du brut, obligatoire en intérim.</dd>
+              <dt>CP</dt><dd>Congés payés : <b>+10&nbsp;%</b> — l'intérimaire ne prend pas de congés, on les lui paie.</dd>
+              <dt>Charges patronales</dt><dd>Cotisations payées par l'agence en plus du brut : <b>~44,56&nbsp;%</b>.</dd>
+              <dt>RGDU</dt><dd>Réduction de charges de l'État sur les salaires proches du SMIC — l'app la calcule toute seule.</dd>
+              <dt>Marge brute (MB)</dt><dd>Facturé − salaire − charges + réduction. Ce que la mission rapporte à l'agence.</dd>
+            </dl>
+          </div>
+          <div class="tip">💡 <b>☁️ Sauvegarde par code</b> : active-la dans l'onglet Clients et note ton code personnel — tes clients et coefs se retrouvent sur n'importe quel appareil, même après un vidage de cache.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PROCESS FACTURATION ===== -->
+  <section class="view" id="view-fact">
+    <button class="back-link" onclick="showView('accueil')">← Accueil</button>
+    <div class="card">
+      <div class="proc-hero">
+        <div class="ph-ico" style="background:var(--forma-orange-bg)">🧾</div>
+        <div style="flex:1;min-width:260px">
+          <div class="ph-tag" style="color:var(--forma-orange-dark)">Process · Fin du mois</div>
+          <h1>Tableau de facturation</h1>
+          <p>Transforme les relevés d'heures papier en deux chiffres par chantier : combien <b>payer</b> chaque ouvrier, combien <b>facturer</b> au client. C'est ici qu'on utilise <b>LlamaParse</b> pour lire les scans.</p>
+          <div class="proc-launch">
+            <a class="btn btn-accent btn-lg" href="https://cloud.llamaindex.ai/" target="_blank" rel="noopener">🔍 LlamaParse (OCR)</a>
+            <a class="btn btn-blue btn-lg" href="https://facturation-mensuelle-btp.vercel.app/" target="_blank" rel="noopener">🚀 Facturation (V1 jours)</a>
+            <a class="btn btn-ghost btn-lg" href="https://facturation-mensuelle-btp.vercel.app/v2heures.html" target="_blank" rel="noopener">⏱️ V2 heures</a>
+          </div>
+          <div style="margin-top:10px;font-size:12.5px;color:var(--ink-3);"><b style="color:var(--ink-2)">V1</b> = à la journée (MGB · JDS · ACTIBAT) &nbsp;·&nbsp; <b style="color:var(--ink-2)">V2</b> = aux heures (Construction &amp; Patrimoine)</div>
+        </div>
+      </div>
+
+      <div class="ctx or">
+        <span class="cx-ico">🎓</span>
+        <div>
+          <h3>Le contexte, si tu débutes</h3>
+          <p>Chaque semaine, les chefs de chantier remplissent à la main un <b>relevé d'heures</b> : qui a travaillé, quels jours, combien d'heures. Ces feuilles arrivent <b>scannées, souvent mal écrites</b>. À la fin du mois, il faut pourtant en sortir la paie exacte de chaque ouvrier et la facture exacte de chaque client. Le process ci-dessous automatise la chaîne : <b>scan → texte (OCR) → CSV → tableaux calculés</b>. Règle d'or : on ne devine jamais un nom — chaque nom du relevé est comparé à la <b>liste officielle des intérimaires</b> tenue par l'agence (le document de référence), parce qu'une paie sur un nom mal orthographié, c'est une paie perdue.</p>
+        </div>
+      </div>
+
+      <div class="proc-layout">
+        <div>
+          <div class="bsteps-title">Le process, étape par étape</div>
+          <div class="bsteps">
+            <div class="bstep or"><div class="bn">1</div><div class="bc">
+              <h4>Passe le relevé dans LlamaParse</h4>
+              <p>Le relevé scanné est une <b>image</b> : l'ordinateur ne sait pas la lire. <b>LlamaParse</b> fait l'OCR (reconnaissance de texte) et ressort un texte propre et exploitable.</p>
+              <div class="why"><b>Pourquoi :</b> sans OCR il faudrait tout retaper à la main — lent et source d'erreurs. LlamaParse lit même les tableaux manuscrits.</div>
+              <div class="mini"><a class="btn btn-accent btn-sm" href="https://cloud.llamaindex.ai/" target="_blank" rel="noopener">Ouvrir LlamaParse ↗</a></div>
+            </div></div>
+            <div class="bstep or"><div class="bn">2</div><div class="bc">
+              <h4>Fais générer le CSV par Claude</h4>
+              <p><b>Claude</b>, c'est l'assistant IA de l'agence (sur claude.ai). <b>Colle-lui le texte</b> sorti de LlamaParse et demande le CSV au format facturation : il produit un <b>CSV multi-blocs</b> (1 bloc = 1 chantier), convertit les heures en jours (<b>plus de 5&nbsp;h = 1 jour, 5&nbsp;h ou moins = ½ journée</b>) et <b>vérifie chaque nom</b> dans la liste officielle des intérimaires de l'agence.</p>
+              <div class="why"><b>Pourquoi :</b> le CSV est le format que l'app sait importer d'un coup. Et les noms sur les relevés sont souvent incomplets (« Correia Alex » = en réalité CARDOSO CORREIA ALEX) — la vérification évite les erreurs de paie.</div>
+            </div></div>
+            <div class="bstep or"><div class="bn">3</div><div class="bc">
+              <h4>Importe dans l'app</h4>
+              <p>Bouton <b>📎 Importer CSV</b> : un <b>tableau par chantier</b> se crée automatiquement pour le mois, avec les jours de chaque ouvrier déjà remplis semaine par semaine.</p>
+            </div></div>
+            <div class="bstep or"><div class="bn">4</div><div class="bc">
+              <h4>Ajuste et tarifie</h4>
+              <p>Vérifie les jours (modifiables d'un clic), le <b>tarif net</b> de chaque ouvrier (le <b>carnet</b> retient les tarifs d'un mois sur l'autre) et le <b>coef du client</b>. Le facturé se calcule tout seul : <b>net × coef</b> (ex. ACTIBAT/JDS ×1,82, MGB ×1,78).</p>
+              <div class="why"><b>Pourquoi :</b> on ne saisit que le net — jamais le facturé à la main. Une seule source de vérité = zéro incohérence entre paie et facture.</div>
+            </div></div>
+            <div class="bstep or"><div class="bn">5</div><div class="bc">
+              <h4>Sors les documents</h4>
+              <p><b>💰 Paie hebdo</b> : combien donner à chaque ouvrier, semaine par semaine (les paiements remis en main propre chaque semaine). <b>🖨️ Fiche du mois</b> : tous les chantiers, classés par entreprise, sur <b>une seule page A4</b>. Export Excel disponible.</p>
+            </div></div>
+            <div class="bstep or"><div class="bn">6</div><div class="bc">
+              <h4>Cas particulier : V2 « aux heures »</h4>
+              <p>Le client <b>Construction &amp; Patrimoine</b> fonctionne autrement : à l'<b>heure</b> (pas à la journée), et sur ses relevés <b>la couleur de chaque case indique le chantier du jour</b> (rouge = St Roch, vert = Arles…). Pour lui : onglet <b>⏱️ V2 heures</b>.</p>
+              <div class="why"><b>Repère :</b> MGB / JDS / ACTIBAT = V1 à la journée. Construction &amp; Patrimoine = V2 aux heures. En cas de doute, regarde si le relevé a des cases colorées.</div>
+            </div></div>
+          </div>
+        </div>
+        <div class="side">
+          <div class="mock">
+            <div class="mbar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="mt">facturation-mensuelle-btp.vercel.app</span></div>
+            <div class="mbody">
+              <div class="mttl">Harmonie Le Muy · MGB · Juin 2026</div>
+              <table class="mtab">
+                <thead><tr><th class="l">Intérimaire</th><th>S23</th><th>S24</th><th>Tot.</th><th>Salaire</th><th class="fac">Facturé</th></tr></thead>
+                <tbody>
+                  <tr><td class="l">GAGE Mickael</td><td>5</td><td>5</td><td>10</td><td>1 600 €</td><td class="fac">2 848 €</td></tr>
+                  <tr><td class="l">MENDES Sergio</td><td>5</td><td>4,5</td><td>9,5</td><td>1 900 €</td><td class="fac">3 382 €</td></tr>
+                  <tr><td class="l">DUARTE Adilson</td><td>5</td><td>5</td><td>10</td><td>1 600 €</td><td class="fac">2 848 €</td></tr>
+                  <tr class="tot"><td class="l">TOTAL</td><td></td><td></td><td>29,5</td><td>5 100 €</td><td>9 078 €</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mcap">Exemple d'écran — un tableau par chantier, jours par semaine</div>
+          </div>
+          <div class="llama-card">
+            <div class="lh"><span class="li">🔍</span><b>LlamaParse — l'OCR de la facturation</b></div>
+            <p>cloud.llamaindex.ai transforme un PDF de relevé scanné en texte propre. C'est <b>l'étape de départ</b> de tout import de relevé — garde le lien sous la main.</p>
+            <a class="btn btn-accent" href="https://cloud.llamaindex.ai/" target="_blank" rel="noopener">Ouvrir LlamaParse ↗</a>
+          </div>
+          <div class="lex">
+            <h3>📖 Lexique express</h3>
+            <dl>
+              <dt>Relevé d'heures</dt><dd>La feuille remplie sur le chantier : qui a travaillé, quels jours, combien d'heures.</dd>
+              <dt>OCR</dt><dd>Reconnaissance de texte : transforme une image scannée en texte que l'ordinateur peut lire.</dd>
+              <dt>Net vs Facturé</dt><dd>Le <b>net</b> = ce que touche l'ouvrier. Le <b>facturé</b> = ce que paie le client (net × coef).</dd>
+              <dt>Coef client</dt><dd>Multiplicateur propre à chaque client : ACTIBAT/JDS ×1,82, MGB ×1,78. ⚠️ Ici il s'applique au <b>net journalier</b> de l'ouvrier — ce n'est pas le même que le coef du Calculateur (appliqué au taux horaire).</dd>
+              <dt>CSV</dt><dd>Un fichier texte en lignes/colonnes (ouvrable dans Excel) — le format que l'app importe en 1 clic.</dd>
+              <dt>Claude</dt><dd>L'assistant IA de l'agence (claude.ai) : il transforme le texte OCR en CSV prêt à importer, noms vérifiés.</dd>
+              <dt>V1 / V2</dt><dd><b>V1</b> = facturation à la journée (MGB, JDS, ACTIBAT). <b>V2</b> = aux heures, couleur de case = chantier (Construction &amp; Patrimoine).</dd>
+              <dt>Carnet</dt><dd>La mémoire de l'app : les tarifs de chaque intérimaire, retenus d'un mois sur l'autre.</dd>
+              <dt>Férié travaillé</dt><dd>Jour férié où l'ouvrier a bossé : compté + prime 50&nbsp;€ au salaire, <b>jamais facturée</b> au client.</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PROCESS VÉHICULES ===== -->
+  <section class="view" id="view-veh">
+    <button class="back-link" onclick="showView('accueil')">← Accueil</button>
+    <div class="card">
+      <div class="proc-hero">
+        <div class="ph-ico" style="background:linear-gradient(135deg,var(--forma-blue-bg),var(--forma-orange-bg))">🚐</div>
+        <div style="flex:1;min-width:260px">
+          <div class="ph-tag">Process · En continu</div>
+          <h1>Suivi véhicules</h1>
+          <p>Le registre exact des locations de véhicules : quel véhicule, pour quel client et quel chantier, combien de jours, combien ça coûte — et qui suit le dossier.</p>
+          <div class="proc-launch">
+            <a class="btn btn-blue btn-lg" href="./vehicules.html" target="_blank" rel="noopener">🚀 Ouvrir le suivi véhicules</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="ctx">
+        <span class="cx-ico">🎓</span>
+        <div>
+          <h3>Le contexte, si tu débutes</h3>
+          <p>Les chantiers sont rarement à côté de l'agence : Forma <b>loue des camionnettes</b> chez des loueurs partenaires (Olympic Location, 6D AuPrestige…) pour que les ouvriers puissent s'y rendre. Chaque location génère une facture + des frais annexes (essence, kilomètres au-delà du forfait, réparations, amendes…). Sans suivi, ces coûts partent dans tous les sens. Cette app tient le registre — <b>1 ligne = 1 véhicule loué sur une période</b> — et rattache chaque coût à un client, un chantier et un <b>rapporteur d'affaires</b> (le commercial responsable du client).</p>
+        </div>
+      </div>
+
+      <div class="proc-layout">
+        <div>
+          <div class="bsteps-title">Le process, étape par étape</div>
+          <div class="bsteps">
+            <div class="bstep"><div class="bn">1</div><div class="bc">
+              <h4>Récupère les factures des loueurs</h4>
+              <p>Dans le mois, les loueurs envoient leurs <b>factures PDF</b> (Olympic Location, 6D AuPrestige…). Rassemble-les : ce sont elles qui contiennent modèle, immatriculation, dates et montants.</p>
+            </div></div>
+            <div class="bstep"><div class="bn">2</div><div class="bc">
+              <h4>Fais générer le CSV par Claude</h4>
+              <p>Donne les factures à <b>Claude</b>, l'assistant IA de l'agence (le même que pour la facturation, sur claude.ai) : il les lit et produit un <b>CSV au bon format</b> — un fichier tableau avec séparateur «&nbsp;;&nbsp;» et décimales à virgule. Une ligne par véhicule loué.</p>
+              <div class="why"><b>À venir (phase 2) :</b> des scénarios Make.com déposeront automatiquement ces CSV dans OneDrive depuis les bons de commande reçus par email.</div>
+            </div></div>
+            <div class="bstep"><div class="bn">3</div><div class="bc">
+              <h4>Importe en 1 clic</h4>
+              <p>Bouton <b>📂 Importer CSV</b> : les lignes arrivent dans le tableau. Le <b>rapporteur d'affaires se remplit tout seul</b> à partir du client : MGB/JDS/ACTIBAT → <b>Aristide</b> · HD/Vilaplano/Lobo → <b>Rui</b> · Fereira/Grow/Acobat → <b>Bruno</b> · Patrimoine → <b>Pedro</b>.</p>
+              <div class="why"><b>Pourquoi :</b> chaque commercial suit ses clients — l'affectation automatique évite les oublis et permet les sous-totaux par rapporteur.</div>
+            </div></div>
+            <div class="bstep"><div class="bn">4</div><div class="bc">
+              <h4>Vérifie : tout se calcule tout seul</h4>
+              <p><b>Nb jours</b> = date fin − date début · <b>TTC = HT × 1,20</b> (TVA 20&nbsp;%) · <b>Total frais</b> = essence + éco-contribution/nettoyage + km au-delà du <b>forfait 4&nbsp;500&nbsp;km</b> + réparations + PV · <b>TOTAL = TTC + frais</b>. Coche «&nbsp;facture reçue&nbsp;» quand elle arrive.</p>
+              <div class="why"><b>Pourquoi :</b> la case « facture reçue » sert de pointage — en fin de mois tu vois immédiatement quels loueurs n'ont pas encore facturé.</div>
+            </div></div>
+            <div class="bstep"><div class="bn">5</div><div class="bc">
+              <h4>Groupe, archive, exporte</h4>
+              <p>Groupe l'affichage par <b>rapporteur, client, chantier ou loueur</b> (avec sous-totaux). En fin de mois, <b>📦 archive</b> le tableau (photo restaurable à tout moment) et repars sur un mois propre. Ré-export CSV possible à tout moment.</p>
+            </div></div>
+          </div>
+        </div>
+        <div class="side">
+          <div class="mock">
+            <div class="mbar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="mt">vehicules.html — Suivi véhicules</span></div>
+            <div class="mbody">
+              <div class="mttl">Suivi véhicules · Juin 2026</div>
+              <table class="mtab">
+                <thead><tr><th class="l">Client</th><th class="l">Loueur</th><th>Jrs</th><th>TTC</th><th class="fac">Frais</th><th>TOTAL</th></tr></thead>
+                <tbody>
+                  <tr><td class="l">MGB</td><td class="l">Olympic</td><td>22</td><td>620 €</td><td class="fac">85 €</td><td>705 €</td></tr>
+                  <tr><td class="l">JDS</td><td class="l">6D</td><td>15</td><td>410 €</td><td class="fac">40 €</td><td>450 €</td></tr>
+                  <tr><td class="l">ACTIBAT</td><td class="l">Olympic</td><td>30</td><td>560 €</td><td class="fac">0 €</td><td>560 €</td></tr>
+                  <tr class="tot"><td class="l">TOTAL</td><td class="l"></td><td>67</td><td>1 590 €</td><td>125 €</td><td>1 715 €</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mcap">Exemple d'écran — rapporteur auto, groupement, sous-totaux</div>
+          </div>
+          <div class="lex">
+            <h3>📖 Lexique express</h3>
+            <dl>
+              <dt>Loueur</dt><dd>L'entreprise qui loue les véhicules à l'agence (Olympic Location, 6D AuPrestige…).</dd>
+              <dt>Rapporteur d'affaires</dt><dd>Le commercial de l'agence responsable du client — c'est lui qui suit le dossier.</dd>
+              <dt>HT / TTC</dt><dd>Hors taxes / toutes taxes comprises. TTC = HT × 1,20 (TVA à 20&nbsp;%).</dd>
+              <dt>Forfait km</dt><dd>4&nbsp;500&nbsp;km inclus dans la location. Au-delà, chaque km est facturé en plus (colonne « Km sup »).</dd>
+              <dt>Éco-contribution</dt><dd>Frais annexe du loueur (environnement / nettoyage du véhicule).</dd>
+              <dt>PV</dt><dd>Les amendes reçues avec le véhicule. À <b>rattacher à la bonne ligne</b> pour pouvoir les refacturer à qui de droit.</dd>
+              <dt>CSV</dt><dd>Un fichier texte en lignes/colonnes (ouvrable dans Excel) — le format que l'app importe en 1 clic.</dd>
+            </dl>
+          </div>
+          <div class="tip">💡 Certains loueurs ouvrent un <b>compte (code) distinct par commercial</b> de l'agence : dans ce cas, tiens un tableau de suivi séparé par commercial, pour que chacun retrouve ses lignes. Pas de LlamaParse ici : le CSV vient directement des factures loueur.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="foot"><b>FORMA INTERIM</b> · Suite d'outils interne — Calculateur de marge · Facturation mensuelle · Suivi véhicules</footer>
+
+<script>
+function showView(name){
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+  var el=document.getElementById('view-'+name); if(el) el.classList.add('active');
+  ['accueil','calc','fact','veh'].forEach(function(k){
+    var b=document.getElementById('nav-'+k); if(b) b.classList.toggle('active', k===name);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function skipIntro(){
+  try{ if(document.getElementById('introNoShow').checked) localStorage.setItem('forma_suite_intro','off'); }catch(e){}
+  var i=document.getElementById('intro'); if(!i) return;
+  i.classList.add('hide'); setTimeout(function(){ i.remove(); },600);
+}
+(function initIntro(){
+  var skip=false; try{ skip=localStorage.getItem('forma_suite_intro')==='off'; }catch(e){}
+  if(skip){ var i=document.getElementById('intro'); if(i) i.remove(); }
+  else { setTimeout(function(){ if(document.getElementById('intro')) skipIntro(); }, 7000); }
+})();
+function toggleTheme(){
+  var r=document.documentElement; var n=r.dataset.theme==='dark'?'light':'dark'; r.dataset.theme=n;
+  document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';
+  try{ localStorage.setItem('forma_suite_theme',n); }catch(e){}
+}
+(function initTheme(){ try{ var s=localStorage.getItem('forma_suite_theme'); if(s){document.documentElement.dataset.theme=s; document.getElementById('themeBtn').textContent=s==='dark'?'☀️':'🌙';} }catch(e){} })();
+</script>
+</body>
+</html>
