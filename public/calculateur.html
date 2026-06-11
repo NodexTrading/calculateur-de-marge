@@ -1119,8 +1119,8 @@ if ('serviceWorker' in navigator) {
       <span><strong>Paramètres verrouillés.</strong> Ces constantes légales (charges, SMIC, Fillon, IFM, CP) ne sont pas modifiables. Contactez l'administrateur si la législation évolue.</span>
     </div>
     <div class="params-grid">
-      <div class="pg"><label>TX Charges Pat. (%)</label><input type="number" id="p_tx_chg"   value="44.56"  step="0.01" readonly tabindex="-1"></div>
-      <div class="pg"><label>SMIC (juin 2026) €/h</label> <input type="number" id="p_smic"     value="12.31"  step="0.01" readonly tabindex="-1"></div>
+      <div class="pg"><label>TX Charges Pat. (%)</label><input type="number" id="p_tx_chg"   value="46.26"  step="0.01" readonly tabindex="-1"></div>
+      <div class="pg"><label>SMIC réf. RGDU (figé 2026)</label> <input type="number" id="p_smic"     value="12.02"  step="0.01" readonly tabindex="-1"></div>
       <div class="pg"><label>Constante Fillon</label>    <input type="number" id="p_c_fillon" value="0.4725" step="0.0001" readonly tabindex="-1"></div>
       <div class="pg"><label>Formule</label>
         <select id="p_formule" disabled tabindex="-1">
@@ -1132,6 +1132,14 @@ if ('serviceWorker' in navigator) {
       <div class="pg"><label>Taux CP (%)</label>  <input type="number" id="p_cp"  value="10" step="0.1" readonly tabindex="-1"></div>
     </div>
   </div>
+
+  <!-- Tolérance officielle (service-public F24542) : pour les contrats prenant fin
+       entre le 1er et le 30 juin 2026, la RGDU peut être calculée avec le SMIC
+       revalorisé (12,31 €/h) au lieu du SMIC figé au 1er janvier (12,02 €/h). -->
+  <label style="display:flex;align-items:center;gap:8px;margin:10px 0 14px;padding:9px 12px;border:1px dashed var(--border2);border-radius:8px;background:#fffbeb;font-size:12px;color:var(--text);cursor:pointer">
+    <input type="checkbox" id="tol_juin" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0">
+    <span><strong>Contrat se terminant entre le 1ᵉʳ et le 30 juin 2026</strong> — tolérance officielle : RGDU calculée avec le SMIC revalorisé <strong>12,31 €/h</strong> au lieu du SMIC figé 12,02 €/h (réduction plus favorable).</span>
+  </label>
 
   <div class="card">
     <div class="card-head c-blue"><div class="dot"></div>Saisie de la mission</div>
@@ -1335,6 +1343,7 @@ if ('serviceWorker' in navigator) {
           <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Salaire Brut <span class="wf-note">(Brut+IFM+CP)</span></td><td class="wf-val col-m" id="dt_sal">–</td></tr>
           <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Charges Patronales <span class="wf-note" id="dt_tx_note"></span></td><td class="wf-val col-m" id="dt_chg">–</td></tr>
           <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Réduction Fillon/RGDU <span class="wf-note" id="dt_fil_note"></span></td><td class="wf-val col-p" id="dt_fillon">–</td></tr>
+          <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Déduction forfaitaire HS <span class="wf-note">(0,50 €/h sup)</span></td><td class="wf-val col-p" id="dt_dedhs">–</td></tr>
           <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Indemnités INA</td><td class="wf-val col-m" id="dt_ina">–</td></tr>
           <tr class="wf-total"><td class="wf-sign" style="color:var(--orange)">=</td><td class="wf-lbl">Marge Brute</td><td class="wf-val" id="dt_mb">–</td></tr>
         </table>
@@ -1705,6 +1714,7 @@ if ('serviceWorker' in navigator) {
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Salaire Brut <span class="wf-note">(base + IFM + CP + primes soumises)</span></td><td class="wf-val col-m" id="sim-wf-sal">–</td></tr>
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Charges Patronales <span class="wf-note" id="sim-wf-chg-note"></span></td><td class="wf-val col-m" id="sim-wf-chg">–</td></tr>
         <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Réduction Fillon/RGDU <span class="wf-note" id="sim-wf-fil-note"></span></td><td class="wf-val col-p" id="sim-wf-fil">–</td></tr>
+        <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Déduction forfaitaire HS <span class="wf-note">(0,50 €/h sup)</span></td><td class="wf-val col-p" id="sim-wf-dedhs">–</td></tr>
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Indemnités INA</td><td class="wf-val col-m" id="sim-wf-ina">–</td></tr>
         <tr class="wf-total">
           <td class="wf-sign" style="color:var(--orange)">=</td>
@@ -1906,6 +1916,7 @@ if ('serviceWorker' in navigator) {
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Salaire Brut <span class="wf-note">(base + IFM + CP + primes soumises)</span></td><td class="wf-val col-m" id="inv-wf-sal">–</td></tr>
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Charges Patronales <span class="wf-note" id="inv-wf-chg-note"></span></td><td class="wf-val col-m" id="inv-wf-chg">–</td></tr>
         <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Réduction Fillon/RGDU <span class="wf-note" id="inv-wf-fil-note"></span></td><td class="wf-val col-p" id="inv-wf-fil">–</td></tr>
+        <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Déduction forfaitaire HS <span class="wf-note">(0,50 €/h sup)</span></td><td class="wf-val col-p" id="inv-wf-dedhs">–</td></tr>
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Indemnités INA</td><td class="wf-val col-m" id="inv-wf-ina">–</td></tr>
         <tr class="wf-total">
           <td class="wf-sign" style="color:var(--orange)">=</td>
@@ -2160,14 +2171,37 @@ function fillon(smic,total_h,brut_f,formule,c_f){
   if(formule==='old')return Math.max(0,c_f*(1.6*smic*total_h/brut_f-1));
   const inner=0.5*(3*smic*total_h/brut_f-1);
   // RGDU 2026 — Tmin=0,02 · Tdelta=0,3821 (≥ 50 salariés, FNAL 0,50%) · exposant 1,75.
-  // (Tdelta < 50 salariés = 0,3781 ; relevé à 0,3821 car l'agence dépasse 50 salariés.)
+  // (< 50 salariés : Tdelta=0,3781, FNAL 0,10%.) Décrets 2025-887 + 2025-1446.
+  // Agence Forma Interim : effectif ≥ 50 salariés (intérimaires inclus dans l'effectif URSSAF).
   return inner<=0?0:Math.max(0,0.02+0.3821*Math.pow(inner,1.75));
+}
+
+/* ── Constantes paie 2026 — validées sur bulletins réels juin 2026 ──────────
+   NET_RATIO : charges salariales réelles ≈ 21,34 % du brut (cotisations
+   11,761 % + CSG/CRDS 9,7 % sur 98,25 % du brut et sur la prévoyance
+   patronale) → net ≈ 78,66 % du brut. Remplace l'ancien forfait 0,806.
+   EXO_SAL_HS : exonération salariale TEPA sur la paie brute des heures sup.
+   DED_PAT_HS : déduction forfaitaire patronale par heure sup (≥ 20 salariés :
+   0,50 €/h ; le plafond de 250 salariés est supprimé depuis la LFSS 2026). */
+const NET_RATIO  = 0.7866;
+const EXO_SAL_HS = 0.1131;
+const DED_PAT_HS = 0.50;
+function netEstime(sal_brut, hs_pay){ return sal_brut*NET_RATIO + (hs_pay||0)*EXO_SAL_HS; }
+
+/* SMIC de référence RGDU : figé à la valeur du 1er janvier (12,02 €) pour toute
+   l'année 2026, même après la revalorisation du SMIC réel à 12,31 € au 1er juin
+   (gel décidé par le gouvernement, fiche service-public F24542).
+   Tolérance officielle : 12,31 € pour les contrats prenant fin entre le 1er et
+   le 30 juin 2026 — activable via la case "tol_juin". */
+function smicRgdu(){
+  const el = document.getElementById('tol_juin');
+  return (el && el.checked) ? 12.31 : g('p_smic');
 }
 
 /* ════ CORE ENGINE ════ */
 function computeMarge(p){
   const{tx,coef,hn,hs25,hs50,nb_pp,mt_pp,nb_ip,mt_ip,nb_pt,mt_pt,nb_it,mt_it,clientId,fact}=p;
-  const tx_chg=g('p_tx_chg')/100,smic=g('p_smic'),c_f=g('p_c_fillon');
+  const tx_chg=g('p_tx_chg')/100,smic=smicRgdu(),c_f=g('p_c_fillon');
   const taux_ifm=g('p_ifm')/100,taux_cp=g('p_cp')/100,formule=gv('p_formule');
   const cl=getClient(clientId);
   const coefIna =cl?cl.coefIna:1;
@@ -2179,8 +2213,13 @@ function computeMarge(p){
   // Non facturée = exclue totalement (ni coût ni facturation)
   const ina=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
   const total_h=hn+hs25+hs50,eff_h=hn+hs25*1.25+hs50*1.5;
-  const brut_base=tx*eff_h,ifm=brut_base*taux_ifm,cp=(brut_base+ifm)*taux_cp;
-  const sal_brut=brut_base+ifm+cp+(fpp?st_pp:0)+(fpt?st_pt:0),brut_fillon=sal_brut; // Fillon sur sal_brut complet
+  const brut_base=tx*eff_h;
+  // Base IFM/ICP = heures + primes soumises (panier soumis, prime trajet),
+  // comme en paie réelle (cf. bulletins : base IFM = brut_base + PP + PT)
+  const base_ifm=brut_base+(fpp?st_pp:0)+(fpt?st_pt:0);
+  const ifm=base_ifm*taux_ifm,cp=(base_ifm+ifm)*taux_cp;
+  const sal_brut=base_ifm+ifm+cp,brut_fillon=sal_brut; // Fillon sur sal_brut complet
+  const hs_pay=tx*(hs25*1.25+hs50*1.5); // paie brute des heures sup (exo salariale)
   // tf : seules les INA facturées sont incluses dans la facturation client
   const tf=tx*hn*coef+tx*hs25*1.25*coefHs25+tx*hs50*1.5*coefHs50
     +(fpp?st_pp*coef:0)
@@ -2189,8 +2228,10 @@ function computeMarge(p){
     +(fit?st_it*coefIna:0);
   const thm=total_h>0?tf/total_h:0,mont_chg=sal_brut*tx_chg;
   const fil_r=fillon(smic,total_h,brut_fillon,formule,c_f),mont_fil=sal_brut*fil_r*(1+taux_ifm);
-  const mb=tf-sal_brut-mont_chg+mont_fil-ina,pct_mb=tf>0?(mb/tf)*100:0;
-  return{tx,coef,hn,hs25,hs50,st_pp,st_ip,st_pt,st_it,ina,tf,thm,sal_brut,brut_fillon,mont_chg,fil_r,mont_fil,mb,pct_mb,total_h,tx_chg,smic,c_f,taux_ifm,formule};
+  const ded_hs=DED_PAT_HS*(hs25+hs50); // déduction forfaitaire patronale HS (≥ 20 salariés : 0,50 €/h)
+  const mb=tf-sal_brut-mont_chg+mont_fil+ded_hs-ina,pct_mb=tf>0?(mb/tf)*100:0;
+  const net_est=netEstime(sal_brut,hs_pay);
+  return{tx,coef,hn,hs25,hs50,st_pp,st_ip,st_pt,st_it,ina,tf,thm,sal_brut,brut_fillon,ifm,cp,hs_pay,net_est,mont_chg,fil_r,mont_fil,ded_hs,mb,pct_mb,total_h,tx_chg,smic,c_f,taux_ifm,formule};
 }
 
 
@@ -2303,8 +2344,8 @@ function setInputMode(mode){
       const st_pp=nb_pp*mt_pp,st_ip=nb_ip*mt_ip,st_pt=nb_pt*mt_pt,st_it=nb_it*mt_it;
       const fpp=inaFact.pp,fip=inaFact.ip,fpt=inaFact.pt,fit=inaFact.it;
       const ina_v=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
-      const sal_brut=tx*eff_h*(1+taux_ifm)*(1+taux_cp)+(fpp?st_pp:0)+(fpt?st_pt:0);
-      const net=sal_brut*0.806+ina_v;
+      const sal_brut=(tx*eff_h+(fpp?st_pp:0)+(fpt?st_pt:0))*(1+taux_ifm)*(1+taux_cp);
+      const net=netEstime(sal_brut,tx*(hs25*1.25+hs50*1.5))+ina_v;
       document.getElementById('net_input').value = net.toFixed(2);
     }
     setTimeout(()=>document.getElementById('net_input').focus(),0);
@@ -2333,19 +2374,20 @@ function syncNetToTx(){
   const st_pp=nb_pp*mt_pp,st_ip=nb_ip*mt_ip,st_pt=nb_pt*mt_pt,st_it=nb_it*mt_it;
   const fpp=inaFact.pp,fip=inaFact.ip,fpt=inaFact.pt,fit=inaFact.it;
   const ina_v=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
-  // Inverse de  net = sal_brut * 0.806 + ina_versée
-  const sal_brut = (net - ina_v) / 0.806;
-  // Inverse de  sal_brut = tx*eff_h*(1+ifm)*(1+cp) + PP_fact + PT_fact
+  // Inverse de  net = NET_RATIO × sal_brut + EXO_SAL_HS × paie_HS + ina_versée
+  // avec sal_brut = (tx·eff_h + PP_fact + PT_fact) × (1+ifm) × (1+cp)
   const taux_ifm=g('p_ifm')/100,taux_cp=g('p_cp')/100;
+  const K=(1+taux_ifm)*(1+taux_cp);
   const ina_brut=(fpp?st_pp:0)+(fpt?st_pt:0);
-  const tx=(sal_brut-ina_brut)/(eff_h*(1+taux_ifm)*(1+taux_cp));
+  const hs_eff=hs25*1.25+hs50*1.5;
+  const tx=(net-ina_v-NET_RATIO*K*ina_brut)/(NET_RATIO*K*eff_h+EXO_SAL_HS*hs_eff);
   if(tx <= 0){
     document.getElementById('tx_horaire').value='';
     if(derived) derived.innerHTML='<span style="color:#ef4444">⚠ Net trop faible</span>';
     return false;
   }
   document.getElementById('tx_horaire').value=tx.toFixed(2);
-  if(derived) derived.innerHTML=`→ <strong style="color:var(--blue)">${tx.toFixed(2)} €/h brut</strong> &nbsp;·&nbsp; ${(tx*0.806).toFixed(2)} €/h net`;
+  if(derived) derived.innerHTML=`→ <strong style="color:var(--blue)">${tx.toFixed(2)} €/h brut</strong> &nbsp;·&nbsp; ${(tx*NET_RATIO).toFixed(2)} €/h net`;
   // Dériver le coef depuis TF si saisi
   const tf_val=parseFloat(g('tf_input'))||0;
   const tfEl=document.getElementById('tf_input');
@@ -2387,14 +2429,14 @@ function calc(){
   else{bh='<span class="badge b-green">Bonne marge</span>';gc='#22c55e';pb.style.borderColor='rgba(34,197,94,.2)';}
   sh('badge_mb',bh);ga.style.background=gc;ga.style.width=Math.max(0,Math.min(r.pct_mb*2,100))+'%';
   sv('dt_tf',f(r.tf));sv('dt_sal',f(r.sal_brut));sv('dt_chg',f(r.mont_chg));
-  sv('dt_fillon',f(r.mont_fil));sv('dt_ina',f(r.ina));sv('dt_mb',f(r.mb));
+  sv('dt_fillon',f(r.mont_fil));sv('dt_dedhs',f(r.ded_hs));sv('dt_ina',f(r.ina));sv('dt_mb',f(r.mb));
   sh('dt_tx_note',`(${(r.tx_chg*100).toFixed(2)}%)`);sh('dt_fil_note',`(${(r.fil_r*100).toFixed(2)}%)`);
   sv('r_th',r.total_h+' h');sv('r_thm',f(r.thm));sv('r_sal',f(r.sal_brut));sv('r_ina',f(r.ina));
-  sv('r_net_ina', f(r.sal_brut*0.806 + r.ina));
+  sv('r_net_ina', f(r.net_est + r.ina));
   let tip='';
-  if(r.formule==='old'){const fn=fillon(r.smic,r.total_h,r.brut_fillon,'rgdu',r.c_f),mn=r.sal_brut*fn*(1+r.taux_ifm),mbn=r.tf-r.sal_brut-r.mont_chg+mn-r.ina;
+  if(r.formule==='old'){const fn=fillon(r.smic,r.total_h,r.brut_fillon,'rgdu',r.c_f),mn=r.sal_brut*fn*(1+r.taux_ifm),mbn=r.tf-r.sal_brut-r.mont_chg+mn+r.ded_hs-r.ina;
     tip=`💡 <strong>RGDU 2026</strong> : réduction=${f(mn)} (${(fn*100).toFixed(1)}%) → MB=<strong>${f(mbn)} — ${fp(mbn/r.tf*100)}</strong> · Gain=<strong>+${f(mbn-r.mb)}</strong>`;}
-  else{const fo=Math.max(0,r.c_f*(1.6*r.smic*r.total_h/r.brut_fillon-1)),mo=r.sal_brut*fo*(1+r.taux_ifm),mbo=r.tf-r.sal_brut-r.mont_chg+mo-r.ina;
+  else{const fo=Math.max(0,r.c_f*(1.6*r.smic*r.total_h/r.brut_fillon-1)),mo=r.sal_brut*fo*(1+r.taux_ifm),mbo=r.tf-r.sal_brut-r.mont_chg+mo+r.ded_hs-r.ina;
     tip=`📊 Ancienne Fillon : réduction=${f(mo)} → MB=${f(mbo)} · <strong>Gain RGDU=+${f(r.mb-mbo)}</strong>`;}
   sh('tip-rgdu',tip);
   const cl=getClient(gv('client-select'));
@@ -2798,7 +2840,7 @@ function invCalc() {
   }
 
   const tx_chg  = g('p_tx_chg')/100;
-  const smic    = g('p_smic');
+  const smic    = smicRgdu();
   const c_f     = g('p_c_fillon');
   const tifm    = g('p_ifm')/100;
   const tcp     = g('p_cp')/100;
@@ -2808,17 +2850,19 @@ function invCalc() {
   const eff_h   = hn + hs25*1.25 + hs50*1.5;
 
   // ── Salaire brut depuis tx horaire ────────────────────────────────
-  // sal_brut = brut_base + IFM + CP + primes soumises (pp + pt)
+  // Base IFM/ICP = heures + primes soumises (comme en paie réelle)
   const brut_base   = tx_h * eff_h;
-  const ifm         = brut_base * tifm;
-  const cp          = (brut_base + ifm) * tcp;
-  const sal_brut    = brut_base + ifm + cp + ina_s;
+  const base_ifm    = brut_base + ina_s;
+  const ifm         = base_ifm * tifm;
+  const cp          = (base_ifm + ifm) * tcp;
+  const sal_brut    = base_ifm + ifm + cp;
   const brut_fillon = sal_brut; // Fillon sur sal_brut complet
 
   // ── Charges et Fillon ─────────────────────────────────────────────
   const mont_chg = sal_brut * tx_chg;
   const fil_r    = fillon(smic, total_h, brut_fillon, formule, c_f);
   const mont_fil = sal_brut * fil_r * (1 + tifm);
+  const ded_hs   = DED_PAT_HS * (hs25 + hs50); // déduction patronale HS (≥ 20 sal. : 0,50 €/h)
 
   // ── Coefficient implicite ─────────────────────────────────────────
   // TF = (brut_base + pp + pt) × coef + ip + it
@@ -2827,9 +2871,9 @@ function invCalc() {
   const coef      = base_coef > 0 ? (TF - ina_l) / base_coef : 0;
 
   // ── Marge ─────────────────────────────────────────────────────────
-  const mb      = TF - sal_brut - mont_chg + mont_fil - ina_tot;
+  const mb      = TF - sal_brut - mont_chg + mont_fil + ded_hs - ina_tot;
   const pct_mb  = TF > 0 ? (mb/TF)*100 : 0;
-  const net_est = sal_brut * 0.806;
+  const net_est = netEstime(sal_brut, tx_h*(hs25*1.25+hs50*1.5));
   const thm     = total_h > 0 ? TF / total_h : 0;
 
   // ── Coef hero ─────────────────────────────────────────────────────
@@ -2856,6 +2900,7 @@ function invCalc() {
   // ── Waterfall ─────────────────────────────────────────────────────
   sv('inv-wf-tf',  f(TF));   sv('inv-wf-sal', f(sal_brut));
   sv('inv-wf-chg', f(mont_chg)); sv('inv-wf-fil', f(mont_fil));
+  sv('inv-wf-dedhs', f(ded_hs));
   sv('inv-wf-ina', f(ina_tot)); sv('inv-wf-mb',  f(mb));
   sh('inv-wf-chg-note', `(${(tx_chg*100).toFixed(2)}%)`);
   sh('inv-wf-fil-note',  `(${(fil_r*100).toFixed(2)}%)`);
@@ -3137,7 +3182,7 @@ function eqCalcRow(id) {
   const retenue = parseFloat(document.getElementById('eq-ret-'+id)?.value)||0;
   const mb      = r.mb - veh - carb + retenue;
   const pct_mb  = r.tf>0 ? (mb/r.tf)*100 : 0;
-  const net_ina  = r.sal_brut*0.806 + r.ina;
+  const net_ina  = r.net_est + r.ina;
   const net_verse= net_ina - retenue;
 
   const fc  = v => v.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
@@ -3160,7 +3205,7 @@ function eqCalcRow(id) {
   if(mbEl)  { mbEl.textContent=fc(mb);       mbEl.style.color =mb>=0?'var(--green)':'var(--red)'; }
   if(pctEl) { pctEl.textContent=fp2(pct_mb); pctEl.style.color=mb>=0?'var(--green)':'var(--red)'; }
 
-  if(row) row.result={tf:r.tf,thm:r.thm,sal_brut:r.sal_brut,ina_tot:r.ina,mb,pct_mb,net_ina,net_verse,tx,total_h:r.total_h,hn:r.hn,hs25:r.hs25,hs50:r.hs50,veh,carb,retenue};
+  if(row) row.result={tf:r.tf,thm:r.thm,sal_brut:r.sal_brut,ina_tot:r.ina,mb,pct_mb,net_ina,net_verse,tx,total_h:r.total_h,hn:r.hn,hs25:r.hs25,hs50:r.hs50,ifm:r.ifm,cp:r.cp,net_est:r.net_est,veh,carb,retenue};
   eqRefreshTotal();
   triggerAutoSave();
 }
@@ -3811,13 +3856,13 @@ function eqToFacturation() {
     const chanName = chanObj ? (chanObj.name || '') : '';
 
     // Net hebdo transmis = net TOTAL touché par l'intérimaire :
-    // salaire net (brut × 0,806) + primes/indemnités versées (panier,
-    // trajet, transport). Ainsi net hebdo ÷ 5 = ce qu'il gagne par jour,
-    // primes comprises. (La retenue n'est pas déduite ici : c'est une
+    // salaire net (≈ 78,66 % du brut + exo HS) + primes/indemnités versées
+    // (panier, trajet, transport). Ainsi net hebdo ÷ 5 = ce qu'il gagne par
+    // jour, primes comprises. (La retenue n'est pas déduite ici : c'est une
     // déduction ponctuelle, pas le salaire de base.)
     const netTotal = (res.net_ina != null)
       ? res.net_ina
-      : (res.sal_brut * 0.806 + (res.ina_tot || 0));
+      : (netEstime(res.sal_brut, (res.tx||0)*((res.hs25||0)*1.25+(res.hs50||0)*1.5)) + (res.ina_tot || 0));
     const emp = {
       nom,
       salNetHebdo: Number(netTotal.toFixed(2)),
@@ -4430,12 +4475,19 @@ function eqExport() {
     if(key==='hs25_v') return _h25;
     if(key==='hs50_v') return _h50;
     if(key==='brut_av'){
+      // Base avant IFM/CP = heures + primes soumises (pour que la feuille se
+      // recoupe : BRUT AV + IFM + CP = SAL BRUT) ; fallback heures seules.
+      if(res.sal_brut != null && res.ifm != null && res.cp != null)
+        return res.sal_brut - res.ifm - res.cp;
       return res.tx * _eff;
     }
     if(key==='ifm_v'){
-      return res.tx * _eff * tifm;
+      // Valeur exacte stockée par le moteur (base = heures + primes soumises) ;
+      // fallback heures seules pour les anciens résultats sauvegardés.
+      return res.ifm != null ? res.ifm : res.tx * _eff * tifm;
     }
     if(key==='cp_v'){
+      if(res.cp != null) return res.cp;
       const brut_base = res.tx * _eff;
       return (brut_base + brut_base*tifm) * tcp;
     }
@@ -4581,6 +4633,8 @@ function captureState() {
     if(el) params[id] = el.value;
   });
   params._inaFact = {...inaFact};
+  // Case "tolérance juin 2026" (checkbox → .checked, pas .value)
+  params._tolJuin = !!document.getElementById('tol_juin')?.checked;
 
   // Résoudre le nom du client principal
   const mainCli = getClient(params['client-select']);
@@ -4716,7 +4770,7 @@ function restoreState(state) {
 
   // Formulaire principal
   Object.entries(state.params||{}).forEach(([id,val])=>{
-    if(id==='_inaFact') return;
+    if(id==='_inaFact'||id==='_tolJuin'||id==='_clientName') return;
     // Le panneau "Paramètres techniques" est verrouillé en lecture seule :
     // on ignore les anciennes valeurs sauvegardées pour ces champs et on
     // garde celles definies dans le HTML (notamment p_formule = RGDU 2026).
@@ -4727,6 +4781,9 @@ function restoreState(state) {
   // Force la formule sur RGDU 2026 pour annuler tout ancien snapshot.
   const fEl = document.getElementById('p_formule');
   if(fEl) fEl.value = 'rgdu';
+  // Restaure la case "tolérance juin 2026" (absente des anciens snapshots → décochée)
+  const tolEl = document.getElementById('tol_juin');
+  if(tolEl) tolEl.checked = !!(state.params && state.params._tolJuin);
   if(state.params._inaFact) {
     Object.entries(state.params._inaFact).forEach(([k,v])=>{
       inaFact[k]=v;
@@ -5178,11 +5235,13 @@ setTimeout(initCardCollapse, 100);
   const el=document.getElementById(id);
   if(el) el.addEventListener('input', triggerAutoSave);
 });
-['p_tx_chg','p_smic','p_c_fillon','p_ifm','p_cp','p_formule'].forEach(id=>
-  document.getElementById(id).addEventListener('change',()=>{
+['p_tx_chg','p_smic','p_c_fillon','p_ifm','p_cp','p_formule','tol_juin'].forEach(id=>
+  document.getElementById(id)?.addEventListener('change',()=>{
     if(document.getElementById('results-card').style.display!=='none')calc();
-    interimaires.forEach(im=>{if(im.result)calcIm(im);});
+    eqRows.forEach(r=>{ try{ eqCalcRow(r.id); }catch(e){} });
     simCalc();
+    if(typeof invCalc==='function') invCalc();
+    if(typeof triggerAutoSave==='function') triggerAutoSave();
   })
 );
 
@@ -5246,7 +5305,7 @@ function simCalc() {
   }
 
   const tx_chg  = g('p_tx_chg')/100;
-  const smic    = g('p_smic');
+  const smic    = smicRgdu();
   const c_f     = g('p_c_fillon');
   const tifm    = g('p_ifm')/100;
   const tcp     = g('p_cp')/100;
@@ -5257,28 +5316,30 @@ function simCalc() {
 
   // ── Salaire brut depuis le tx horaire ──────────────────────────────
   // brut_base = tx * heures effectives
-  // sal_brut  = brut_base + IFM + CP + primes soumises (pp + pt)
+  // base IFM/ICP = brut_base + primes soumises (pp + pt) — comme en paie réelle
   const brut_base   = tx_h * eff_h;
-  const ifm         = brut_base * tifm;
-  const cp          = (brut_base + ifm) * tcp;
-  const sal_brut    = brut_base + ifm + cp + ina.st_pp + ina.st_pt;
+  const base_ifm    = brut_base + ina.st_pp + ina.st_pt;
+  const ifm         = base_ifm * tifm;
+  const cp          = (base_ifm + ifm) * tcp;
+  const sal_brut    = base_ifm + ifm + cp;
   const brut_fillon = sal_brut; // Fillon sur sal_brut complet
 
   // ── Charges et allégements ─────────────────────────────────────────
   const mont_chg = sal_brut * tx_chg;
   const fil_r    = fillon(smic, total_h, brut_fillon, formule, c_f);
   const mont_fil = sal_brut * fil_r * (1 + tifm);
+  const ded_hs   = DED_PAT_HS * (hs25 + hs50); // déduction patronale HS (≥ 20 sal. : 0,50 €/h)
 
   // ── Coût total à couvrir (marge = 0) ──────────────────────────────
-  const cout_0 = sal_brut + mont_chg - mont_fil + ina.total;
+  const cout_0 = sal_brut + mont_chg - mont_fil - ded_hs + ina.total;
 
   // ── Prix avec marge cible ─────────────────────────────────────────
   // TF = cout_0 / (1 - mb_pc/100)
   const TF     = mb_pc < 100 ? cout_0 / (1 - mb_pc/100) : cout_0;
   const prix_h = total_h > 0 ? TF / total_h : 0;
-  const mb     = TF - sal_brut - mont_chg + mont_fil - ina.total;
+  const mb     = TF - sal_brut - mont_chg + mont_fil + ded_hs - ina.total;
   const pct_mb = TF > 0 ? (mb/TF)*100 : 0;
-  const net_est = sal_brut * 0.806;
+  const net_est = netEstime(sal_brut, tx_h*(hs25*1.25+hs50*1.5));
   const coef_i  = brut_base > 0 ? TF / brut_base : 0;
 
   // ── Affichage résultat ─────────────────────────────────────────────
@@ -5288,7 +5349,7 @@ function simCalc() {
   const tx_net_h  = eff_h > 0 ? net_est  / eff_h : 0;
   // Salaire semaine = brut + IFM + CP + primes soumises + INA non soumises
   const sal_semaine_brut = sal_brut;                    // déjà complet
-  const sal_semaine_net  = net_est;                     // ≈ brut × 0.806
+  const sal_semaine_net  = net_est;                     // ≈ 78,66 % du brut + exo HS
   const sal_semaine_poche= net_est + ina.total; // net + toutes les INA versées en cash
 
   // ── Prix horaire ──
@@ -5320,6 +5381,7 @@ function simCalc() {
   sv('sim-wf-sal', f(sal_brut));
   sv('sim-wf-chg', f(mont_chg));
   sv('sim-wf-fil', f(mont_fil));
+  sv('sim-wf-dedhs', f(ded_hs));
   sv('sim-wf-ina', f(ina.total));
   sv('sim-wf-mb',  f(mb));
   sh('sim-wf-chg-note', `(${(tx_chg*100).toFixed(2)}%)`);
@@ -5375,6 +5437,8 @@ function simCalc() {
         preset_grand: { nb_pp:0, mt_pp:1.80, nb_ip:9, mt_ip:21.40, nb_pt:0, mt_pt:2.05, nb_it:4, mt_it:56.80, note:'9 repas + 4 nuitees' }
       },
       smic: num('p_smic'), tx_charges_pct: num('p_tx_chg'), c_fillon: num('p_c_fillon'),
+      smic_rgdu_effectif: (typeof smicRgdu==='function') ? smicRgdu() : num('p_smic'),
+      tol_juin: !!document.getElementById('tol_juin')?.checked,
       ifm_pct: num('p_ifm'), cp_pct: num('p_cp'),
       formule_fillon: document.getElementById('p_formule')?.value || null,
       client: cl ? {id:cl.id, name:cl.name, coefIna:cl.coefIna} : null,
@@ -5431,20 +5495,22 @@ function simCalc() {
   function runCalc(){
     if(typeof calc!=='function') throw new Error('calc indisponible');
     const r = calc();
-    return r ? {tf:r.tf, mb:r.mb, mb_pct:r.pct_mb, sal_brut:r.sal_brut, ina:r.ina, total_h:r.total_h, sal_net_estime: r.sal_brut*0.806} : null;
+    return r ? {tf:r.tf, mb:r.mb, mb_pct:r.pct_mb, sal_brut:r.sal_brut, ina:r.ina, total_h:r.total_h, sal_net_estime: r.net_est} : null;
   }
 
   // Solveur inverse : trouve (tx, coef) tel que TF cible et SAL_NET cible
-  // sal_net ≈ sal_brut * 0.806 (charges salariales ~19,4%) — aligné sur le reste de l'app
-  function solveInverse({tf_target, net_target, hn=35, hs25=0, hs50=0, net_ratio=0.806}){
+  // sal_net = sal_brut × NET_RATIO + EXO_SAL_HS × paie HS (charges salariales réelles ~21,34 %)
+  function solveInverse({tf_target, net_target, hn=35, hs25=0, hs50=0, net_ratio=NET_RATIO}){
     if(!tf_target||!net_target) throw new Error('tf_target et net_target requis');
-    // on calcule sal_brut cible depuis net cible
-    const sal_brut_target = net_target / net_ratio;
     // sal_brut = tx*eff_h*(1+ifm)*(1+cp) (sans INA pour simplifier le solveur principal)
     const ifm = (parseFloat(document.getElementById('p_ifm').value)||10.5)/100;
     const cp = (parseFloat(document.getElementById('p_cp').value)||10)/100;
     const eff_h = hn + hs25*1.25 + hs50*1.5;
-    const tx = sal_brut_target / (eff_h * (1+ifm) * (1+cp));
+    const hs_eff = hs25*1.25 + hs50*1.5;
+    const K = (1+ifm)*(1+cp);
+    // net = net_ratio × tx·eff_h·K + EXO_SAL_HS × tx·hs_eff  →  on isole tx
+    const tx = net_target / (net_ratio*K*eff_h + EXO_SAL_HS*hs_eff);
+    const sal_brut_target = tx * eff_h * K;
     // tf = tx*hn*coef + tx*hs25*1.25*coef + tx*hs50*1.5*coef  (sans INA)
     // = tx*coef*eff_h
     const coef = tf_target / (tx * eff_h);
