@@ -1119,7 +1119,7 @@ if ('serviceWorker' in navigator) {
       <span><strong>Paramètres verrouillés.</strong> Ces constantes légales (charges, SMIC, Fillon, IFM, CP) ne sont pas modifiables. Contactez l'administrateur si la législation évolue.</span>
     </div>
     <div class="params-grid">
-      <div class="pg"><label>TX Charges Pat. (%)</label><input type="number" id="p_tx_chg"   value="46.26"  step="0.01" readonly tabindex="-1"></div>
+      <div class="pg"><label>TX Charges Pat. (%)</label><input type="number" id="p_tx_chg"   value="46.25"  step="0.01" readonly tabindex="-1"></div>
       <div class="pg"><label>SMIC réf. RGDU (figé 2026)</label> <input type="number" id="p_smic"     value="12.02"  step="0.01" readonly tabindex="-1"></div>
       <div class="pg"><label>Constante Fillon</label>    <input type="number" id="p_c_fillon" value="0.4725" step="0.0001" readonly tabindex="-1"></div>
       <div class="pg"><label>Formule</label>
@@ -1343,7 +1343,7 @@ if ('serviceWorker' in navigator) {
           <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Salaire Brut <span class="wf-note">(Brut+IFM+CP)</span></td><td class="wf-val col-m" id="dt_sal">–</td></tr>
           <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Charges Patronales <span class="wf-note" id="dt_tx_note"></span></td><td class="wf-val col-m" id="dt_chg">–</td></tr>
           <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Réduction Fillon/RGDU <span class="wf-note" id="dt_fil_note"></span></td><td class="wf-val col-p" id="dt_fillon">–</td></tr>
-          <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Déduction forfaitaire HS <span class="wf-note">(0,50 €/h sup)</span></td><td class="wf-val col-p" id="dt_dedhs">–</td></tr>
+          <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Déduction forfaitaire HS <span class="wf-note">(1,50 €/h sup)</span></td><td class="wf-val col-p" id="dt_dedhs">–</td></tr>
           <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Indemnités INA</td><td class="wf-val col-m" id="dt_ina">–</td></tr>
           <tr class="wf-total"><td class="wf-sign" style="color:var(--orange)">=</td><td class="wf-lbl">Marge Brute</td><td class="wf-val" id="dt_mb">–</td></tr>
         </table>
@@ -1714,7 +1714,7 @@ if ('serviceWorker' in navigator) {
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Salaire Brut <span class="wf-note">(base + IFM + CP + primes soumises)</span></td><td class="wf-val col-m" id="sim-wf-sal">–</td></tr>
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Charges Patronales <span class="wf-note" id="sim-wf-chg-note"></span></td><td class="wf-val col-m" id="sim-wf-chg">–</td></tr>
         <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Réduction Fillon/RGDU <span class="wf-note" id="sim-wf-fil-note"></span></td><td class="wf-val col-p" id="sim-wf-fil">–</td></tr>
-        <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Déduction forfaitaire HS <span class="wf-note">(0,50 €/h sup)</span></td><td class="wf-val col-p" id="sim-wf-dedhs">–</td></tr>
+        <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Déduction forfaitaire HS <span class="wf-note">(1,50 €/h sup)</span></td><td class="wf-val col-p" id="sim-wf-dedhs">–</td></tr>
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Indemnités INA</td><td class="wf-val col-m" id="sim-wf-ina">–</td></tr>
         <tr class="wf-total">
           <td class="wf-sign" style="color:var(--orange)">=</td>
@@ -1916,7 +1916,7 @@ if ('serviceWorker' in navigator) {
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Salaire Brut <span class="wf-note">(base + IFM + CP + primes soumises)</span></td><td class="wf-val col-m" id="inv-wf-sal">–</td></tr>
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Charges Patronales <span class="wf-note" id="inv-wf-chg-note"></span></td><td class="wf-val col-m" id="inv-wf-chg">–</td></tr>
         <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Réduction Fillon/RGDU <span class="wf-note" id="inv-wf-fil-note"></span></td><td class="wf-val col-p" id="inv-wf-fil">–</td></tr>
-        <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Déduction forfaitaire HS <span class="wf-note">(0,50 €/h sup)</span></td><td class="wf-val col-p" id="inv-wf-dedhs">–</td></tr>
+        <tr><td class="wf-sign col-p">+</td><td class="wf-lbl">Déduction forfaitaire HS <span class="wf-note">(1,50 €/h sup)</span></td><td class="wf-val col-p" id="inv-wf-dedhs">–</td></tr>
         <tr><td class="wf-sign col-m">−</td><td class="wf-lbl">Indemnités INA</td><td class="wf-val col-m" id="inv-wf-ina">–</td></tr>
         <tr class="wf-total">
           <td class="wf-sign" style="color:var(--orange)">=</td>
@@ -2170,10 +2170,11 @@ function fillon(smic,total_h,brut_f,formule,c_f){
   if(brut_f<=0||total_h<=0)return 0;
   if(formule==='old')return Math.max(0,c_f*(1.6*smic*total_h/brut_f-1));
   const inner=0.5*(3*smic*total_h/brut_f-1);
-  // RGDU 2026 — Tmin=0,02 · Tdelta=0,3821 (≥ 50 salariés, FNAL 0,50%) · exposant 1,75.
-  // (< 50 salariés : Tdelta=0,3781, FNAL 0,10%.) Décrets 2025-887 + 2025-1446.
-  // Agence Forma Interim : effectif ≥ 50 salariés (intérimaires inclus dans l'effectif URSSAF).
-  return inner<=0?0:Math.max(0,0.02+0.3821*Math.pow(inner,1.75));
+  // RGDU 2026 — Tmin=0,02 · Tdelta=0,3781 (< 50 salariés, FNAL 0,10%) · exposant 1,75.
+  // (≥ 50 salariés : Tdelta=0,3821, FNAL 0,50%.) Décrets 2025-887 + 2025-1446.
+  // Calé sur le journal de paie Forma (mai 2026) : effectif < 20/< 50 sal.
+  // (effectif ETT = permanents, hors intérimaires placés), FNAL 0,10% confirmé.
+  return inner<=0?0:Math.max(0,0.02+0.3781*Math.pow(inner,1.75));
 }
 
 /* ── Constantes paie 2026 — validées sur bulletins réels juin 2026 ──────────
@@ -2181,11 +2182,11 @@ function fillon(smic,total_h,brut_f,formule,c_f){
    11,761 % + CSG/CRDS 9,7 % sur 98,25 % du brut et sur la prévoyance
    patronale) → net ≈ 78,66 % du brut. Remplace l'ancien forfait 0,806.
    EXO_SAL_HS : exonération salariale TEPA sur la paie brute des heures sup.
-   DED_PAT_HS : déduction forfaitaire patronale par heure sup (≥ 20 salariés :
-   0,50 €/h ; le plafond de 250 salariés est supprimé depuis la LFSS 2026). */
+   DED_PAT_HS : déduction forfaitaire patronale par heure sup (< 20 salariés :
+   1,50 €/h ; confirmé par le journal de paie Forma — ligne « Exo.Pat. <20 sal »). */
 const NET_RATIO  = 0.7866;
 const EXO_SAL_HS = 0.1131;
-const DED_PAT_HS = 0.50;
+const DED_PAT_HS = 1.50;
 function netEstime(sal_brut, hs_pay){ return sal_brut*NET_RATIO + (hs_pay||0)*EXO_SAL_HS; }
 
 /* SMIC de référence RGDU : figé à la valeur du 1er janvier (12,02 €) pour toute
@@ -2228,7 +2229,7 @@ function computeMarge(p){
     +(fit?st_it*coefIna:0);
   const thm=total_h>0?tf/total_h:0,mont_chg=sal_brut*tx_chg;
   const fil_r=fillon(smic,total_h,brut_fillon,formule,c_f),mont_fil=sal_brut*fil_r*(1+taux_ifm);
-  const ded_hs=DED_PAT_HS*(hs25+hs50); // déduction forfaitaire patronale HS (≥ 20 salariés : 0,50 €/h)
+  const ded_hs=DED_PAT_HS*(hs25+hs50); // déduction forfaitaire patronale HS (< 20 salariés : 1,50 €/h)
   const mb=tf-sal_brut-mont_chg+mont_fil+ded_hs-ina,pct_mb=tf>0?(mb/tf)*100:0;
   const net_est=netEstime(sal_brut,hs_pay);
   return{tx,coef,hn,hs25,hs50,st_pp,st_ip,st_pt,st_it,ina,tf,thm,sal_brut,brut_fillon,ifm,cp,hs_pay,net_est,mont_chg,fil_r,mont_fil,ded_hs,mb,pct_mb,total_h,tx_chg,smic,c_f,taux_ifm,formule};
@@ -2862,7 +2863,7 @@ function invCalc() {
   const mont_chg = sal_brut * tx_chg;
   const fil_r    = fillon(smic, total_h, brut_fillon, formule, c_f);
   const mont_fil = sal_brut * fil_r * (1 + tifm);
-  const ded_hs   = DED_PAT_HS * (hs25 + hs50); // déduction patronale HS (≥ 20 sal. : 0,50 €/h)
+  const ded_hs   = DED_PAT_HS * (hs25 + hs50); // déduction patronale HS (< 20 sal. : 1,50 €/h)
 
   // ── Coefficient implicite ─────────────────────────────────────────
   // TF = (brut_base + pp + pt) × coef + ip + it
@@ -5328,7 +5329,7 @@ function simCalc() {
   const mont_chg = sal_brut * tx_chg;
   const fil_r    = fillon(smic, total_h, brut_fillon, formule, c_f);
   const mont_fil = sal_brut * fil_r * (1 + tifm);
-  const ded_hs   = DED_PAT_HS * (hs25 + hs50); // déduction patronale HS (≥ 20 sal. : 0,50 €/h)
+  const ded_hs   = DED_PAT_HS * (hs25 + hs50); // déduction patronale HS (< 20 sal. : 1,50 €/h)
 
   // ── Coût total à couvrir (marge = 0) ──────────────────────────────
   const cout_0 = sal_brut + mont_chg - mont_fil - ded_hs + ina.total;
