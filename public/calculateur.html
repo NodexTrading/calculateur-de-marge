@@ -1119,7 +1119,7 @@ if ('serviceWorker' in navigator) {
       <span><strong>Paramètres verrouillés.</strong> Ces constantes légales (charges, SMIC, Fillon, IFM, CP) ne sont pas modifiables. Contactez l'administrateur si la législation évolue.</span>
     </div>
     <div class="params-grid">
-      <div class="pg"><label>TX Charges Pat. (%)</label><input type="number" id="p_tx_chg"   value="46.25"  step="0.01" readonly tabindex="-1"></div>
+      <div class="pg"><label>TX Charges Pat. (%)</label><input type="number" id="p_tx_chg"   value="45.86"  step="0.01" readonly tabindex="-1"></div>
       <div class="pg"><label>SMIC réf. RGDU (figé 2026)</label> <input type="number" id="p_smic"     value="12.02"  step="0.01" readonly tabindex="-1"></div>
       <div class="pg"><label>Constante Fillon</label>    <input type="number" id="p_c_fillon" value="0.4725" step="0.0001" readonly tabindex="-1"></div>
       <div class="pg"><label>Formule</label>
@@ -1143,6 +1143,13 @@ if ('serviceWorker' in navigator) {
   <label style="display:flex;align-items:center;gap:8px;margin:10px 0 14px;padding:9px 12px;border:1px dashed var(--border2);border-radius:8px;background:#fffbeb;font-size:12px;color:var(--text);cursor:pointer">
     <input type="checkbox" id="tol_juin" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0">
     <span><strong>Contrat se terminant entre le 1ᵉʳ et le 30 juin 2026</strong> — tolérance officielle : RGDU calculée avec le SMIC revalorisé <strong>12,31 €/h</strong> au lieu du SMIC figé 12,02 €/h (réduction plus favorable).</span>
+  </label>
+
+  <!-- Ancienneté intérimaire : la mutuelle santé (Siaci) + la prévoyance majorée
+       ne s'appliquent qu'au-delà de 414 h cumulées -> +0,46 pt de charges pat. -->
+  <label style="display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:9px 12px;border:1px dashed var(--border2);border-radius:8px;background:#f0fdf4;font-size:12px;color:var(--text);cursor:pointer">
+    <input type="checkbox" id="anc_414" onchange="onAnc414()" style="width:15px;height:15px;accent-color:#16a34a;cursor:pointer;flex-shrink:0">
+    <span><strong>Intérimaire avec +414 h d'ancienneté (mutuelle santé)</strong> — charges patronales <strong>46,32 %</strong> (mutuelle Siaci + prévoyance majorée) au lieu de <strong>45,86 %</strong>. Décoché = junior &lt; 414 h (cas par défaut d'une nouvelle mission).</span>
   </label>
 
   <div class="card">
@@ -2201,6 +2208,23 @@ function netEstime(sal_brut, hs_pay){ return sal_brut*NET_RATIO + (hs_pay||0)*EX
 function smicRgdu(){
   const el = document.getElementById('tol_juin');
   return (el && el.checked) ? 12.31 : g('p_smic');
+}
+
+/* Ancienneté intérimaire : au-delà de 414 h cumulées, l'intérimaire bénéficie
+   de la mutuelle santé de branche (Siaci) et d'une prévoyance majorée, ce qui
+   porte les charges patronales de 45,86 % (junior) à 46,32 % (calé sur le
+   journal de paie réel). L'interrupteur réécrit le taux patronal verrouillé. */
+const TX_CHG_JUNIOR = '45.86';   // < 414 h : sans mutuelle santé
+const TX_CHG_SENIOR = '46.32';   // ≥ 414 h : + mutuelle Siaci + prévoyance majorée
+function onAnc414(){
+  const sen = document.getElementById('anc_414')?.checked;
+  const el  = document.getElementById('p_tx_chg');
+  if(el) el.value = sen ? TX_CHG_SENIOR : TX_CHG_JUNIOR;
+  if(document.getElementById('results-card') && document.getElementById('results-card').style.display!=='none') calc();
+  if(typeof eqRows!=='undefined') eqRows.forEach(r=>{ try{ eqCalcRow(r.id); }catch(e){} });
+  if(typeof simCalc==='function') simCalc();
+  if(typeof invCalc==='function') invCalc();
+  if(typeof triggerAutoSave==='function') triggerAutoSave();
 }
 
 /* ════ CORE ENGINE ════ */
@@ -4640,6 +4664,8 @@ function captureState() {
   params._inaFact = {...inaFact};
   // Case "tolérance juin 2026" (checkbox → .checked, pas .value)
   params._tolJuin = !!document.getElementById('tol_juin')?.checked;
+  // Ancienneté > 414 h (mutuelle santé) — bascule le taux de charges patronales
+  params._anc414 = !!document.getElementById('anc_414')?.checked;
 
   // Résoudre le nom du client principal
   const mainCli = getClient(params['client-select']);
@@ -4775,7 +4801,7 @@ function restoreState(state) {
 
   // Formulaire principal
   Object.entries(state.params||{}).forEach(([id,val])=>{
-    if(id==='_inaFact'||id==='_tolJuin'||id==='_clientName') return;
+    if(id==='_inaFact'||id==='_tolJuin'||id==='_anc414'||id==='_clientName') return;
     // Le panneau "Paramètres techniques" est verrouillé en lecture seule :
     // on ignore les anciennes valeurs sauvegardées pour ces champs et on
     // garde celles definies dans le HTML (notamment p_formule = RGDU 2026).
@@ -4789,6 +4815,12 @@ function restoreState(state) {
   // Restaure la case "tolérance juin 2026" (absente des anciens snapshots → décochée)
   const tolEl = document.getElementById('tol_juin');
   if(tolEl) tolEl.checked = !!(state.params && state.params._tolJuin);
+  // Restaure l'ancienneté > 414 h et réapplique le taux de charges patronales
+  // correspondant (le champ p_tx_chg verrouillé est ignoré ci-dessus).
+  const ancEl = document.getElementById('anc_414');
+  if(ancEl) ancEl.checked = !!(state.params && state.params._anc414);
+  const txEl = document.getElementById('p_tx_chg');
+  if(txEl) txEl.value = (ancEl && ancEl.checked) ? TX_CHG_SENIOR : TX_CHG_JUNIOR;
   if(state.params._inaFact) {
     Object.entries(state.params._inaFact).forEach(([k,v])=>{
       inaFact[k]=v;
@@ -5444,6 +5476,7 @@ function simCalc() {
       smic: num('p_smic'), tx_charges_pct: num('p_tx_chg'), c_fillon: num('p_c_fillon'),
       smic_rgdu_effectif: (typeof smicRgdu==='function') ? smicRgdu() : num('p_smic'),
       tol_juin: !!document.getElementById('tol_juin')?.checked,
+      anciennete_414: !!document.getElementById('anc_414')?.checked,
       ifm_pct: num('p_ifm'), cp_pct: num('p_cp'),
       formule_fillon: document.getElementById('p_formule')?.value || null,
       client: cl ? {id:cl.id, name:cl.name, coefIna:cl.coefIna} : null,
