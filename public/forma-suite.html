@@ -7,7 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" href="brand/forma-mark.png">
+<link rel="icon" type="image/png" href="brand/forma-suite-icon-512.png">
+<link rel="apple-touch-icon" href="brand/forma-suite-icon-512.png">
+<link rel="manifest" href="forma-suite.webmanifest">
+<meta name="theme-color" content="#3DA5E0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Forma Suite">
 <style>
 :root{
   --bg:#fafafa; --surface:#ffffff; --surface-2:#f4f5f7;
@@ -71,8 +77,8 @@ button:focus-visible,a:focus-visible{outline:2.5px solid var(--forma-blue);outli
 
 /* ===== Brand ===== */
 .brand-logo{display:inline-flex;align-items:center;gap:12px;font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:-0.01em;}
-.brand-logo .mark{width:44px;height:44px;background:#000;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-display);font-weight:800;font-size:19px;box-shadow:0 1px 2px rgba(0,0,0,0.1),0 4px 12px rgba(0,0,0,0.15);}
-.brand-logo .mark img{width:34px;height:34px;}
+.brand-logo .mark{width:44px;height:44px;background:#fff;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:var(--forma-blue-dark);font-family:var(--font-display);font-weight:800;font-size:19px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.1),0 4px 12px rgba(0,0,0,0.12);}
+.brand-logo .mark img{width:100%;height:100%;object-fit:contain;}
 .brand-logo .forma{color:var(--forma-blue);} .brand-logo .interim{color:var(--forma-orange);}
 
 /* ===== Buttons ===== */
@@ -256,6 +262,20 @@ button:focus-visible,a:focus-visible{outline:2.5px solid var(--forma-blue);outli
 .intro-remember{margin-top:20px;font-size:13px;color:rgba(255,255,255,0.7);opacity:0;animation:iIn .7s ease 1.9s forwards;}
 .intro-remember input{vertical-align:middle;margin-right:6px;}
 
+/* ===== Modale d'installation (PWA) ===== */
+#install-ov{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(12,58,92,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:fadeUp .3s var(--ease-out);}
+.install-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);max-width:540px;width:100%;padding:30px 30px 26px;box-shadow:0 30px 80px rgba(10,10,10,.3);position:relative;}
+[data-theme="dark"] .install-card{border-color:var(--line-strong);}
+.install-card .ic-x{position:absolute;top:15px;right:18px;background:none;border:0;font-size:20px;color:var(--ink-3);cursor:pointer;line-height:1;}
+.install-card .ic-ico{width:66px;height:66px;border-radius:18px;overflow:hidden;margin-bottom:15px;box-shadow:0 6px 18px rgba(10,10,10,.12);background:#fff;}
+.install-card .ic-ico img{width:100%;height:100%;object-fit:contain;}
+.install-card h2{font-family:var(--font-display);font-size:25px;font-weight:700;margin:0 0 7px;letter-spacing:-0.025em;}
+.install-card .ic-lead{margin:0 0 18px;color:var(--ink-3);font-size:15px;line-height:1.55;}
+.install-steps{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:16px 18px;font-size:14.5px;line-height:1.65;color:var(--ink-2);}
+.install-steps .bw{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-display);font-weight:800;font-size:13px;margin-bottom:9px;padding:4px 12px;border-radius:99px;background:var(--forma-blue-bg);color:var(--forma-blue-dark);}
+.install-steps b{color:var(--ink);}
+.install-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap;}
+
 @media(max-width:860px){
   .cards,.biz{grid-template-columns:1fr;}
   .hero h1{font-size:36px;} #intro h1{font-size:36px;} .proc-hero h1{font-size:30px;}
@@ -277,7 +297,7 @@ button:focus-visible,a:focus-visible{outline:2.5px solid var(--forma-blue);outli
 <div id="intro">
   <button class="intro-skip" onclick="skipIntro()">Passer l'intro →</button>
   <div class="intro-inner">
-    <div class="intro-logo"><span class="mark"><img src="brand/forma-mark.png" onerror="this.style.display='none';this.parentNode.innerHTML='<span>F</span>'" alt="Forma"></span><span><span style="color:#fff">FORMA</span> <span style="color:var(--forma-orange-light)">INTERIM</span></span></div>
+    <div class="intro-logo"><span class="mark"><img src="brand/forma-suite-icon-512.png" onerror="this.style.display='none';this.parentNode.innerHTML='<span>F</span>'" alt="Forma"></span><span><span style="color:#fff">FORMA</span> <span style="color:var(--forma-orange-light)">INTERIM</span></span></div>
     <h1>Votre <em>suite d'outils</em></h1>
     <p class="sub">L'agence place des ouvriers intérimaires sur les chantiers.<br>Ces trois apps calculent la marge, préparent la facturation et suivent les véhicules.</p>
     <div class="intro-tools">
@@ -294,7 +314,7 @@ button:focus-visible,a:focus-visible{outline:2.5px solid var(--forma-blue);outli
 <!-- ============ NAV ============ -->
 <nav class="nav">
   <div class="brand-logo" style="cursor:pointer" role="button" tabindex="0" onclick="showView('accueil')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('accueil')}">
-    <span class="mark"><img src="brand/forma-mark.png" onerror="this.style.display='none';this.parentNode.textContent='F'" alt="Forma"></span>
+    <span class="mark"><img src="brand/forma-suite-icon-512.png" onerror="this.style.display='none';this.parentNode.textContent='F'" alt="Forma"></span>
     <span><span class="forma">FORMA</span> <span class="interim">INTERIM</span></span>
   </div>
   <div class="spacer"></div>
@@ -302,6 +322,7 @@ button:focus-visible,a:focus-visible{outline:2.5px solid var(--forma-blue);outli
   <button class="nav-link" id="nav-calc" onclick="showView('calc')">🧮 Process Calculateur</button>
   <button class="nav-link" id="nav-fact" onclick="showView('fact')">🧾 Process Facturation</button>
   <button class="nav-link" id="nav-veh" onclick="showView('veh')">🚐 Process Véhicules</button>
+  <button class="nav-link" id="nav-install" onclick="showInstallTuto(true)" title="Installer Forma Suite comme une application sur ton appareil" style="background:var(--forma-orange-bg);color:var(--forma-orange-dark)">📲 Installer l'app</button>
   <button class="btn btn-ghost theme-toggle" onclick="toggleTheme()" title="Mode sombre / clair" id="themeBtn">🌙</button>
 </nav>
 
@@ -554,7 +575,7 @@ button:focus-visible,a:focus-visible{outline:2.5px solid var(--forma-blue);outli
           <h1>Suivi véhicules</h1>
           <p>Le registre exact des locations de véhicules : quel véhicule, pour quel client et quel chantier, combien de jours, combien ça coûte — et qui suit le dossier.</p>
           <div class="proc-launch">
-            <a class="btn btn-blue btn-lg" href="./vehicules.html" target="_blank" rel="noopener">🚀 Ouvrir le suivi véhicules</a>
+            <a class="btn btn-blue btn-lg" href="tabelau-vehicule-forma.vercel.app" target="_blank" rel="noopener">🚀 Ouvrir le suivi véhicules</a>
           </div>
         </div>
       </div>
@@ -646,12 +667,13 @@ function showView(name){
 }
 function skipIntro(){
   try{ if(document.getElementById('introNoShow').checked) localStorage.setItem('forma_suite_intro','off'); }catch(e){}
-  var i=document.getElementById('intro'); if(!i) return;
-  i.classList.add('hide'); setTimeout(function(){ i.remove(); },600);
+  var i=document.getElementById('intro');
+  if(i){ i.classList.add('hide'); setTimeout(function(){ i.remove(); },600); }
+  setTimeout(function(){ if(typeof showInstallTuto==='function') showInstallTuto(false); }, i?950:60);
 }
 (function initIntro(){
   var skip=false; try{ skip=localStorage.getItem('forma_suite_intro')==='off'; }catch(e){}
-  if(skip){ var i=document.getElementById('intro'); if(i) i.remove(); }
+  if(skip){ var i=document.getElementById('intro'); if(i) i.remove(); setTimeout(function(){ if(typeof showInstallTuto==='function') showInstallTuto(false); }, 500); }
   else { setTimeout(function(){ if(document.getElementById('intro')) skipIntro(); }, 7000); }
 })();
 function toggleTheme(){
@@ -660,6 +682,41 @@ function toggleTheme(){
   try{ localStorage.setItem('forma_suite_theme',n); }catch(e){}
 }
 (function initTheme(){ try{ var s=localStorage.getItem('forma_suite_theme'); if(s){document.documentElement.dataset.theme=s; document.getElementById('themeBtn').textContent=s==='dark'?'☀️':'🌙';} }catch(e){} })();
+
+/* ===== INSTALLATION (PWA) — tuto une fois, différent selon le navigateur ===== */
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){ e.preventDefault(); deferredPrompt=e; var b=document.getElementById('btn-native-install'); if(b){ b.style.display='inline-flex'; } });
+window.addEventListener('appinstalled',function(){ deferredPrompt=null; try{ localStorage.setItem('forma_suite_install_seen','1'); }catch(e){} var ov=document.getElementById('install-ov'); if(ov) ov.remove(); });
+function appInstalled(){ try{ return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone===true; }catch(e){ return false; } }
+function browserKind(){ var ua=navigator.userAgent; if(/Edg\//.test(ua)) return 'edge'; if(/OPR\//.test(ua)||/Opera/.test(ua)) return 'opera'; if(/Firefox\//.test(ua)) return 'firefox'; if(/Chrome\//.test(ua)) return 'chrome'; if(/Safari\//.test(ua)) return 'safari'; return 'other'; }
+function installSteps(kind){
+  if(kind==='edge') return '<div class="bw">🟦 Microsoft Edge</div>1. Clique sur <b>⋯</b> (les 3 points, en haut à droite).<br>2. <b>Applications</b> → <b>Installer ce site en tant qu\'application</b>.<br>3. Valide avec <b>Installer</b>.<br><span style="color:var(--ink-3);font-size:13px">Astuce : une icône <b>⊕ (écran)</b> apparaît aussi à droite de la barre d\'adresse.</span>';
+  if(kind==='chrome') return '<div class="bw">🟢 Google Chrome</div>1. À droite de la barre d\'adresse, clique sur l\'icône <b>Installer ⤓</b> (un écran avec une flèche vers le bas).<br>2. Si tu ne la vois pas : menu <b>⋮</b> → <b>Caster, enregistrer et partager</b> → <b>Installer Forma Suite…</b><br>3. Valide avec <b>Installer</b>.';
+  if(kind==='safari') return '<div class="bw">🧭 Safari (Mac / iPhone)</div>1. Bouton <b>Partager</b> (le carré avec une flèche vers le haut).<br>2. <b>Ajouter à l\'écran d\'accueil</b> (iPhone) ou <b>Ajouter au Dock</b> (Mac).';
+  if(kind==='firefox') return '<div class="bw">🦊 Firefox</div>Firefox sur ordinateur n\'installe pas les applications web. Pour installer Forma Suite, ouvre ce lien dans <b>Google Chrome</b> ou <b>Microsoft Edge</b>.';
+  if(kind==='opera') return '<div class="bw">🔴 Opera</div>Menu <b>Opera</b> → <b>… (plus)</b> → cherche <b>Installer</b> / <b>Ajouter à l\'écran d\'accueil</b>. Sinon, utilise Chrome ou Edge.';
+  return '<div class="bw">🌐 Navigateur</div>Ouvre le menu de ton navigateur et cherche <b>« Installer l\'application »</b> ou <b>« Ajouter à l\'écran d\'accueil »</b>. (Le plus simple : Chrome ou Edge.)';
+}
+function showInstallTuto(force){
+  if(appInstalled()){ if(force) alert('✅ Forma Suite est déjà installée sur cet appareil.'); return; }
+  try{ if(!force && localStorage.getItem('forma_suite_install_seen')==='1') return; }catch(e){}
+  if(document.getElementById('install-ov')) return;
+  var kind=browserKind();
+  var ov=document.createElement('div'); ov.id='install-ov';
+  ov.onclick=function(e){ if(e.target===ov) closeInstallTuto(); };
+  var nativeBtn = deferredPrompt ? '<button class="btn btn-blue" id="btn-native-install" onclick="doInstall()">📲 Installer maintenant</button>' : '';
+  ov.innerHTML='<div class="install-card">'
+    +'<button class="ic-x" onclick="closeInstallTuto()" aria-label="Fermer">✕</button>'
+    +'<div class="ic-ico"><img src="brand/forma-suite-icon-512.png" alt="Forma Suite"></div>'
+    +'<h2>Installe Forma Suite sur ton appareil</h2>'
+    +'<p class="ic-lead">Ça crée un raccourci comme une vraie appli : ouverture en plein écran, sans la barre du navigateur, accessible d\'un clic depuis le bureau. C\'est instantané — rien à télécharger.</p>'
+    +'<div class="install-steps">'+installSteps(kind)+'</div>'
+    +'<div class="install-actions"><button class="btn btn-ghost" onclick="closeInstallTuto()">Plus tard</button>'+nativeBtn+'</div>'
+    +'</div>';
+  document.body.appendChild(ov);
+}
+function closeInstallTuto(){ try{ localStorage.setItem('forma_suite_install_seen','1'); }catch(e){} var ov=document.getElementById('install-ov'); if(ov) ov.remove(); }
+function doInstall(){ if(!deferredPrompt){ closeInstallTuto(); return; } deferredPrompt.prompt(); deferredPrompt.userChoice.then(function(){ deferredPrompt=null; }).catch(function(){}).then(function(){ closeInstallTuto(); }); }
 </script>
 </body>
 </html>
