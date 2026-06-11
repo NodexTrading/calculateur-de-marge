@@ -1120,7 +1120,7 @@ if ('serviceWorker' in navigator) {
     </div>
     <div class="params-grid">
       <div class="pg"><label>TX Charges Pat. (%)</label><input type="number" id="p_tx_chg"   value="45.86"  step="0.01" readonly tabindex="-1"></div>
-      <div class="pg"><label>SMIC réf. RGDU (figé 2026)</label> <input type="number" id="p_smic"     value="12.02"  step="0.01" readonly tabindex="-1"></div>
+      <div class="pg"><label>SMIC réf. RGDU (€/h)</label> <input type="number" id="p_smic"     value="12.31"  step="0.01" readonly tabindex="-1"></div>
       <div class="pg"><label>Constante Fillon</label>    <input type="number" id="p_c_fillon" value="0.4725" step="0.0001" readonly tabindex="-1"></div>
       <div class="pg"><label>Formule</label>
         <select id="p_formule" disabled tabindex="-1">
@@ -1136,14 +1136,6 @@ if ('serviceWorker' in navigator) {
       📌 <strong>Effectif : configuration « moins de 20 salariés »</strong> — agence créée le 21/05/2023 (~10 contrats le 1ᵉʳ mois). Pour une ETT, l'effectif ne compte que les permanents + les intérimaires en mission ≥ 3 mois cumulés/an (art. L1251-54 C. trav.). Grâce au <strong>gel des seuils loi PACTE</strong> (art. L130-1 CSS), le FNAL 0,10 %, la déduction patronale HS de 1,50 €/h et la RGDU Tdelta 0,3781 sont maintenus tant que le seuil n'a pas été dépassé 5 années civiles de suite → <strong>valable jusqu'à ~2028-2029 (à revérifier avec l'expert-comptable)</strong>. Au-delà du gel : charges ~46,65 %, Tdelta 0,3821, déduction 0,50 €/h. Constantes calées sur le journal de paie réel (mai 2026).
     </div>
   </div>
-
-  <!-- Tolérance officielle (service-public F24542) : pour les contrats prenant fin
-       entre le 1er et le 30 juin 2026, la RGDU peut être calculée avec le SMIC
-       revalorisé (12,31 €/h) au lieu du SMIC figé au 1er janvier (12,02 €/h). -->
-  <label style="display:flex;align-items:center;gap:8px;margin:10px 0 14px;padding:9px 12px;border:1px dashed var(--border2);border-radius:8px;background:#fffbeb;font-size:12px;color:var(--text);cursor:pointer">
-    <input type="checkbox" id="tol_juin" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0">
-    <span><strong>Contrat se terminant entre le 1ᵉʳ et le 30 juin 2026</strong> — tolérance officielle : RGDU calculée avec le SMIC revalorisé <strong>12,31 €/h</strong> au lieu du SMIC figé 12,02 €/h (réduction plus favorable).</span>
-  </label>
 
   <!-- Ancienneté intérimaire : la mutuelle santé (Siaci) + la prévoyance majorée
        ne s'appliquent qu'au-delà de 414 h cumulées -> +0,46 pt de charges pat. -->
@@ -2200,14 +2192,12 @@ const EXO_SAL_HS = 0.1131;
 const DED_PAT_HS = 1.50;
 function netEstime(sal_brut, hs_pay){ return sal_brut*NET_RATIO + (hs_pay||0)*EXO_SAL_HS; }
 
-/* SMIC de référence RGDU : figé à la valeur du 1er janvier (12,02 €) pour toute
-   l'année 2026, même après la revalorisation du SMIC réel à 12,31 € au 1er juin
-   (gel décidé par le gouvernement, fiche service-public F24542).
-   Tolérance officielle : 12,31 € pour les contrats prenant fin entre le 1er et
-   le 30 juin 2026 — activable via la case "tol_juin". */
+/* SMIC de référence RGDU : Forma applique le SMIC revalorisé 12,31 €/h depuis le
+   1er juin 2026 (choix de l'agence / expert-comptable, tolérance juin 2026).
+   NB : le gel légal serait 12,02 € ; repasser p_smic à 12,02 si la paie revient
+   au SMIC figé après juin 2026. */
 function smicRgdu(){
-  const el = document.getElementById('tol_juin');
-  return (el && el.checked) ? 12.31 : g('p_smic');
+  return g('p_smic');
 }
 
 /* Ancienneté intérimaire : au-delà de 414 h cumulées, l'intérimaire bénéficie
@@ -4662,8 +4652,6 @@ function captureState() {
     if(el) params[id] = el.value;
   });
   params._inaFact = {...inaFact};
-  // Case "tolérance juin 2026" (checkbox → .checked, pas .value)
-  params._tolJuin = !!document.getElementById('tol_juin')?.checked;
   // Ancienneté > 414 h (mutuelle santé) — bascule le taux de charges patronales
   params._anc414 = !!document.getElementById('anc_414')?.checked;
 
@@ -4801,7 +4789,7 @@ function restoreState(state) {
 
   // Formulaire principal
   Object.entries(state.params||{}).forEach(([id,val])=>{
-    if(id==='_inaFact'||id==='_tolJuin'||id==='_anc414'||id==='_clientName') return;
+    if(id==='_inaFact'||id==='_anc414'||id==='_clientName') return;
     // Le panneau "Paramètres techniques" est verrouillé en lecture seule :
     // on ignore les anciennes valeurs sauvegardées pour ces champs et on
     // garde celles definies dans le HTML (notamment p_formule = RGDU 2026).
@@ -4812,9 +4800,6 @@ function restoreState(state) {
   // Force la formule sur RGDU 2026 pour annuler tout ancien snapshot.
   const fEl = document.getElementById('p_formule');
   if(fEl) fEl.value = 'rgdu';
-  // Restaure la case "tolérance juin 2026" (absente des anciens snapshots → décochée)
-  const tolEl = document.getElementById('tol_juin');
-  if(tolEl) tolEl.checked = !!(state.params && state.params._tolJuin);
   // Restaure l'ancienneté > 414 h et réapplique le taux de charges patronales
   // correspondant (le champ p_tx_chg verrouillé est ignoré ci-dessus).
   const ancEl = document.getElementById('anc_414');
@@ -5272,7 +5257,7 @@ setTimeout(initCardCollapse, 100);
   const el=document.getElementById(id);
   if(el) el.addEventListener('input', triggerAutoSave);
 });
-['p_tx_chg','p_smic','p_c_fillon','p_ifm','p_cp','p_formule','tol_juin'].forEach(id=>
+['p_tx_chg','p_smic','p_c_fillon','p_ifm','p_cp','p_formule'].forEach(id=>
   document.getElementById(id)?.addEventListener('change',()=>{
     if(document.getElementById('results-card').style.display!=='none')calc();
     eqRows.forEach(r=>{ try{ eqCalcRow(r.id); }catch(e){} });
@@ -5475,7 +5460,6 @@ function simCalc() {
       },
       smic: num('p_smic'), tx_charges_pct: num('p_tx_chg'), c_fillon: num('p_c_fillon'),
       smic_rgdu_effectif: (typeof smicRgdu==='function') ? smicRgdu() : num('p_smic'),
-      tol_juin: !!document.getElementById('tol_juin')?.checked,
       anciennete_414: !!document.getElementById('anc_414')?.checked,
       ifm_pct: num('p_ifm'), cp_pct: num('p_cp'),
       formule_fillon: document.getElementById('p_formule')?.value || null,
