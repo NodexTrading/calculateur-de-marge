@@ -2367,9 +2367,10 @@ function setInputMode(mode){
       const nb_pt=g('nb_pt'),mt_pt=g('mt_pt'),nb_it=g('nb_it'),mt_it=g('mt_it');
       const st_pp=nb_pp*mt_pp,st_ip=nb_ip*mt_ip,st_pt=nb_pt*mt_pt,st_it=nb_it*mt_it;
       const fpp=inaFact.pp,fip=inaFact.ip,fpt=inaFact.pt,fit=inaFact.it;
-      const ina_v=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
+      // Net = net salaire + indemnités NON soumises (panier/trajet soumis déjà dans le brut)
+      const ina_net=(fip?st_ip:0)+(fit?st_it:0);
       const sal_brut=(tx*eff_h+(fpp?st_pp:0)+(fpt?st_pt:0))*(1+taux_ifm)*(1+taux_cp);
-      const net=netEstime(sal_brut,tx*(hs25*1.25+hs50*1.5))+ina_v;
+      const net=netEstime(sal_brut,tx*(hs25*1.25+hs50*1.5))+ina_net;
       document.getElementById('net_input').value = net.toFixed(2);
     }
     setTimeout(()=>document.getElementById('net_input').focus(),0);
@@ -2397,14 +2398,17 @@ function syncNetToTx(){
   const nb_pt=g('nb_pt'),mt_pt=g('mt_pt'),nb_it=g('nb_it'),mt_it=g('mt_it');
   const st_pp=nb_pp*mt_pp,st_ip=nb_ip*mt_ip,st_pt=nb_pt*mt_pt,st_it=nb_it*mt_it;
   const fpp=inaFact.pp,fip=inaFact.ip,fpt=inaFact.pt,fit=inaFact.it;
-  const ina_v=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
-  // Inverse de  net = NET_RATIO × sal_brut + EXO_SAL_HS × paie_HS + ina_versée
+  // On n'ajoute au net que les indemnités NON soumises (Ind. Repas + Transport) ;
+  // le panier soumis (PP) et la prime trajet (PT) sont déjà dans le brut. Cohérent
+  // avec computeMarge corrigé (net = net_est + ina_net) → 800 net saisi = 800 réel.
+  const ina_net=(fip?st_ip:0)+(fit?st_it:0);
+  // Inverse de  net = NET_RATIO × sal_brut + EXO_SAL_HS × paie_HS + ina_net
   // avec sal_brut = (tx·eff_h + PP_fact + PT_fact) × (1+ifm) × (1+cp)
   const taux_ifm=g('p_ifm')/100,taux_cp=g('p_cp')/100;
   const K=(1+taux_ifm)*(1+taux_cp);
   const ina_brut=(fpp?st_pp:0)+(fpt?st_pt:0);
   const hs_eff=hs25*1.25+hs50*1.5;
-  const tx=(net-ina_v-NET_RATIO*K*ina_brut)/(NET_RATIO*K*eff_h+EXO_SAL_HS*hs_eff);
+  const tx=(net-ina_net-NET_RATIO*K*ina_brut)/(NET_RATIO*K*eff_h+EXO_SAL_HS*hs_eff);
   if(tx <= 0){
     document.getElementById('tx_horaire').value='';
     if(derived) derived.innerHTML='<span style="color:#ef4444">⚠ Net trop faible</span>';
@@ -3879,11 +3883,11 @@ function eqToFacturation() {
     const chanObj = cliObj && cliObj.chantiers ? cliObj.chantiers.find(ch => ch.id == chanId) : null;
     const chanName = chanObj ? (chanObj.name || '') : '';
 
-    // Net hebdo transmis = net TOTAL touché par l'intérimaire :
-    // salaire net (≈ 78,66 % du brut + exo HS) + primes/indemnités versées
-    // (panier, trajet, transport). Ainsi net hebdo ÷ 5 = ce qu'il gagne par
-    // jour, primes comprises. (La retenue n'est pas déduite ici : c'est une
-    // déduction ponctuelle, pas le salaire de base.)
+    // Net hebdo transmis = net TOTAL touché : salaire net (≈ 78,66 % du brut
+    // + exo HS, panier/trajet soumis déjà inclus dans le brut) + les indemnités
+    // NON soumises versées (Ind. Repas + Ind. Transport). Ainsi net hebdo ÷ 5 =
+    // ce qu'il gagne par jour. (La retenue n'est pas déduite ici : déduction
+    // ponctuelle, pas le salaire de base.)
     const netTotal = (res.net_ina != null)
       ? res.net_ina
       : (netEstime(res.sal_brut, (res.tx||0)*((res.hs25||0)*1.25+(res.hs50||0)*1.5)) + (res.ina_tot || 0));
