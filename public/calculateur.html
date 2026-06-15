@@ -2231,6 +2231,11 @@ function computeMarge(p){
   const st_pp=nb_pp*mt_pp,st_ip=nb_ip*mt_ip,st_pt=nb_pt*mt_pt,st_it=nb_it*mt_it;
   // Non facturée = exclue totalement (ni coût ni facturation)
   const ina=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
+  // Part des INA à AJOUTER au net : uniquement les indemnités NON soumises
+  // (Ind. Repas + Ind. Transport). Le panier soumis (PP) et la prime trajet (PT)
+  // sont déjà DANS le salaire brut → déjà comptés dans net_est. Les ré-ajouter
+  // via "ina" les compterait deux fois (vérifié sur fiche de paie : +~20 €/sem).
+  const ina_net=(fip?st_ip:0)+(fit?st_it:0);
   const total_h=hn+hs25+hs50,eff_h=hn+hs25*1.25+hs50*1.5;
   const brut_base=tx*eff_h;
   // Base IFM/ICP = heures + primes soumises (panier soumis, prime trajet),
@@ -2250,7 +2255,7 @@ function computeMarge(p){
   const ded_hs=DED_PAT_HS*(hs25+hs50); // déduction forfaitaire patronale HS (< 20 salariés : 1,50 €/h)
   const mb=tf-sal_brut-mont_chg+mont_fil+ded_hs-ina,pct_mb=tf>0?(mb/tf)*100:0;
   const net_est=netEstime(sal_brut,hs_pay);
-  return{tx,coef,hn,hs25,hs50,st_pp,st_ip,st_pt,st_it,ina,tf,thm,sal_brut,brut_fillon,ifm,cp,hs_pay,net_est,mont_chg,fil_r,mont_fil,ded_hs,mb,pct_mb,total_h,tx_chg,smic,c_f,taux_ifm,formule};
+  return{tx,coef,hn,hs25,hs50,st_pp,st_ip,st_pt,st_it,ina,ina_net,tf,thm,sal_brut,brut_fillon,ifm,cp,hs_pay,net_est,mont_chg,fil_r,mont_fil,ded_hs,mb,pct_mb,total_h,tx_chg,smic,c_f,taux_ifm,formule};
 }
 
 
@@ -2451,7 +2456,7 @@ function calc(){
   sv('dt_fillon',f(r.mont_fil));sv('dt_dedhs',f(r.ded_hs));sv('dt_ina',f(r.ina));sv('dt_mb',f(r.mb));
   sh('dt_tx_note',`(${(r.tx_chg*100).toFixed(2)}%)`);sh('dt_fil_note',`(${(r.fil_r*100).toFixed(2)}%)`);
   sv('r_th',r.total_h+' h');sv('r_thm',f(r.thm));sv('r_sal',f(r.sal_brut));sv('r_ina',f(r.ina));
-  sv('r_net_ina', f(r.net_est + r.ina));
+  sv('r_net_ina', f(r.net_est + r.ina_net));
   let tip='';
   if(r.formule==='old'){const fn=fillon(r.smic,r.total_h,r.brut_fillon,'rgdu',r.c_f),mn=r.sal_brut*fn*(1+r.taux_ifm),mbn=r.tf-r.sal_brut-r.mont_chg+mn+r.ded_hs-r.ina;
     tip=`💡 <strong>RGDU 2026</strong> : réduction=${f(mn)} (${(fn*100).toFixed(1)}%) → MB=<strong>${f(mbn)} — ${fp(mbn/r.tf*100)}</strong> · Gain=<strong>+${f(mbn-r.mb)}</strong>`;}
@@ -3201,7 +3206,7 @@ function eqCalcRow(id) {
   const retenue = parseFloat(document.getElementById('eq-ret-'+id)?.value)||0;
   const mb      = r.mb - veh - carb + retenue;
   const pct_mb  = r.tf>0 ? (mb/r.tf)*100 : 0;
-  const net_ina  = r.net_est + r.ina;
+  const net_ina  = r.net_est + r.ina_net;
   const net_verse= net_ina - retenue;
 
   const fc  = v => v.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
