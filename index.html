@@ -20,6 +20,31 @@
     <meta property="og:title" content="Calculateur de Marge — Forma Interim BTP" />
     <meta property="og:description" content="Calculateur de marge intérim BTP avec tutoriel visuel intégré." />
     <meta property="og:type" content="website" />
+    <script>
+    /* ════ PORTE CHROME ════ */
+    (function(){
+      try{
+        var ua=navigator.userAgent||'';
+        var isChrome=(/Chrome\//.test(ua)&&!/Edg(A|iOS)?\//.test(ua)&&!/OPR\//.test(ua)&&!/SamsungBrowser/.test(ua)&&!/YaBrowser/.test(ua))||/CriOS\//.test(ua);
+        var isInApp=/;\s?wv\)|FBAN|FBAV|FB_IAB|Instagram|Line\/|Snapchat|Twitter|WhatsApp|Messenger|GSA\/|OutlookMobile|MicroMessenger/i.test(ua);
+        if(isChrome&&!isInApp) return;
+        var url=location.href, host=location.host, path=location.pathname+location.search+location.hash;
+        var isAndroid=/Android/i.test(ua), isIOS=/iPhone|iPad|iPod/i.test(ua);
+        var chromeUrl=isAndroid?('intent://'+host+path+'#Intent;scheme=https;package=com.android.chrome;end'):(isIOS?('googlechromes://'+host+path):'');
+        var esc=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');};
+        function mount(){
+          if(document.getElementById('__chrome_gate__'))return;
+          var o=document.createElement('div'); o.id='__chrome_gate__';
+          o.style.cssText='position:fixed;inset:0;z-index:2147483647;background:linear-gradient(160deg,#0c3a5c,#1a6ea3);color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif';
+          o.innerHTML=`<div style="max-width:430px;text-align:center"><div style="font-size:52px;margin-bottom:8px">🌐</div><h1 style="font-size:22px;font-weight:800;margin:0 0 10px">Ouvre cette app dans Google Chrome</h1><p style="font-size:15px;opacity:.92;line-height:1.5;margin:0 0 20px">Les outils Forma s'installent et fonctionnent correctement <b>uniquement dans Chrome</b>. Ouvre ce lien dans Chrome pour continuer.</p>${chromeUrl?`<a href="${esc(chromeUrl)}" style="display:block;background:#fff;color:#1a6ea3;font-weight:800;font-size:16px;padding:14px;border-radius:14px;text-decoration:none;margin-bottom:12px">👉 Ouvrir dans Chrome</a>`:''}<button id="__cg_copy__" style="display:block;width:100%;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.4);font-weight:700;font-size:15px;padding:13px;border-radius:14px;cursor:pointer;margin-bottom:14px">📋 Copier le lien</button><div style="font-size:12.5px;opacity:.85;word-break:break-all;background:rgba(0,0,0,.2);padding:9px 12px;border-radius:10px;margin-bottom:14px">${esc(url)}</div><p style="font-size:12.5px;opacity:.8;margin:0 0 12px">${chromeUrl?"Si rien ne s'ouvre, copie le lien et colle-le dans Google Chrome.":"Copie ce lien et colle-le dans la barre d'adresse de Google Chrome."}</p><a href="#" id="__cg_continue__" style="font-size:12px;color:rgba(255,255,255,.65)">continuer quand même ici</a></div>`;
+          document.body.appendChild(o);
+          var c=document.getElementById('__cg_copy__'); if(c) c.onclick=function(){ var ok=function(){c.textContent='✅ Lien copié !';}; if(navigator.clipboard){ navigator.clipboard.writeText(url).then(ok,function(){}); } try{ var t=document.createElement('textarea'); t.value=url; t.style.cssText='position:fixed;opacity:0'; document.body.appendChild(t); t.focus(); t.select(); document.execCommand('copy'); t.remove(); ok(); }catch(e){} };
+          var k=document.getElementById('__cg_continue__'); if(k) k.onclick=function(e){ e.preventDefault(); var g=document.getElementById('__chrome_gate__'); if(g) g.remove(); };
+        }
+        if(document.body) mount(); else document.addEventListener('DOMContentLoaded',mount);
+      }catch(e){}
+    })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
