@@ -8,7 +8,7 @@
      - Mise à jour : nouveau CACHE_VERSION → suppression des anciens caches
        et activation immédiate (skipWaiting + clients.claim).
 */
-const CACHE_VERSION = 'cm-v11-2026-06-15';
+const CACHE_VERSION = 'cm-v12-2026-06-15';
 const STATIC_CACHE  = `static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 

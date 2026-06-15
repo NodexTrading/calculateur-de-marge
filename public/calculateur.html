@@ -1130,6 +1130,7 @@ if ('serviceWorker' in navigator) {
       </div>
       <div class="pg"><label>Taux IFM (%)</label><input type="number" id="p_ifm" value="10" step="0.1" readonly tabindex="-1"></div>
       <div class="pg"><label>Taux CP (%)</label>  <input type="number" id="p_cp"  value="10" step="0.1" readonly tabindex="-1"></div>
+      <div class="pg"><label>Taux net (%) — ✏️ ajustable</label><input type="number" id="p_net_ratio" value="78.66" step="0.01" oninput="try{calc()}catch(e){}" title="Taux net moyen de l'agence (calé sur le journal de paie). Ajuste-le pour coller le net à une fiche précise : ex. 78,04 % pour un salarié dépassant le plafond Sécu." style="border:1.5px solid var(--blue);background:#fff"></div>
     </div>
     <!-- Note effectif : justification de la config « < 20 salariés » + échéance du gel PACTE. -->
     <div style="margin-top:11px;padding:9px 12px;border-radius:7px;background:#f0f6ff;border:1px solid var(--border2);font-size:11px;color:var(--text2);line-height:1.55">
@@ -2190,7 +2191,10 @@ function fillon(smic,total_h,brut_f,formule,c_f){
 const NET_RATIO  = 0.7866;
 const EXO_SAL_HS = 0.1131;
 const DED_PAT_HS = 1.50;
-function netEstime(sal_brut, hs_pay){ return sal_brut*NET_RATIO + (hs_pay||0)*EXO_SAL_HS; }
+/* Taux net effectif : lit le champ AJUSTABLE "p_net_ratio" (pour caler le net
+   sur une fiche de paie précise), sinon le défaut NET_RATIO (moyenne agence). */
+function getNetRatio(){ const v=parseFloat(document.getElementById('p_net_ratio')?.value); return (v>50 && v<100) ? v/100 : NET_RATIO; }
+function netEstime(sal_brut, hs_pay){ return sal_brut*getNetRatio() + (hs_pay||0)*EXO_SAL_HS; }
 
 /* SMIC de référence RGDU : Forma applique le SMIC revalorisé 12,31 €/h depuis le
    1er juin 2026 (choix de l'agence / expert-comptable, tolérance juin 2026).
@@ -2408,14 +2412,15 @@ function syncNetToTx(){
   const K=(1+taux_ifm)*(1+taux_cp);
   const ina_brut=(fpp?st_pp:0)+(fpt?st_pt:0);
   const hs_eff=hs25*1.25+hs50*1.5;
-  const tx=(net-ina_net-NET_RATIO*K*ina_brut)/(NET_RATIO*K*eff_h+EXO_SAL_HS*hs_eff);
+  const NR=getNetRatio();
+  const tx=(net-ina_net-NR*K*ina_brut)/(NR*K*eff_h+EXO_SAL_HS*hs_eff);
   if(tx <= 0){
     document.getElementById('tx_horaire').value='';
     if(derived) derived.innerHTML='<span style="color:#ef4444">⚠ Net trop faible</span>';
     return false;
   }
   document.getElementById('tx_horaire').value=tx.toFixed(2);
-  if(derived) derived.innerHTML=`→ <strong style="color:var(--blue)">${tx.toFixed(2)} €/h brut</strong> &nbsp;·&nbsp; ${(tx*NET_RATIO).toFixed(2)} €/h net`;
+  if(derived) derived.innerHTML=`→ <strong style="color:var(--blue)">${tx.toFixed(2)} €/h brut</strong> &nbsp;·&nbsp; ${(tx*getNetRatio()).toFixed(2)} €/h net`;
   // Dériver le coef depuis TF si saisi
   const tf_val=parseFloat(g('tf_input'))||0;
   const tfEl=document.getElementById('tf_input');
