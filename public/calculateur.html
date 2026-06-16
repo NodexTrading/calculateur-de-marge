@@ -1130,7 +1130,6 @@ if ('serviceWorker' in navigator) {
       </div>
       <div class="pg"><label>Taux IFM (%)</label><input type="number" id="p_ifm" value="10" step="0.1" readonly tabindex="-1"></div>
       <div class="pg"><label>Taux CP (%)</label>  <input type="number" id="p_cp"  value="10" step="0.1" readonly tabindex="-1"></div>
-      <div class="pg"><label>Taux net (%) — ✏️ ajustable</label><input type="number" id="p_net_ratio" value="78.66" step="0.01" oninput="try{calc()}catch(e){}" title="Taux net moyen de l'agence (calé sur le journal de paie). Ajuste-le pour coller le net à une fiche précise : ex. 78,04 % pour un salarié dépassant le plafond Sécu." style="border:1.5px solid var(--blue);background:#fff"></div>
     </div>
     <!-- Note effectif : justification de la config « < 20 salariés » + échéance du gel PACTE. -->
     <div style="margin-top:11px;padding:9px 12px;border-radius:7px;background:#f0f6ff;border:1px solid var(--border2);font-size:11px;color:var(--text2);line-height:1.55">
@@ -2191,10 +2190,7 @@ function fillon(smic,total_h,brut_f,formule,c_f){
 const NET_RATIO  = 0.7866;
 const EXO_SAL_HS = 0.1131;
 const DED_PAT_HS = 1.50;
-/* Taux net effectif : lit le champ AJUSTABLE "p_net_ratio" (pour caler le net
-   sur une fiche de paie précise), sinon le défaut NET_RATIO (moyenne agence). */
-function getNetRatio(){ const v=parseFloat(document.getElementById('p_net_ratio')?.value); return (v>50 && v<100) ? v/100 : NET_RATIO; }
-function netEstime(sal_brut, hs_pay){ return sal_brut*getNetRatio() + (hs_pay||0)*EXO_SAL_HS; }
+function netEstime(sal_brut, hs_pay){ return sal_brut*NET_RATIO + (hs_pay||0)*EXO_SAL_HS; }
 
 /* SMIC de référence RGDU : Forma applique le SMIC revalorisé 12,31 €/h depuis le
    1er juin 2026 (choix de l'agence / expert-comptable, tolérance juin 2026).
@@ -2235,11 +2231,6 @@ function computeMarge(p){
   const st_pp=nb_pp*mt_pp,st_ip=nb_ip*mt_ip,st_pt=nb_pt*mt_pt,st_it=nb_it*mt_it;
   // Non facturée = exclue totalement (ni coût ni facturation)
   const ina=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
-  // Part des INA à AJOUTER au net : uniquement les indemnités NON soumises
-  // (Ind. Repas + Ind. Transport). Le panier soumis (PP) et la prime trajet (PT)
-  // sont déjà DANS le salaire brut → déjà comptés dans net_est. Les ré-ajouter
-  // via "ina" les compterait deux fois (vérifié sur fiche de paie : +~20 €/sem).
-  const ina_net=(fip?st_ip:0)+(fit?st_it:0);
   const total_h=hn+hs25+hs50,eff_h=hn+hs25*1.25+hs50*1.5;
   const brut_base=tx*eff_h;
   // Base IFM/ICP = heures + primes soumises (panier soumis, prime trajet),
@@ -2259,7 +2250,7 @@ function computeMarge(p){
   const ded_hs=DED_PAT_HS*(hs25+hs50); // déduction forfaitaire patronale HS (< 20 salariés : 1,50 €/h)
   const mb=tf-sal_brut-mont_chg+mont_fil+ded_hs-ina,pct_mb=tf>0?(mb/tf)*100:0;
   const net_est=netEstime(sal_brut,hs_pay);
-  return{tx,coef,hn,hs25,hs50,st_pp,st_ip,st_pt,st_it,ina,ina_net,tf,thm,sal_brut,brut_fillon,ifm,cp,hs_pay,net_est,mont_chg,fil_r,mont_fil,ded_hs,mb,pct_mb,total_h,tx_chg,smic,c_f,taux_ifm,formule};
+  return{tx,coef,hn,hs25,hs50,st_pp,st_ip,st_pt,st_it,ina,tf,thm,sal_brut,brut_fillon,ifm,cp,hs_pay,net_est,mont_chg,fil_r,mont_fil,ded_hs,mb,pct_mb,total_h,tx_chg,smic,c_f,taux_ifm,formule};
 }
 
 
@@ -2371,10 +2362,9 @@ function setInputMode(mode){
       const nb_pt=g('nb_pt'),mt_pt=g('mt_pt'),nb_it=g('nb_it'),mt_it=g('mt_it');
       const st_pp=nb_pp*mt_pp,st_ip=nb_ip*mt_ip,st_pt=nb_pt*mt_pt,st_it=nb_it*mt_it;
       const fpp=inaFact.pp,fip=inaFact.ip,fpt=inaFact.pt,fit=inaFact.it;
-      // Net = net salaire + indemnités NON soumises (panier/trajet soumis déjà dans le brut)
-      const ina_net=(fip?st_ip:0)+(fit?st_it:0);
+      const ina_v=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
       const sal_brut=(tx*eff_h+(fpp?st_pp:0)+(fpt?st_pt:0))*(1+taux_ifm)*(1+taux_cp);
-      const net=netEstime(sal_brut,tx*(hs25*1.25+hs50*1.5))+ina_net;
+      const net=netEstime(sal_brut,tx*(hs25*1.25+hs50*1.5))+ina_v;
       document.getElementById('net_input').value = net.toFixed(2);
     }
     setTimeout(()=>document.getElementById('net_input').focus(),0);
@@ -2402,25 +2392,21 @@ function syncNetToTx(){
   const nb_pt=g('nb_pt'),mt_pt=g('mt_pt'),nb_it=g('nb_it'),mt_it=g('mt_it');
   const st_pp=nb_pp*mt_pp,st_ip=nb_ip*mt_ip,st_pt=nb_pt*mt_pt,st_it=nb_it*mt_it;
   const fpp=inaFact.pp,fip=inaFact.ip,fpt=inaFact.pt,fit=inaFact.it;
-  // On n'ajoute au net que les indemnités NON soumises (Ind. Repas + Transport) ;
-  // le panier soumis (PP) et la prime trajet (PT) sont déjà dans le brut. Cohérent
-  // avec computeMarge corrigé (net = net_est + ina_net) → 800 net saisi = 800 réel.
-  const ina_net=(fip?st_ip:0)+(fit?st_it:0);
-  // Inverse de  net = NET_RATIO × sal_brut + EXO_SAL_HS × paie_HS + ina_net
+  const ina_v=(fpp?st_pp:0)+(fip?st_ip:0)+(fpt?st_pt:0)+(fit?st_it:0);
+  // Inverse de  net = NET_RATIO × sal_brut + EXO_SAL_HS × paie_HS + ina_versée
   // avec sal_brut = (tx·eff_h + PP_fact + PT_fact) × (1+ifm) × (1+cp)
   const taux_ifm=g('p_ifm')/100,taux_cp=g('p_cp')/100;
   const K=(1+taux_ifm)*(1+taux_cp);
   const ina_brut=(fpp?st_pp:0)+(fpt?st_pt:0);
   const hs_eff=hs25*1.25+hs50*1.5;
-  const NR=getNetRatio();
-  const tx=(net-ina_net-NR*K*ina_brut)/(NR*K*eff_h+EXO_SAL_HS*hs_eff);
+  const tx=(net-ina_v-NET_RATIO*K*ina_brut)/(NET_RATIO*K*eff_h+EXO_SAL_HS*hs_eff);
   if(tx <= 0){
     document.getElementById('tx_horaire').value='';
     if(derived) derived.innerHTML='<span style="color:#ef4444">⚠ Net trop faible</span>';
     return false;
   }
   document.getElementById('tx_horaire').value=tx.toFixed(2);
-  if(derived) derived.innerHTML=`→ <strong style="color:var(--blue)">${tx.toFixed(2)} €/h brut</strong> &nbsp;·&nbsp; ${(tx*getNetRatio()).toFixed(2)} €/h net`;
+  if(derived) derived.innerHTML=`→ <strong style="color:var(--blue)">${tx.toFixed(2)} €/h brut</strong> &nbsp;·&nbsp; ${(tx*NET_RATIO).toFixed(2)} €/h net`;
   // Dériver le coef depuis TF si saisi
   const tf_val=parseFloat(g('tf_input'))||0;
   const tfEl=document.getElementById('tf_input');
@@ -2465,7 +2451,7 @@ function calc(){
   sv('dt_fillon',f(r.mont_fil));sv('dt_dedhs',f(r.ded_hs));sv('dt_ina',f(r.ina));sv('dt_mb',f(r.mb));
   sh('dt_tx_note',`(${(r.tx_chg*100).toFixed(2)}%)`);sh('dt_fil_note',`(${(r.fil_r*100).toFixed(2)}%)`);
   sv('r_th',r.total_h+' h');sv('r_thm',f(r.thm));sv('r_sal',f(r.sal_brut));sv('r_ina',f(r.ina));
-  sv('r_net_ina', f(r.net_est + r.ina_net));
+  sv('r_net_ina', f(r.net_est + r.ina));
   let tip='';
   if(r.formule==='old'){const fn=fillon(r.smic,r.total_h,r.brut_fillon,'rgdu',r.c_f),mn=r.sal_brut*fn*(1+r.taux_ifm),mbn=r.tf-r.sal_brut-r.mont_chg+mn+r.ded_hs-r.ina;
     tip=`💡 <strong>RGDU 2026</strong> : réduction=${f(mn)} (${(fn*100).toFixed(1)}%) → MB=<strong>${f(mbn)} — ${fp(mbn/r.tf*100)}</strong> · Gain=<strong>+${f(mbn-r.mb)}</strong>`;}
@@ -2491,53 +2477,128 @@ function resetForm(){['tx_horaire','coef'].forEach(id=>document.getElementById(i
 
 /* ════ CLIENTS ════ */
 function saveClients() {
-  try { localStorage.setItem('forma_clients', JSON.stringify({clients, cIdCtr})); } catch(e){}
-  try { localStorage.setItem('forma_clients_ts', String(Date.now())); } catch(e){}
+  try { _persistClientsLocal(); } catch(e){}
   try { clientsPushCloud(); } catch(e){}
 }
 
-/* ── Sauvegarde cloud des clients/chantiers par CODE personnel ────────
-   localStorage = usage instantané/hors-ligne. Supabase (table app_state)
-   = copie permanente, récupérable partout via le code. Tout dégrade
-   proprement : si le cloud est indisponible, l'app marche en local. */
+/* ── Synchronisation cloud des clients/chantiers (équipe Forma) ───────
+   localStorage = usage instantané/hors-ligne. Supabase (table app_state,
+   ligne « clients:forma ») = liste d'équipe partagée + sauvegarde permanente.
+   La synchro est AUTOMATIQUE (code d'équipe fixe, aucun réglage) et
+   NON DESTRUCTIVE : fusion par nom + suppressions (tombstones). Un appareil
+   ne peut JAMAIS effacer les clients d'un autre, et une liste vide n'écrase
+   jamais une liste pleine. Dégrade proprement hors-ligne (reste 100 % local). */
 const SYNC_CODE_KEY = 'forma_sync_code';
-let _clientsPushTimer = null, _syncCloudNewer = null;
-function syncGetCode(){ try { return (localStorage.getItem(SYNC_CODE_KEY)||'').trim(); } catch(e){ return ''; } }
+const DEFAULT_SYNC_CODE = 'forma';            // code d'équipe partagé par défaut
+const DELETED_KEY = 'forma_clients_deleted';
+let _clientsPushTimer = null;
+let _deletedClients = {};                     // { nomNormalisé: ts de suppression }
+function syncGetCode(){ try { return ((localStorage.getItem(SYNC_CODE_KEY)||'').trim()) || DEFAULT_SYNC_CODE; } catch(e){ return DEFAULT_SYNC_CODE; } }
 function syncSetCode(code){ try { if(code) localStorage.setItem(SYNC_CODE_KEY, code); else localStorage.removeItem(SYNC_CODE_KEY); } catch(e){} }
 function _syncId(code){ return 'clients:' + String(code||'').toLowerCase().trim().replace(/[^a-z0-9_-]/g,'-'); }
-function syncSuggestCode(){
-  let s = '';
-  try { const b = new Uint32Array(1); crypto.getRandomValues(b); s = String(1000 + (b[0] % 9000)); }
-  catch(e){ s = String(new Date().getFullYear()); }
-  return 'forma-' + s;
+function _normName(s){ return String(s||'').trim().toLowerCase(); }
+
+function _loadDeleted(){ try { _deletedClients = JSON.parse(localStorage.getItem(DELETED_KEY)||'{}') || {}; } catch(e){ _deletedClients = {}; } }
+function _saveDeleted(){ try { localStorage.setItem(DELETED_KEY, JSON.stringify(_deletedClients)); } catch(e){} }
+/* Marque un client comme supprimé pour propager la suppression aux autres. */
+function _tombstone(name){ const k = _normName(name); if(k){ _deletedClients[k] = Date.now(); _saveDeleted(); } }
+
+/* Un input de l'onglet Clients est-il en cours d'édition ? (on évite de
+   re-rendre la grille et de voler le focus pendant la frappe). */
+function _clientsInputFocused(){
+  const a = document.activeElement;
+  if(!a || a.tagName !== 'INPUT') return false;
+  if(a.classList && a.classList.contains('client-name-input')) return true;
+  return !!(a.closest && a.closest('#panel-clients'));
 }
 
-/* Pousse l'état clients vers le cloud (anti-rebond 800 ms). */
+/* Fusion NON DESTRUCTIVE d'un payload cloud dans l'état local :
+   - clients : union par NOM ; champs = version au ts le plus récent ;
+     chantiers = union par nom. Les id locaux sont conservés (un client
+     venu du cloud reçoit un id local frais → aucune référence cassée).
+   - suppressions : tombstones fusionnés puis appliqués (un client supprimé
+     ailleurs, plus récemment que sa dernière modif, est retiré ici aussi).
+   Renvoie true si l'état local a changé. */
+function _mergeCloudIntoLocal(cloud){
+  if(!cloud || typeof cloud !== 'object') return false;
+  let changed = false;
+  const cloudDel = (cloud.deleted && typeof cloud.deleted === 'object') ? cloud.deleted : {};
+  for(const k in cloudDel){ if((cloudDel[k]||0) > (_deletedClients[k]||0)){ _deletedClients[k] = cloudDel[k]; changed = true; } }
+  const cloudClients = Array.isArray(cloud.clients) ? cloud.clients : [];
+  cloudClients.forEach(cc => {
+    const key = _normName(cc && cc.name);
+    if(!key) return;                                   // clients sans nom : ignorés
+    const local = clients.find(c => _normName(c.name) === key);
+    if(local){
+      if((cc.ts||0) > (local.ts||0)){
+        local.coefIna  = (cc.coefIna  != null)        ? cc.coefIna  : local.coefIna;
+        local.coefHs25 = (cc.coefHs25 !== undefined)  ? cc.coefHs25 : local.coefHs25;
+        local.coefHs50 = (cc.coefHs50 !== undefined)  ? cc.coefHs50 : local.coefHs50;
+        local.ts = cc.ts; changed = true;
+      }
+      if(!local.chantiers) local.chantiers = [];
+      (cc.chantiers||[]).forEach(ch => {
+        const ck = _normName(ch && ch.name);
+        if(ck && !local.chantiers.some(x => _normName(x.name) === ck)){ local.chantiers.push({ id: chIdCtr++, name: ch.name }); changed = true; }
+      });
+    } else {
+      clients.push({
+        id: cIdCtr++, name: cc.name,
+        coefIna:  (cc.coefIna  != null)       ? cc.coefIna  : 1,
+        coefHs25: (cc.coefHs25 !== undefined) ? cc.coefHs25 : null,
+        coefHs50: (cc.coefHs50 !== undefined) ? cc.coefHs50 : null,
+        ts: cc.ts || Date.now(),
+        chantiers: (cc.chantiers||[]).map(ch => ({ id: chIdCtr++, name: ch.name }))
+      });
+      changed = true;
+    }
+  });
+  const before = clients.length;
+  clients = clients.filter(c => { const t = _deletedClients[_normName(c.name)]; return !(t && t > (c.ts||0)); });
+  if(clients.length !== before) changed = true;
+  return changed;
+}
+
+/* Payload poussé vers le cloud (clients nommés + suppressions). */
+function _clientsPayload(){
+  return { clients: clients.filter(c => _normName(c.name)), cIdCtr, chIdCtr, deleted: _deletedClients, updated_at: Date.now() };
+}
+/* Persiste l'état clients en local (sans déclencher de push). */
+function _persistClientsLocal(){
+  try { localStorage.setItem('forma_clients', JSON.stringify({clients, cIdCtr})); } catch(e){}
+  try { localStorage.setItem('forma_clients_ts', String(Date.now())); } catch(e){}
+  _saveDeleted();
+  const ec = document.getElementById('count-clients'); if(ec) ec.textContent = clients.length;
+}
+/* Re-rend la grille sauf si l'utilisateur tape (pour ne pas voler le focus). */
+function _renderClientsIfIdle(){ if(_clientsInputFocused()) return; try { renderClients(); updateClientSelects(); } catch(e){} }
+
+/* Pousse l'état clients vers le cloud — en FUSIONNANT d'abord ce qui s'y
+   trouve (lire-modifier-écrire), pour ne jamais écraser un autre appareil.
+   Anti-rebond 800 ms. */
 function clientsPushCloud(){
   const code = syncGetCode();
   if(!code || !_supaReady) return;
   if(_clientsPushTimer) clearTimeout(_clientsPushTimer);
   _clientsPushTimer = window.setTimeout(async () => {
     try {
-      const body = {
-        id: _syncId(code),
-        payload: { clients, cIdCtr, chIdCtr, updated_at: Date.now() },
-        updated_at: new Date().toISOString()
-      };
+      // 1) récupérer + fusionner les changements éventuels d'autres appareils
+      try { const cloud = await clientsPullCloud(code); if(cloud && _mergeCloudIntoLocal(cloud)){ _persistClientsLocal(); _renderClientsIfIdle(); } } catch(e){}
+      // 2) pousser l'état fusionné (upsert de la ligne d'équipe)
       const res = await fetch(_supaBase + '/rest/v1/app_state', {
         method: 'POST',
         headers: {
           apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON,
           'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates'
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify({ id: _syncId(code), payload: _clientsPayload(), updated_at: new Date().toISOString() })
       });
       _syncSetStatus(res.ok ? 'ok' : 'err');
     } catch(e){ console.warn('Sauvegarde cloud clients échouée :', e); _syncSetStatus('err'); }
   }, 800);
 }
 
-/* Récupère l'état clients depuis le cloud pour un code donné. */
+/* Récupère le payload clients depuis le cloud pour un code donné. */
 async function clientsPullCloud(code){
   if(!_supaReady) throw new Error('cloud indisponible');
   const res = await fetch(_supaBase + '/rest/v1/app_state?id=eq.' + encodeURIComponent(_syncId(code)) + '&select=payload', {
@@ -2548,39 +2609,41 @@ async function clientsPullCloud(code){
   return (arr && arr.length) ? arr[0].payload : null;
 }
 
-/* Adopte un payload cloud comme état clients courant. */
-function _syncAdopt(cloud){
-  clients = Array.isArray(cloud.clients) ? cloud.clients : [];
-  clients.forEach(c => { if(!c.chantiers) c.chantiers = []; });
-  cIdCtr = cloud.cIdCtr || clients.length + 1;
-  let mx = 0; clients.forEach(c => c.chantiers.forEach(ch => { if(ch.id > mx) mx = ch.id; }));
-  chIdCtr = Math.max(cloud.chIdCtr || 0, mx + 1);
-  try { localStorage.setItem('forma_clients', JSON.stringify({clients, cIdCtr})); } catch(e){}
-  try { localStorage.setItem('forma_clients_ts', String(cloud.updated_at || Date.now())); } catch(e){}
-  renderClients(); updateClientSelects();
-  const ec = document.getElementById('count-clients'); if(ec) ec.textContent = clients.length;
+/* Tire le cloud et fusionne (propage les ajouts/suppressions d'autres
+   appareils). Silencieux et non bloquant : en cas d'échec, on reste local. */
+async function clientsPullMerge(){
+  const code = syncGetCode();
+  if(!code || !_supaReady) return;
+  try {
+    const cloud = await clientsPullCloud(code);
+    if(cloud && _mergeCloudIntoLocal(cloud)){ _persistClientsLocal(); _renderClientsIfIdle(); }
+    _syncSetStatus('ok');
+  } catch(e){ /* hors-ligne : on garde l'état local */ }
 }
 
-/* Réconciliation au démarrage — SÛRE : ne laisse jamais un cloud vide
-   écraser des clients locaux, et n'écrase jamais une version cloud plus
-   récente (autre appareil) sans le consentement de l'utilisateur. */
+/* Synchro automatique : périodique + au retour sur la fenêtre / l'onglet. */
+let _autoSyncStarted = false;
+function _startAutoSync(){
+  if(_autoSyncStarted) return; _autoSyncStarted = true;
+  setInterval(() => { if(document.visibilityState !== 'hidden') clientsPullMerge(); }, 45000);
+  document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') clientsPullMerge(); });
+  window.addEventListener('focus', () => clientsPullMerge());
+}
+
+/* Réconciliation au démarrage — fusion automatique et NON DESTRUCTIVE :
+   on récupère la liste d'équipe, on la fusionne avec le local (aucune perte),
+   puis on republie l'état fusionné. Démarre ensuite la synchro périodique. */
 async function clientsCloudInit(){
   try { if(navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch(e){}
+  _loadDeleted();
   const code = syncGetCode();
   if(code && _supaReady){
     try {
       const cloud = await clientsPullCloud(code);
-      const cloudClients = (cloud && Array.isArray(cloud.clients)) ? cloud.clients : [];
-      const localTs = parseInt(localStorage.getItem('forma_clients_ts') || '0', 10) || 0;
-      const cloudTs = (cloud && cloud.updated_at) || 0;
-      if(cloudClients.length && clients.length === 0){
-        _syncAdopt(cloud);                      // local vide → récupération
-      } else if(cloudClients.length && clients.length && cloudTs > localTs){
-        _syncCloudNewer = { code, count: cloudClients.length };  // autre appareil + récent → on propose
-      } else if(clients.length){
-        clientsPushCloud();                     // local = référence → sauvegarde
-      }
+      if(_mergeCloudIntoLocal(cloud)){ _persistClientsLocal(); renderClients(); updateClientSelects(); }
+      clientsPushCloud();   // republie l'état fusionné (couvre : local rempli + cloud vide, et propage la fusion)
     } catch(e){ console.warn('Init sync clients :', e); }
+    _startAutoSync();
   }
   syncRenderPanel();
 }
@@ -2595,71 +2658,41 @@ function _syncSetStatus(s){
 function syncRenderPanel(){
   const bar = document.getElementById('cloud-sync-bar'); if(!bar) return;
   const code = syncGetCode();
-  if(!code){
-    bar.innerHTML =
-      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:rgba(29,78,216,.06);border:1px solid rgba(29,78,216,.2);border-radius:10px">' +
-        '<span style="font-size:16px">☁️</span>' +
-        '<div style="flex:1;min-width:200px"><div style="font-size:12px;font-weight:700;color:var(--text)">Sauvegarde cloud — protège tes clients</div>' +
-        '<div style="font-size:11px;color:var(--text3)">Active un code pour retrouver tes clients partout, même après un vidage de cache ou sur un autre téléphone.</div></div>' +
-        '<button class="btn-add" style="padding:7px 14px;font-size:12px;background:var(--blue);border-color:var(--blue);color:#fff" onclick="syncActivate()">Activer la sauvegarde</button>' +
-        '<button class="btn-add" style="padding:7px 12px;font-size:12px" onclick="syncRestore()">📥 Restaurer un code</button>' +
-      '</div>';
-    return;
-  }
-  const warn = _syncCloudNewer
-    ? '<div style="margin-top:8px;padding:8px 12px;background:rgba(234,108,0,.08);border:1px solid rgba(234,108,0,.3);border-radius:8px;font-size:11px;color:var(--text2)">⚠️ Une version plus récente existe sur un autre appareil (' + _syncCloudNewer.count + ' client' + (_syncCloudNewer.count>1?'s':'') + '). <button class="btn-add" style="padding:3px 10px;font-size:11px;margin-left:6px" onclick="syncLoadNewer()">Charger cette version</button></div>'
-    : '';
+  const isTeam = (code === DEFAULT_SYNC_CODE);
+  const sub = isTeam
+    ? 'Tes clients sont partagés avec toute l\'équipe et sauvegardés sur tous les appareils. Ajoute un client ici, il apparaît partout.'
+    : 'Synchro sur le code <strong style="font-family:\'DM Mono\',monospace;color:var(--blue)">' + code.replace(/</g,'&lt;') + '</strong> — partagé et sauvegardé sur tous les appareils utilisant ce code.';
   bar.innerHTML =
     '<div style="padding:10px 14px;background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.25);border-radius:10px">' +
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
         '<span style="font-size:16px">☁️</span>' +
-        '<div style="flex:1;min-width:200px"><div style="font-size:12px;font-weight:700;color:var(--text)">Sauvegarde cloud active · <span id="sync-status" style="font-weight:600;color:var(--green)">✓ sauvegardé</span></div>' +
-        '<div style="font-size:11px;color:var(--text3)">Ton code : <strong style="font-family:\'DM Mono\',monospace;color:var(--blue)">' + code.replace(/</g,'&lt;') + '</strong> — note-le pour récupérer tes clients ailleurs.</div></div>' +
-        '<button class="btn-add" style="padding:6px 12px;font-size:11px" onclick="syncChangeCode()">Changer le code</button>' +
-        '<button class="btn-add" style="padding:6px 12px;font-size:11px" onclick="syncRestore()">📥 Restaurer</button>' +
-      '</div>' + warn +
+        '<div style="flex:1;min-width:200px">' +
+          '<div style="font-size:12px;font-weight:700;color:var(--text)">Synchronisation d\'équipe automatique · <span id="sync-status" style="font-weight:600;color:var(--green)">✓ sauvegardé</span></div>' +
+          '<div style="font-size:11px;color:var(--text3)">' + sub + '</div>' +
+        '</div>' +
+        '<button class="btn-add" style="padding:6px 12px;font-size:11px" onclick="clientsForceSync()">🔄 Synchroniser</button>' +
+        '<button class="btn-add" style="padding:6px 12px;font-size:11px" onclick="syncRestore()">📥 Importer un code</button>' +
+      '</div>' +
     '</div>';
 }
-function syncActivate(){
-  const code = (prompt('Choisis un CODE de sauvegarde (ex : ton prénom + 4 chiffres).\n\n⚠️ Note-le bien : c\'est lui qui te permet de retrouver tes clients sur un autre appareil ou après un vidage de cache.', syncSuggestCode()) || '').trim();
-  if(!code) return;
-  syncSetCode(code);
-  clientsPushCloud();
-  syncRenderPanel();
-  if(typeof showToast === 'function') showToast('☁️ Sauvegarde cloud activée — code : ' + code);
+/* Force une synchro immédiate (tirer la liste d'équipe + republier). */
+function clientsForceSync(){
+  clientsPullMerge().then(() => { clientsPushCloud(); if(typeof showToast === 'function') showToast('🔄 Clients synchronisés'); });
 }
-function syncChangeCode(){
-  const cur = syncGetCode();
-  const code = (prompt('Nouveau code de sauvegarde :', cur) || '').trim();
-  if(!code || code === cur) return;
-  syncSetCode(code);
-  clientsPushCloud();
-  syncRenderPanel();
-  if(typeof showToast === 'function') showToast('Code mis à jour : ' + code);
-}
+/* Importe (FUSIONNE) les clients d'un autre code dans la liste courante,
+   sans rien supprimer. Utile pour récupérer une ancienne sauvegarde perso. */
 async function syncRestore(){
-  const code = (prompt('Entre le CODE de sauvegarde pour récupérer tes clients :') || '').trim();
+  const code = (prompt('Entre un code de synchronisation pour IMPORTER ses clients ici.\n(Fusion : tes clients actuels sont conservés, rien n\'est supprimé.)', '') || '').trim();
   if(!code) return;
   try {
     const cloud = await clientsPullCloud(code);
-    if(!cloud || !Array.isArray(cloud.clients) || !cloud.clients.length){ alert('Aucune sauvegarde trouvée pour le code « ' + code + ' ».'); return; }
-    if(clients.length && !confirm('Remplacer tes ' + clients.length + ' client' + (clients.length>1?'s':'') + ' actuel' + (clients.length>1?'s':'') + ' par les ' + cloud.clients.length + ' du code « ' + code + ' » ?')) return;
-    _syncAdopt(cloud);
-    syncSetCode(code);
-    _syncCloudNewer = null;
-    syncRenderPanel();
-    if(typeof showToast === 'function') showToast('✅ ' + clients.length + ' client' + (clients.length>1?'s':'') + ' restauré' + (clients.length>1?'s':'') + ' depuis « ' + code + ' »');
-  } catch(e){ alert('Restauration impossible : ' + (e && e.message ? e.message : e)); }
-}
-async function syncLoadNewer(){
-  if(!_syncCloudNewer) return;
-  const code = _syncCloudNewer.code;
-  try {
-    const cloud = await clientsPullCloud(code);
-    if(cloud && Array.isArray(cloud.clients)){ _syncAdopt(cloud); }
-    _syncCloudNewer = null; syncRenderPanel();
-    if(typeof showToast === 'function') showToast('✅ Version la plus récente chargée');
-  } catch(e){ alert('Chargement impossible : ' + (e && e.message ? e.message : e)); }
+    if(!cloud || !Array.isArray(cloud.clients) || !cloud.clients.length){ alert('Aucune sauvegarde trouvée pour « ' + code + ' ».'); return; }
+    const before = clients.length;
+    _mergeCloudIntoLocal(cloud); _persistClientsLocal(); renderClients(); updateClientSelects();
+    clientsPushCloud();
+    const added = clients.length - before;
+    if(typeof showToast === 'function') showToast('✅ ' + (added > 0 ? added + ' client' + (added>1?'s':'') + ' importé' + (added>1?'s':'') : 'Liste déjà à jour') + ' depuis « ' + code + ' »');
+  } catch(e){ alert('Import impossible : ' + (e && e.message ? e.message : e)); }
 }
 function loadClients() {
   try {
@@ -2679,14 +2712,15 @@ function loadClients() {
   } catch(e){}
 }
 
-function addClient(){clients.push({id:cIdCtr++,name:'',coefIna:1,coefHs25:null,coefHs50:null,chantiers:[]});renderClients();updateClientSelects();saveClients();}
-function removeClient(id){clients=clients.filter(c=>c.id!==id);renderClients();updateClientSelects();saveClients();}
+function addClient(){clients.push({id:cIdCtr++,name:'',coefIna:1,coefHs25:null,coefHs50:null,chantiers:[],ts:Date.now()});renderClients();updateClientSelects();saveClients();}
+function removeClient(id){const c=clients.find(c=>c.id===id);if(c&&c.name)_tombstone(c.name);clients=clients.filter(c=>c.id!==id);renderClients();updateClientSelects();saveClients();}
 function setClientField(id,field,val){
   const c=clients.find(c=>c.id===id);if(!c)return;
   if(field==='name'){c.name=val;const av=document.getElementById('av-'+id);if(av)av.textContent=initials(val);updateClientSelects();}
   else if(field==='coefIna')c.coefIna=parseFloat(val)||1;
   else if(field==='coefHs25')c.coefHs25=val===''?null:(parseFloat(val)||null);
   else if(field==='coefHs50')c.coefHs50=val===''?null:(parseFloat(val)||null);
+  c.ts=Date.now();
   const leg=document.getElementById('leg-'+id);if(leg)leg.innerHTML=clientLegend(c);
   onClientChange();
   saveClients();
@@ -2788,6 +2822,7 @@ function addChantier(cid) {
   const c = clients.find(x=>x.id===cid); if(!c) return;
   if(!c.chantiers) c.chantiers=[];
   c.chantiers.push({id: chIdCtr++, name:''});
+  c.ts = Date.now();
   renderChantiers(cid);
   saveClients();
   updateEqChantierSelects();
@@ -2796,6 +2831,7 @@ function addChantier(cid) {
 function removeChantier(cid, chid) {
   const c = clients.find(x=>x.id===cid); if(!c) return;
   c.chantiers = c.chantiers.filter(ch=>ch.id!==chid);
+  c.ts = Date.now();
   renderChantiers(cid);
   saveClients();
   updateEqChantierSelects();
@@ -2805,6 +2841,7 @@ function setChantierName(cid, chid, val) {
   const c = clients.find(x=>x.id===cid); if(!c) return;
   const ch = c.chantiers.find(x=>x.id===chid); if(!ch) return;
   ch.name = val;
+  c.ts = Date.now();
   saveClients();
   updateEqChantierSelects();
 }
@@ -3215,7 +3252,7 @@ function eqCalcRow(id) {
   const retenue = parseFloat(document.getElementById('eq-ret-'+id)?.value)||0;
   const mb      = r.mb - veh - carb + retenue;
   const pct_mb  = r.tf>0 ? (mb/r.tf)*100 : 0;
-  const net_ina  = r.net_est + r.ina_net;
+  const net_ina  = r.net_est + r.ina;
   const net_verse= net_ina - retenue;
 
   const fc  = v => v.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
@@ -3888,11 +3925,11 @@ function eqToFacturation() {
     const chanObj = cliObj && cliObj.chantiers ? cliObj.chantiers.find(ch => ch.id == chanId) : null;
     const chanName = chanObj ? (chanObj.name || '') : '';
 
-    // Net hebdo transmis = net TOTAL touché : salaire net (≈ 78,66 % du brut
-    // + exo HS, panier/trajet soumis déjà inclus dans le brut) + les indemnités
-    // NON soumises versées (Ind. Repas + Ind. Transport). Ainsi net hebdo ÷ 5 =
-    // ce qu'il gagne par jour. (La retenue n'est pas déduite ici : déduction
-    // ponctuelle, pas le salaire de base.)
+    // Net hebdo transmis = net TOTAL touché par l'intérimaire :
+    // salaire net (≈ 78,66 % du brut + exo HS) + primes/indemnités versées
+    // (panier, trajet, transport). Ainsi net hebdo ÷ 5 = ce qu'il gagne par
+    // jour, primes comprises. (La retenue n'est pas déduite ici : c'est une
+    // déduction ponctuelle, pas le salaire de base.)
     const netTotal = (res.net_ina != null)
       ? res.net_ina
       : (netEstime(res.sal_brut, (res.tx||0)*((res.hs25||0)*1.25+(res.hs50||0)*1.5)) + (res.ina_tot || 0));
